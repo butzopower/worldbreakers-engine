@@ -205,7 +205,7 @@ function proceedToFight(state: GameState, events: GameEvent[]): { state: GameSta
  * End combat, clean up combat state, expire combat lasting effects.
  */
 export function endCombat(state: GameState, events: GameEvent[]): { state: GameState; events: GameEvent[] } {
-  let s = { ...state, combat: null, pendingChoice: null };
+  let s: GameState = { ...state, combat: null, pendingChoice: null };
   const allEvents = [...events];
 
   // Expire end-of-combat lasting effects

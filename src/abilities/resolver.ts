@@ -105,7 +105,7 @@ function needsTargetChoice(effect: EffectPrimitive): boolean {
 
 function getTargetSelector(effect: EffectPrimitive) {
   if ('target' in effect) {
-    return effect.target as { kind: string; filter: unknown; count: number };
+    return effect.target;
   }
   return null;
 }
