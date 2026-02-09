@@ -1,5 +1,19 @@
 import type { PlayerId, GameState, PlayerAction, PendingChoice, ActionInput, GameEvent, DeckConfig } from '@worldbreakers/engine';
 
+export interface ClientCardDefinition {
+  id: string;
+  name: string;
+  type: string;
+  guild: string;
+  cost: number;
+  strength?: number;
+  health?: number;
+  stages?: number;
+  keywords?: string[];
+  standingRequirement?: Record<string, number>;
+  description?: string;
+}
+
 export interface GameInfo {
   gameId: string;
   creatorName: string;
@@ -8,7 +22,7 @@ export interface GameInfo {
 
 export interface ServerToClientEvents {
   game_created: (data: { gameId: string; playerId: PlayerId }) => void;
-  game_started: (data: { state: FilteredGameState; legalActions: PlayerAction[] }) => void;
+  game_started: (data: { state: FilteredGameState; legalActions: PlayerAction[]; cardDefinitions: Record<string, ClientCardDefinition> }) => void;
   game_state: (data: { state: FilteredGameState; legalActions: PlayerAction[]; events: GameEvent[] }) => void;
   waiting_for_input: (data: { pendingChoice: PendingChoice; legalActions: PlayerAction[] }) => void;
   lobby_update: (data: { games: GameInfo[] }) => void;

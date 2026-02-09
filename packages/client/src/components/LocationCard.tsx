@@ -1,5 +1,5 @@
-import type { VisibleCard, PlayerAction } from '../types.js';
-import { getCardData } from './FollowerCard.js';
+import type { VisibleCard } from '../types.js';
+import { useCardDefinitions } from '../context/CardDefinitions.js';
 
 interface Props {
   card: VisibleCard;
@@ -10,7 +10,8 @@ interface Props {
 }
 
 export default function LocationCard({ card, canDevelop, highlighted, onClick, onDevelop }: Props) {
-  const data = getCardData(card.definitionId);
+  const cardDefinitions = useCardDefinitions();
+  const cardDef = cardDefinitions[card.definitionId] ?? { name: card.definitionId, stages: 0 };
   const stage = card.counters['stage'] ?? 0;
 
   return (
@@ -27,10 +28,10 @@ export default function LocationCard({ card, canDevelop, highlighted, onClick, o
       }}
     >
       <div style={{ fontWeight: 'bold', marginBottom: '2px', color: '#8B6914' }}>
-        {data.name}
+        {cardDef.name}
       </div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span>Stage: {'●'.repeat(stage)}{'○'.repeat(Math.max(0, (data.stages ?? 0) - stage))}</span>
+        <span>Stage: {'●'.repeat(stage)}{'○'.repeat(Math.max(0, (cardDef.stages ?? 0) - stage))}</span>
         {canDevelop && (
           <button
             onClick={(e) => { e.stopPropagation(); onDevelop?.(); }}
@@ -44,7 +45,7 @@ export default function LocationCard({ card, canDevelop, highlighted, onClick, o
           </button>
         )}
       </div>
-      {data.keywords?.includes('hidden') && (
+      {cardDef.keywords?.includes('hidden') && (
         <div style={{ fontSize: '9px', color: '#aaa' }}>hidden</div>
       )}
     </div>

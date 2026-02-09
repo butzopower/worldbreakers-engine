@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { socket } from './socket.js';
 import LobbyView from './components/LobbyView.js';
 import GameView from './components/GameView.js';
-import type { PlayerId, FilteredGameState, PlayerAction, GameEvent } from './types.js';
+import { CardDefinitionsProvider } from './context/CardDefinitions.js';
+import type { PlayerId, FilteredGameState, PlayerAction, GameEvent, ClientCardDefinition } from './types.js';
 
 type AppState =
   | { screen: 'lobby' }
@@ -11,6 +12,7 @@ type AppState =
 
 export default function App() {
   const [appState, setAppState] = useState<AppState>({ screen: 'lobby' });
+  const [cardDefinitions, setCardDefinitions] = useState<Record<string, ClientCardDefinition>>({});
   const [error, setError] = useState<string | null>(null);
   const [disconnected, setDisconnected] = useState(false);
 
@@ -21,7 +23,8 @@ export default function App() {
       setAppState({ screen: 'waiting', gameId });
     });
 
-    socket.on('game_started', ({ state, legalActions }) => {
+    socket.on('game_started', ({ state, legalActions, cardDefinitions: defs }) => {
+      setCardDefinitions(defs);
       setAppState(prev => {
         const gameId = prev.screen === 'waiting' ? prev.gameId :
           prev.screen === 'game' ? prev.gameId : '';
@@ -97,13 +100,15 @@ export default function App() {
       )}
 
       {appState.screen === 'game' && (
-        <GameView
-          playerId={appState.playerId}
-          state={appState.state}
-          legalActions={appState.legalActions}
-          events={appState.events}
-          onReturnToLobby={returnToLobby}
-        />
+        <CardDefinitionsProvider value={cardDefinitions}>
+          <GameView
+            playerId={appState.playerId}
+            state={appState.state}
+            legalActions={appState.legalActions}
+            events={appState.events}
+            onReturnToLobby={returnToLobby}
+          />
+        </CardDefinitionsProvider>
       )}
     </div>
   );

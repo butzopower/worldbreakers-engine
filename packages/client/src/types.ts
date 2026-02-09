@@ -73,6 +73,20 @@ export interface GameEvent {
   [key: string]: unknown;
 }
 
+export interface ClientCardDefinition {
+  id: string;
+  name: string;
+  type: string;
+  guild: string;
+  cost: number;
+  strength?: number;
+  health?: number;
+  stages?: number;
+  keywords?: string[];
+  standingRequirement?: Record<string, number>;
+  description?: string;
+}
+
 export type InteractionMode =
   | { type: 'none' }
   | { type: 'select_attackers'; selected: string[] }

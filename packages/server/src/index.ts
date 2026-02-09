@@ -3,7 +3,8 @@ import { createServer } from 'http';
 import { Server } from 'socket.io';
 import cors from 'cors';
 import { GameManager } from './game-manager.js';
-import type { ServerToClientEvents, ClientToServerEvents } from './types.js';
+import type { ServerToClientEvents, ClientToServerEvents, ClientCardDefinition } from './types.js';
+import { getAllCardDefinitions } from '@worldbreakers/engine';
 import type { PlayerId } from '@worldbreakers/engine';
 
 const app = express();
@@ -18,6 +19,27 @@ const io = new Server<ClientToServerEvents, ServerToClientEvents>(httpServer, {
 });
 
 const manager = new GameManager();
+
+function buildClientCardDefs(): Record<string, ClientCardDefinition> {
+  const defs: Record<string, ClientCardDefinition> = {};
+  for (const def of getAllCardDefinitions()) {
+    const description = def.abilities?.[0]?.description;
+    defs[def.id] = {
+      id: def.id,
+      name: def.name,
+      type: def.type,
+      guild: def.guild,
+      cost: def.cost,
+      ...(def.strength !== undefined && { strength: def.strength }),
+      ...(def.health !== undefined && { health: def.health }),
+      ...(def.stages !== undefined && { stages: def.stages }),
+      ...(def.keywords?.length && { keywords: def.keywords }),
+      ...(def.standingRequirement && { standingRequirement: def.standingRequirement as Record<string, number> }),
+      ...(description && { description }),
+    };
+  }
+  return defs;
+}
 
 io.on('connection', (socket) => {
   console.log(`Player connected: ${socket.id}`);
@@ -49,16 +71,20 @@ io.on('connection', (socket) => {
     const p1Socket = session.getSocketId('player1');
     const p2Socket = session.getSocketId('player2');
 
+    const cardDefinitions = buildClientCardDefs();
+
     if (p1Socket) {
       io.to(p1Socket).emit('game_started', {
         state: session.getFilteredState('player1'),
         legalActions: session.getLegalActionsForPlayer('player1'),
+        cardDefinitions,
       });
     }
     if (p2Socket) {
       io.to(p2Socket).emit('game_started', {
         state: session.getFilteredState('player2'),
         legalActions: session.getLegalActionsForPlayer('player2'),
+        cardDefinitions,
       });
     }
 
