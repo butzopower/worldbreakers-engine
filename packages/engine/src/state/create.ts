@@ -2,7 +2,7 @@ import { PlayerId, Guild, PLAYERS } from '../types/core.js';
 import { GameState, PlayerState, CardInstance } from '../types/state.js';
 import { generateInstanceId, resetIdCounter } from '../utils/id.js';
 import { seededShuffle } from '../utils/random.js';
-import { getCardDefinition } from "../cards/registry";
+import { getCardDefinition } from "../cards/registry.js";
 
 export interface DeckConfig {
   worldbreakerId: string;

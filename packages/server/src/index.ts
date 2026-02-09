@@ -2,18 +2,27 @@ import express from 'express';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import cors from 'cors';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { GameManager } from './game-manager.js';
 import type { ServerToClientEvents, ClientToServerEvents, ClientCardDefinition } from './types.js';
 import { getAllCardDefinitions } from '@worldbreakers/engine';
 import type { PlayerId } from '@worldbreakers/engine';
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 const app = express();
 app.use(cors());
+
+// Serve built client as static files
+const clientDistPath = path.join(__dirname, '../../client/dist');
+app.use(express.static(clientDistPath));
 
 const httpServer = createServer(app);
 const io = new Server<ClientToServerEvents, ServerToClientEvents>(httpServer, {
   cors: {
-    origin: ['http://localhost:5173', 'http://127.0.0.1:5173'],
+    origin: '*',
     methods: ['GET', 'POST'],
   },
 });
@@ -141,6 +150,11 @@ io.on('connection', (socket) => {
     }
     console.log(`Player disconnected: ${socket.id}`);
   });
+});
+
+// SPA fallback: serve index.html for non-API/non-file requests
+app.get('*', (_req, res) => {
+  res.sendFile(path.join(clientDistPath, 'index.html'));
 });
 
 const PORT = process.env.PORT ?? 3001;
