@@ -2,6 +2,7 @@ import { PlayerId, Guild } from '../types/core.js';
 import { GameState, PlayerState, CardInstance } from '../types/state.js';
 import { generateInstanceId, resetIdCounter } from '../utils/id.js';
 import { seededShuffle } from '../utils/random.js';
+import { getCardDefinition } from "../cards/registry";
 
 export interface DeckConfig {
   worldbreakerId: string;
@@ -15,11 +16,13 @@ export interface GameConfig {
   firstPlayer?: PlayerId;
 }
 
-function createPlayerState(): PlayerState {
+function createPlayerState(guild: Guild): PlayerState {
+  const standing = { earth: 0, moon: 0, void: 0, stars: 0, [guild]: 1 }
+
   return {
-    mythium: 0,
+    mythium: 5,
     power: 0,
-    standing: { earth: 0, moon: 0, void: 0, stars: 0 },
+    standing: standing,
     handSize: 0,
   };
 }
@@ -74,8 +77,8 @@ export function createGameState(config: GameConfig): GameState {
     firstPlayer,
     activePlayer: firstPlayer,
     players: {
-      player1: createPlayerState(),
-      player2: createPlayerState(),
+      player1: createPlayerState(getCardDefinition(config.player1Deck.worldbreakerId).guild),
+      player2: createPlayerState(getCardDefinition(config.player2Deck.worldbreakerId).guild),
     },
     cards,
     combat: null,
