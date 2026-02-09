@@ -1,4 +1,4 @@
-import { PlayerId, Guild } from '../types/core.js';
+import { PlayerId, Guild, PLAYERS } from '../types/core.js';
 import { GameState, PlayerState, CardInstance } from '../types/state.js';
 import { generateInstanceId, resetIdCounter } from '../utils/id.js';
 import { seededShuffle } from '../utils/random.js';
@@ -98,7 +98,7 @@ export function createGameState(config: GameConfig): GameState {
 
 function drawOpeningHands(state: GameState): GameState {
   let s = state;
-  for (const player of ['player1', 'player2'] as PlayerId[]) {
+  for (const player of PLAYERS) {
     for (let i = 0; i < 5; i++) {
       s = drawOneCard(s, player);
     }

@@ -38,13 +38,10 @@ registerCustomResolver('void_rift', (state: GameState, ctx: ResolveContext) => {
       pendingChoice: {
         type: 'choose_discard',
         playerId: opponent,
-        context: {
-          count: 1,
-          sourceCardId: ctx.sourceCardId,
-          phase: 'opponent_discard',
-          // After opponent discards, controller discards, then gain power
-          nextPhase: 'controller_discard',
-        },
+        count: 1,
+        sourceCardId: ctx.sourceCardId,
+        phase: 'opponent_discard',
+        nextPhase: 'controller_discard',
       },
     };
     return { state: s, events };
@@ -58,12 +55,10 @@ registerCustomResolver('void_rift', (state: GameState, ctx: ResolveContext) => {
       pendingChoice: {
         type: 'choose_discard',
         playerId: ctx.controller,
-        context: {
-          count: 1,
-          sourceCardId: ctx.sourceCardId,
-          phase: 'controller_discard',
-          nextPhase: 'gain_power',
-        },
+        count: 1,
+        sourceCardId: ctx.sourceCardId,
+        phase: 'controller_discard',
+        nextPhase: 'gain_power',
       },
     };
     return { state: s, events };

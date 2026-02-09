@@ -10,7 +10,7 @@ export { registerTestCards } from './cards/test-cards/index.js';
 
 // Types
 export type { PlayerId, Guild, StandingGuild, Phase, Zone, CombatStep, RallyStep } from './types/core.js';
-export { opponentOf } from './types/core.js';
+export { opponentOf, PLAYERS, STANDING_GUILDS } from './types/core.js';
 export type { CardDefinition, CardType, Keyword, LocationStage } from './types/cards.js';
 export type { GameState, PlayerState, CardInstance, CombatState, LastingEffect, PendingChoice } from './types/state.js';
 export type { PlayerAction, ActionInput } from './types/actions.js';

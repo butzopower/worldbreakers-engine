@@ -39,26 +39,23 @@ export default function GameView({ playerId, state, legalActions, events, onRetu
     const choice = state.pendingChoice;
     switch (choice.type) {
       case 'choose_blockers': {
-        const attackerIds = (choice.context.attackerIds as string[]) ?? [];
-        interaction.startBlockerSelection(attackerIds);
+        interaction.startBlockerSelection(choice.attackerIds);
         break;
       }
       case 'choose_target': {
-        // Find valid targets from legal actions
         const targets = legalActions
-          .filter(a => a.type === 'choose_target')
-          .map(a => a.targetInstanceId as string);
+          .filter((a): a is PlayerAction & { targetInstanceId: string } =>
+            a.type === 'choose_target' && typeof a.targetInstanceId === 'string')
+          .map(a => a.targetInstanceId);
         interaction.startTargetSelection(targets);
         break;
       }
       case 'choose_discard': {
-        const count = (choice.context.count as number) ?? 1;
-        interaction.startDiscardSelection(count);
+        interaction.startDiscardSelection(choice.count);
         break;
       }
       case 'choose_breach_target': {
-        const validLocs = (choice.context.validLocationIds as string[]) ?? [];
-        interaction.startBreachSelection(validLocs);
+        interaction.startBreachSelection(choice.validLocationIds);
         break;
       }
     }

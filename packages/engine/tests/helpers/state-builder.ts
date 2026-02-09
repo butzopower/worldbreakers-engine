@@ -1,4 +1,4 @@
-import { PlayerId, Guild } from '../../src/types/core.js';
+import { PlayerId, StandingGuild } from '../../src/types/core.js';
 import { GameState, PlayerState, CardInstance } from '../../src/types/state.js';
 import { CounterMap } from '../../src/types/counters.js';
 
@@ -67,7 +67,7 @@ export class StateBuilder {
     return this;
   }
 
-  withStanding(player: PlayerId, guild: Guild, amount: number): this {
+  withStanding(player: PlayerId, guild: StandingGuild, amount: number): this {
     this.state.players[player].standing[guild] = amount;
     return this;
   }

@@ -1,6 +1,8 @@
-export type PlayerId = 'player1' | 'player2';
+export const PLAYERS = ['player1', 'player2'] as const;
+export type PlayerId = typeof PLAYERS[number];
 
-export type StandingGuild = 'earth' | 'moon' | 'void' | 'stars';
+export const STANDING_GUILDS = ['earth', 'moon', 'void', 'stars'] as const;
+export type StandingGuild = typeof STANDING_GUILDS[number];
 export type Guild = StandingGuild | 'neutral';
 
 export type Phase = 'action' | 'rally' | 'gameOver';

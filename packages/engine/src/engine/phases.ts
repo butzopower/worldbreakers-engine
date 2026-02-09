@@ -1,4 +1,4 @@
-import { PlayerId, opponentOf } from '../types/core.js';
+import { PlayerId, PLAYERS, opponentOf } from '../types/core.js';
 import { GameState } from '../types/state.js';
 import { GameEvent } from '../types/events.js';
 import { drawCard, gainMythium, gainPower, readyCard } from '../state/mutate.js';
@@ -47,7 +47,7 @@ export function enterRallyPhase(state: GameState, events: GameEvent[]): { state:
   allEvents.push({ type: 'phase_changed', phase: 'rally', round: s.round });
 
   // Step 1: Rally abilities (on both players' cards)
-  for (const player of ['player1', 'player2'] as PlayerId[]) {
+  for (const player of PLAYERS) {
     allEvents.push({ type: 'rally_step', step: 'rally_abilities', player });
     const triggerResult = resolveTriggeredAbilities(s, 'rally', player, {});
     s = triggerResult.state;
@@ -55,7 +55,7 @@ export function enterRallyPhase(state: GameState, events: GameEvent[]): { state:
   }
 
   // Step 2: Ready all cards (handle stun)
-  for (const player of ['player1', 'player2'] as PlayerId[]) {
+  for (const player of PLAYERS) {
     allEvents.push({ type: 'rally_step', step: 'ready_all', player });
     const board = getBoard(s, player);
     for (const card of board) {
@@ -81,7 +81,7 @@ export function enterRallyPhase(state: GameState, events: GameEvent[]): { state:
   }
 
   // Step 3: Gain mythium (2 per player)
-  for (const player of ['player1', 'player2'] as PlayerId[]) {
+  for (const player of PLAYERS) {
     allEvents.push({ type: 'rally_step', step: 'gain_mythium', player });
     const mythResult = gainMythium(s, player, 2);
     s = mythResult.state;
@@ -89,7 +89,7 @@ export function enterRallyPhase(state: GameState, events: GameEvent[]): { state:
   }
 
   // Step 4: Draw a card (1 per player; if deck empty, opponent gains 1 power)
-  for (const player of ['player1', 'player2'] as PlayerId[]) {
+  for (const player of PLAYERS) {
     allEvents.push({ type: 'rally_step', step: 'draw_card', player });
     const hasDeck = s.cards.some(c => c.owner === player && c.zone === 'deck');
     if (hasDeck) {

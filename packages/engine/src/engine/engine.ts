@@ -1,7 +1,7 @@
 import { GameState, PendingChoice } from '../types/state.js';
 import { ActionInput, PlayerAction } from '../types/actions.js';
 import { GameEvent } from '../types/events.js';
-import { PlayerId, opponentOf } from '../types/core.js';
+import { PlayerId, STANDING_GUILDS, opponentOf } from '../types/core.js';
 import { validateAction } from './validator.js';
 import { advanceTurn } from './phases.js';
 import { runCleanup } from './cleanup.js';
@@ -70,7 +70,7 @@ export function processAction(state: GameState, input: ActionInput): ProcessResu
         waitingFor: {
           type: 'choose_blockers',
           playerId: defender,
-          context: { attackerIds: s.combat.attackerIds },
+          attackerIds: s.combat.attackerIds,
         },
       };
     }
@@ -116,7 +116,7 @@ function handleActionPhaseAction(
       result = handleUseAbility(state, player, action.cardInstanceId, action.abilityIndex);
       break;
     default:
-      throw new Error(`Unhandled action type: ${(action as PlayerAction).type}`);
+      throw new Error(`Unhandled action type in action phase: ${action.type}`);
   }
 
   // If there's a pending choice or combat, don't advance turn yet
@@ -172,20 +172,17 @@ function handlePendingChoice(
   switch (choice.type) {
     case 'choose_target': {
       if (action.type !== 'choose_target') throw new Error('Expected choose_target');
-      // Resolve the pending ability with the chosen target
       const ctx: ResolveContext = {
         controller: choice.playerId,
-        sourceCardId: choice.context.sourceCardId as string,
-        triggeringCardId: choice.context.triggeringCardId as string | undefined,
+        sourceCardId: choice.sourceCardId,
+        triggeringCardId: choice.triggeringCardId,
         chosenTargets: [action.targetInstanceId],
       };
       s = { ...s, pendingChoice: null };
-      const effects = choice.context.effects as any[];
-      const effectResult = resolveEffects(s, effects, ctx);
+      const effectResult = resolveEffects(s, choice.effects, ctx);
       s = effectResult.state;
       events.push(...effectResult.events);
 
-      // Cleanup after effect resolution
       const cleanupResult = runCleanup(s);
       s = cleanupResult.state;
       events.push(...cleanupResult.events);
@@ -206,12 +203,8 @@ function handlePendingChoice(
       }
 
       // Handle Void Rift multi-phase discard
-      const phase = choice.context.phase as string | undefined;
-      const nextPhase = choice.context.nextPhase as string | undefined;
-      const sourceCardId = choice.context.sourceCardId as string;
-
-      if (nextPhase === 'controller_discard') {
-        const controller = choice.playerId === 'player1' ? 'player2' : 'player1' as PlayerId;
+      if (choice.nextPhase === 'controller_discard') {
+        const controller = opponentOf(choice.playerId);
         const controllerHand = getHand(s, controller);
         if (controllerHand.length > 0) {
           s = {
@@ -219,7 +212,10 @@ function handlePendingChoice(
             pendingChoice: {
               type: 'choose_discard',
               playerId: controller,
-              context: { count: 1, sourceCardId, phase: 'controller_discard', nextPhase: 'gain_power' },
+              count: 1,
+              sourceCardId: choice.sourceCardId,
+              phase: 'controller_discard',
+              nextPhase: 'gain_power',
             },
           };
           return { state: s, events };
@@ -228,7 +224,7 @@ function handlePendingChoice(
         const powerResult = gainPower(s, controller, 1);
         s = powerResult.state;
         events.push(...powerResult.events);
-      } else if (nextPhase === 'gain_power') {
+      } else if (choice.nextPhase === 'gain_power') {
         const powerResult = gainPower(s, choice.playerId, 1);
         s = powerResult.state;
         events.push(...powerResult.events);
@@ -291,7 +287,7 @@ export function getLegalActions(state: GameState): ActionInput[] {
 
   // Buy standing (if has 2+ mythium)
   if (state.players[player].mythium >= 2) {
-    for (const guild of ['earth', 'moon', 'void', 'stars'] as const) {
+    for (const guild of STANDING_GUILDS) {
       actions.push({ player, action: { type: 'buy_standing', guild } });
     }
   }
@@ -348,23 +344,25 @@ function getLegalChoiceActions(state: GameState): ActionInput[] {
 
   switch (choice.type) {
     case 'choose_target': {
-      // Find valid targets
-      const filter = (choice.context.effects as any[])?.[0]?.target?.filter;
-      if (filter) {
-        const validCards = state.cards.filter(c => {
-          if (filter.type) {
-            const types = Array.isArray(filter.type) ? filter.type : [filter.type];
-            const def = getCardDef(c);
-            if (!types.includes(def.type)) return false;
+      const firstEffect = choice.effects[0];
+      if (firstEffect && 'target' in firstEffect && firstEffect.target) {
+        const filter = firstEffect.target.kind === 'choose' ? firstEffect.target.filter : undefined;
+        if (filter) {
+          const validCards = state.cards.filter(c => {
+            if (filter.type) {
+              const types = Array.isArray(filter.type) ? filter.type : [filter.type];
+              const def = getCardDef(c);
+              if (!types.includes(def.type)) return false;
+            }
+            if (filter.zone) {
+              const zones = Array.isArray(filter.zone) ? filter.zone : [filter.zone];
+              if (!zones.includes(c.zone)) return false;
+            }
+            return true;
+          });
+          for (const card of validCards) {
+            actions.push({ player, action: { type: 'choose_target', targetInstanceId: card.instanceId } });
           }
-          if (filter.zone) {
-            const zones = Array.isArray(filter.zone) ? filter.zone : [filter.zone];
-            if (!zones.includes(c.zone)) return false;
-          }
-          return true;
-        });
-        for (const card of validCards) {
-          actions.push({ player, action: { type: 'choose_target', targetInstanceId: card.instanceId } });
         }
       }
       break;
@@ -394,11 +392,8 @@ function getLegalChoiceActions(state: GameState): ActionInput[] {
     }
     case 'choose_breach_target': {
       actions.push({ player, action: { type: 'skip_breach_damage' } });
-      const validLocIds = choice.context.validLocationIds as string[];
-      if (validLocIds) {
-        for (const locId of validLocIds) {
-          actions.push({ player, action: { type: 'damage_location', locationInstanceId: locId } });
-        }
+      for (const locId of choice.validLocationIds) {
+        actions.push({ player, action: { type: 'damage_location', locationInstanceId: locId } });
       }
       break;
     }

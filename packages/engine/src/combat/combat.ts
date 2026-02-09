@@ -66,7 +66,7 @@ export function initiateAttack(
     pendingChoice: {
       type: 'choose_blockers',
       playerId: defender,
-      context: { attackerIds },
+      attackerIds,
     },
   };
 
@@ -185,9 +185,7 @@ function proceedToFight(state: GameState, events: GameEvent[]): { state: GameSta
         pendingChoice: {
           type: 'choose_breach_target',
           playerId: s.combat!.attackingPlayer,
-          context: {
-            validLocationIds: defenderLocations.map(l => l.instanceId),
-          },
+          validLocationIds: defenderLocations.map(l => l.instanceId),
         },
       };
       return { state: s, events: allEvents };

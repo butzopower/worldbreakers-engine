@@ -57,12 +57,10 @@ export function resolveAbility(
               pendingChoice: {
                 type: 'choose_target',
                 playerId: controller,
-                context: {
-                  sourceCardId,
-                  abilityIndex,
-                  effects: ability.effects,
-                  triggeringCardId,
-                },
+                sourceCardId,
+                abilityIndex,
+                effects: ability.effects,
+                triggeringCardId,
               },
             },
             events: [],
@@ -97,8 +95,7 @@ export function resolveEffects(
 
 function needsTargetChoice(effect: EffectPrimitive): boolean {
   if ('target' in effect && effect.target) {
-    const target = effect.target as { kind: string };
-    return target.kind === 'choose';
+    return effect.target.kind === 'choose';
   }
   return false;
 }

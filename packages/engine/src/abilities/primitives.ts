@@ -1,5 +1,5 @@
 import { PlayerId, opponentOf } from '../types/core.js';
-import { GameState } from '../types/state.js';
+import { GameState, LastingEffect } from '../types/state.js';
 import { GameEvent } from '../types/events.js';
 import { EffectPrimitive, PlayerSelector, TargetSelector, CardFilter } from '../types/effects.js';
 import { CardInstance } from '../types/state.js';
@@ -163,7 +163,8 @@ export function resolvePrimitive(
           pendingChoice: {
             type: 'choose_discard',
             playerId: p,
-            context: { count: effect.count, sourceCardId: ctx.sourceCardId },
+            count: effect.count,
+            sourceCardId: ctx.sourceCardId,
           },
         };
         // Only one pending choice at a time - break after first
@@ -193,12 +194,12 @@ export function resolvePrimitive(
       // Apply to all attackers in current combat
       if (s.combat) {
         const effectId = generateEffectId();
-        const lastingEffect = {
+        const lastingEffect: LastingEffect = {
           id: effectId,
-          type: effect.counter as 'strength_buff',
+          type: effect.counter,
           amount: effect.amount,
           targetInstanceIds: [...s.combat.attackerIds],
-          expiresAt: 'end_of_combat' as const,
+          expiresAt: 'end_of_combat',
         };
         const r = addLastingEffect(s, lastingEffect);
         s = r.state;

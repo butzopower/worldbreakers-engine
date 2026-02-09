@@ -167,7 +167,8 @@ function validateBlockerAssignments(state: GameState, player: PlayerId, assignme
 }
 
 function validateDiscardChoice(state: GameState, player: PlayerId, cardIds: string[]): ValidationResult {
-  const expectedCount = (state.pendingChoice?.context?.count as number) ?? 1;
+  const pending = state.pendingChoice;
+  const expectedCount = (pending?.type === 'choose_discard' ? pending.count : 1);
   const hand = getHand(state, player);
 
   const actualCount = Math.min(expectedCount, hand.length);
