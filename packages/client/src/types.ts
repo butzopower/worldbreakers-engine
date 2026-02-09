@@ -33,8 +33,6 @@ export interface CombatState {
   step: string;
   attackingPlayer: PlayerId;
   attackerIds: string[];
-  blockerAssignments: Record<string, string>;
-  blockedAttackerIds: string[];
   damageDealt: boolean;
 }
 
@@ -78,7 +76,7 @@ export interface GameEvent {
 export type InteractionMode =
   | { type: 'none' }
   | { type: 'select_attackers'; selected: string[] }
-  | { type: 'select_blockers'; assignments: Record<string, string>; attackerIds: string[] }
+  | { type: 'select_blocker'; selectedBlockerId: string | null; attackerIds: string[] }
   | { type: 'choose_target'; validTargets: string[] }
   | { type: 'choose_discard'; count: number; selected: string[] }
   | { type: 'choose_breach_target'; validLocations: string[] };

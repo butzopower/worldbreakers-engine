@@ -8,7 +8,7 @@ export type PlayerAction =
   | { type: 'attack'; attackerIds: string[] }
   | { type: 'develop'; locationInstanceId: string }
   | { type: 'use_ability'; cardInstanceId: string; abilityIndex: number }
-  | { type: 'declare_blockers'; assignments: Record<string, string> }
+  | { type: 'declare_blocker'; blockerId: string; attackerId: string }
   | { type: 'pass_block' }
   | { type: 'choose_target'; targetInstanceId: string }
   | { type: 'choose_discard'; cardInstanceIds: string[] }

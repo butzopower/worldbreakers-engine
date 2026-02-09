@@ -121,11 +121,11 @@ function validatePendingChoice(state: GameState, player: PlayerId, action: Playe
 
   switch (choice.type) {
     case 'choose_blockers':
-      if (action.type !== 'declare_blockers' && action.type !== 'pass_block') {
-        return { valid: false, reason: 'Must declare blockers or pass' };
+      if (action.type !== 'declare_blocker' && action.type !== 'pass_block') {
+        return { valid: false, reason: 'Must declare a blocker or pass' };
       }
-      if (action.type === 'declare_blockers') {
-        return validateBlockerAssignments(state, player, action.assignments);
+      if (action.type === 'declare_blocker') {
+        return validateBlockerAssignment(state, player, action.blockerId, action.attackerId);
       }
       return { valid: true };
 
@@ -152,16 +152,14 @@ function validatePendingChoice(state: GameState, player: PlayerId, action: Playe
   }
 }
 
-function validateBlockerAssignments(state: GameState, player: PlayerId, assignments: Record<string, string>): ValidationResult {
-  for (const [blockerId, attackerId] of Object.entries(assignments)) {
-    const blocker = getCard(state, blockerId);
-    if (!blocker) return { valid: false, reason: `Blocker ${blockerId} not found` };
-    if (blocker.owner !== player) return { valid: false, reason: `${blockerId} is not yours` };
-    if (!canBlock(state, blocker)) return { valid: false, reason: `${blockerId} cannot block` };
+function validateBlockerAssignment(state: GameState, player: PlayerId, blockerId: string, attackerId: string): ValidationResult {
+  const blocker = getCard(state, blockerId);
+  if (!blocker) return { valid: false, reason: `Blocker ${blockerId} not found` };
+  if (blocker.owner !== player) return { valid: false, reason: `${blockerId} is not yours` };
+  if (!canBlock(state, blocker)) return { valid: false, reason: `${blockerId} cannot block` };
 
-    if (!state.combat?.attackerIds.includes(attackerId)) {
-      return { valid: false, reason: `${attackerId} is not an attacker` };
-    }
+  if (!state.combat?.attackerIds.includes(attackerId)) {
+    return { valid: false, reason: `${attackerId} is not an attacker` };
   }
   return { valid: true };
 }
@@ -194,11 +192,11 @@ function validateCombatAction(state: GameState, player: PlayerId, action: Player
   switch (state.combat.step) {
     case 'declare_blockers':
       if (player !== defending) return { valid: false, reason: 'Only defender can declare blockers' };
-      if (action.type !== 'declare_blockers' && action.type !== 'pass_block') {
-        return { valid: false, reason: 'Must declare blockers or pass' };
+      if (action.type !== 'declare_blocker' && action.type !== 'pass_block') {
+        return { valid: false, reason: 'Must declare a blocker or pass' };
       }
-      if (action.type === 'declare_blockers') {
-        return validateBlockerAssignments(state, player, action.assignments);
+      if (action.type === 'declare_blocker') {
+        return validateBlockerAssignment(state, player, action.blockerId, action.attackerId);
       }
       return { valid: true };
 

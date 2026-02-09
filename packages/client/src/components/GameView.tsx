@@ -76,15 +76,17 @@ export default function GameView({ playerId, state, legalActions, events, onRetu
         }
         break;
       }
-      case 'select_blockers': {
+      case 'select_blocker': {
         if (card.owner === playerId && card.zone === 'board') {
-          // Clicking own follower: if already assigned, remove; else pick attacker
-          if (mode.assignments[card.instanceId]) {
-            interaction.removeBlockerAssignment(card.instanceId);
-          } else if (mode.attackerIds.length === 1) {
-            interaction.assignBlocker(card.instanceId, mode.attackerIds[0]);
+          // Click own follower to select as blocker
+          interaction.selectBlocker(card.instanceId);
+          // If only one attacker, auto-submit
+          if (mode.attackerIds.length === 1) {
+            submitAction({ type: 'declare_blocker', blockerId: card.instanceId, attackerId: mode.attackerIds[0] });
           }
-          // For multiple attackers, InteractionOverlay handles attacker selection
+        } else if (mode.selectedBlockerId && mode.attackerIds.includes(card.instanceId)) {
+          // Click an attacker to assign the selected blocker
+          submitAction({ type: 'declare_blocker', blockerId: mode.selectedBlockerId, attackerId: card.instanceId });
         }
         break;
       }
@@ -180,7 +182,6 @@ export default function GameView({ playerId, state, legalActions, events, onRetu
               state={state}
               playerId={playerId}
               onSubmitAction={submitAction}
-              onAssignBlocker={interaction.assignBlocker}
               onCancel={interaction.reset}
             />
           </>

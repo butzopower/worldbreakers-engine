@@ -51,8 +51,8 @@ export default function PlayerArea({ state, playerId, interactionMode, onCardCli
             {followers.map(card => {
               const isSelectedAttacker = interactionMode.type === 'select_attackers' &&
                 interactionMode.selected.includes(card.instanceId);
-              const isAssignedBlocker = interactionMode.type === 'select_blockers' &&
-                card.instanceId in interactionMode.assignments;
+              const isAssignedBlocker = interactionMode.type === 'select_blocker' &&
+                interactionMode.selectedBlockerId === card.instanceId;
               const isTargetable = interactionMode.type === 'choose_target' &&
                 interactionMode.validTargets.includes(card.instanceId);
 

@@ -13,7 +13,7 @@ import { handlePlayCard } from '../actions/play-card.js';
 import { handleAttack } from '../actions/attack.js';
 import { handleDevelop } from '../actions/develop.js';
 import { handleUseAbility } from '../actions/use-ability.js';
-import { declareBlockers, passBlock, endCombat } from '../combat/combat.js';
+import { declareBlocker, passBlock, endCombat } from '../combat/combat.js';
 import { handleBreachDamage, handleSkipBreachDamage } from '../combat/breach.js';
 import { resolveEffects } from '../abilities/resolver.js';
 import { ResolveContext } from '../abilities/primitives.js';
@@ -136,8 +136,8 @@ function handleCombatAction(
   let result: { state: GameState; events: GameEvent[] };
 
   switch (action.type) {
-    case 'declare_blockers':
-      result = declareBlockers(state, action.assignments);
+    case 'declare_blocker':
+      result = declareBlocker(state, action.blockerId, action.attackerId);
       break;
     case 'pass_block':
       result = passBlock(state);
@@ -233,12 +233,22 @@ function handlePendingChoice(
     }
 
     case 'choose_blockers': {
-      if (action.type === 'declare_blockers') {
-        return declareBlockers(s, action.assignments);
+      if (action.type === 'declare_blocker') {
+        const result = declareBlocker(s, action.blockerId, action.attackerId);
+        // If combat ended, advance turn
+        if (!result.state.combat && !result.state.pendingChoice) {
+          return advanceTurn(result.state, result.events);
+        }
+        return result;
       } else if (action.type === 'pass_block') {
-        return passBlock(s);
+        const result = passBlock(s);
+        // If combat ended, advance turn
+        if (!result.state.combat && !result.state.pendingChoice) {
+          return advanceTurn(result.state, result.events);
+        }
+        return result;
       }
-      throw new Error('Expected declare_blockers or pass_block');
+      throw new Error('Expected declare_blocker or pass_block');
     }
 
     case 'choose_breach_target': {
@@ -376,14 +386,13 @@ function getLegalChoiceActions(state: GameState): ActionInput[] {
     }
     case 'choose_blockers': {
       actions.push({ player, action: { type: 'pass_block' } });
-      // Add individual blocker assignments
       const defenders = getFollowers(state, player).filter(f => canBlock(state, f));
       if (state.combat) {
         for (const def of defenders) {
           for (const attackerId of state.combat.attackerIds) {
             actions.push({
               player,
-              action: { type: 'declare_blockers', assignments: { [def.instanceId]: attackerId } },
+              action: { type: 'declare_blocker', blockerId: def.instanceId, attackerId },
             });
           }
         }
@@ -416,7 +425,7 @@ function getLegalCombatActions(state: GameState): ActionInput[] {
         for (const attackerId of state.combat.attackerIds) {
           actions.push({
             player: defender,
-            action: { type: 'declare_blockers', assignments: { [b.instanceId]: attackerId } },
+            action: { type: 'declare_blocker', blockerId: b.instanceId, attackerId },
           });
         }
       }

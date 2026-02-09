@@ -28,10 +28,6 @@ export interface CombatState {
   step: CombatStep;
   attackingPlayer: PlayerId;
   attackerIds: string[];
-  /** Map from blocker instanceId → attacker instanceId it's blocking */
-  blockerAssignments: Record<string, string>;
-  /** Attackers that have been blocked */
-  blockedAttackerIds: string[];
   /** Damage already dealt during fight */
   damageDealt: boolean;
 }

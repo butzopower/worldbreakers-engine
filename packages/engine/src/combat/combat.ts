@@ -2,9 +2,9 @@ import { PlayerId, opponentOf } from '../types/core.js';
 import { GameState, CombatState } from '../types/state.js';
 import { GameEvent } from '../types/events.js';
 import { exhaustCard, gainPower } from '../state/mutate.js';
-import { getCard, getCardDef, getLocations, isHidden, getEffectiveStrength } from '../state/query.js';
+import { getCard, getCardDef, getLocations, isHidden, getEffectiveStrength, getFollowers, canBlock } from '../state/query.js';
 import { resolveTriggeredAbilities } from '../abilities/triggers.js';
-import { resolveFight } from './damage.js';
+import { resolveSingleFight } from './damage.js';
 import { runCleanup, expireLastingEffects } from '../engine/cleanup.js';
 
 /**
@@ -30,8 +30,6 @@ export function initiateAttack(
     step: 'declare_blockers',
     attackingPlayer: player,
     attackerIds,
-    blockerAssignments: {},
-    blockedAttackerIds: [],
     damageDealt: false,
   };
 
@@ -74,84 +72,103 @@ export function initiateAttack(
 }
 
 /**
- * Process blocker declarations, then proceed to fight.
+ * Declare a single blocker: resolve fight between that pair, then check if more blocking is possible.
  */
-export function declareBlockers(
+export function declareBlocker(
   state: GameState,
-  assignments: Record<string, string>,
+  blockerId: string,
+  attackerId: string,
 ): { state: GameState; events: GameEvent[] } {
   let s = state;
   const events: GameEvent[] = [];
 
   if (!s.combat) return { state: s, events };
 
-  const blockedAttackerIds = [...new Set(Object.values(assignments))];
+  const defender = opponentOf(s.combat.attackingPlayer);
 
+  // Exhaust the blocker
+  const exhaustResult = exhaustCard(s, blockerId);
+  s = exhaustResult.state;
+  events.push(...exhaustResult.events);
+
+  events.push({ type: 'blocker_declared', defendingPlayer: defender, blockerId, attackerId });
+
+  // Resolve fight between this pair
+  const fightResult = resolveSingleFight(s, attackerId, blockerId);
+  s = fightResult.state;
+  events.push(...fightResult.events);
+  events.push({ type: 'fight_resolved' });
+
+  // Cleanup after fight (defeated cards go to discard)
+  const cleanupResult = runCleanup(s);
+  s = cleanupResult.state;
+  events.push(...cleanupResult.events);
+
+  if (!s.combat) return { state: s, events };
+
+  // Remove this attacker from attackerIds (it was blocked, regardless of survival)
+  const remainingAttackerIds = s.combat.attackerIds.filter(id => id !== attackerId);
   s = {
     ...s,
-    combat: {
-      ...s.combat,
-      step: 'fight',
-      blockerAssignments: assignments,
-      blockedAttackerIds,
-    },
+    combat: { ...s.combat, attackerIds: remainingAttackerIds, damageDealt: true },
     pendingChoice: null,
   };
 
-  const defender = opponentOf(s.combat!.attackingPlayer);
-  events.push({ type: 'blockers_declared', defendingPlayer: defender, assignments });
+  // Check if defender can block again
+  const defenderFollowers = getFollowers(s, defender).filter(f => canBlock(s, f));
+  if (defenderFollowers.length > 0 && remainingAttackerIds.length > 0) {
+    // More blocking possible
+    s = {
+      ...s,
+      pendingChoice: {
+        type: 'choose_blockers',
+        playerId: defender,
+        attackerIds: remainingAttackerIds,
+      },
+    };
+    return { state: s, events };
+  }
 
-  // Now resolve fight
-  return proceedToFight(s, events);
+  // No more blocking possible — proceed to breach with remaining attackers
+  return proceedToBreach(s, events, remainingAttackerIds);
 }
 
 /**
- * Pass on blocking - no blockers declared.
+ * Pass on blocking — skip straight to breach with all remaining attackers.
  */
 export function passBlock(state: GameState): { state: GameState; events: GameEvent[] } {
-  return declareBlockers(state, {});
+  if (!state.combat) return { state, events: [] };
+
+  const s = { ...state, pendingChoice: null as typeof state.pendingChoice };
+  return proceedToBreach(s, [], state.combat.attackerIds);
 }
 
 /**
- * Resolve fight step and proceed to breach.
+ * Proceed to breach with remaining unblocked attackers.
  */
-function proceedToFight(state: GameState, events: GameEvent[]): { state: GameState; events: GameEvent[] } {
+function proceedToBreach(
+  state: GameState,
+  events: GameEvent[],
+  remainingAttackerIds: string[],
+): { state: GameState; events: GameEvent[] } {
   let s = state;
   const allEvents = [...events];
 
   if (!s.combat) return { state: s, events: allEvents };
 
-  // Resolve simultaneous fight damage
-  const fightResult = resolveFight(s);
-  s = fightResult.state;
-  allEvents.push(...fightResult.events);
-  allEvents.push({ type: 'fight_resolved' });
-
-  // Cleanup after fight
-  const cleanupResult = runCleanup(s);
-  s = cleanupResult.state;
-  allEvents.push(...cleanupResult.events);
-
-  // Determine unblocked attackers for breach
-  if (!s.combat) return { state: s, events: allEvents };
-
-  const unblockedAttackerIds = s.combat.attackerIds.filter(
-    id => !s.combat!.blockedAttackerIds.includes(id)
-  );
-
-  // Check which unblocked attackers are still on the board
-  const livingUnblockedIds = unblockedAttackerIds.filter(
+  // Check which remaining attackers are still on the board
+  const livingAttackerIds = remainingAttackerIds.filter(
     id => s.cards.some(c => c.instanceId === id && c.zone === 'board')
   );
 
-  if (livingUnblockedIds.length > 0) {
+  if (livingAttackerIds.length > 0) {
     // Proceed to breach
     s = {
       ...s,
-      combat: { ...s.combat!, step: 'breach' },
+      combat: { ...s.combat, step: 'breach' },
     };
 
-    allEvents.push({ type: 'breach', attackingPlayer: s.combat!.attackingPlayer, attackerIds: livingUnblockedIds });
+    allEvents.push({ type: 'breach', attackingPlayer: s.combat!.attackingPlayer, attackerIds: livingAttackerIds });
 
     // Trigger breach abilities
     const breachTriggerResult = resolveTriggeredAbilities(s, 'breach', s.combat!.attackingPlayer, {});
@@ -160,7 +177,7 @@ function proceedToFight(state: GameState, events: GameEvent[]): { state: GameSta
 
     // Calculate breach power
     let breachPower = 0;
-    for (const id of livingUnblockedIds) {
+    for (const id of livingAttackerIds) {
       const card = getCard(s, id);
       if (card) {
         breachPower += getEffectiveStrength(s, card);
@@ -195,7 +212,7 @@ function proceedToFight(state: GameState, events: GameEvent[]): { state: GameSta
     return endCombat(s, allEvents);
   }
 
-  // No unblocked attackers - end combat
+  // No living attackers - end combat
   return endCombat(s, allEvents);
 }
 

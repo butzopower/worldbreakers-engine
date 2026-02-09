@@ -17,7 +17,7 @@ export type GameEvent =
   | { type: 'mythium_spent'; player: PlayerId; amount: number }
   | { type: 'power_gained'; player: PlayerId; amount: number }
   | { type: 'combat_started'; attackingPlayer: PlayerId; attackerIds: string[] }
-  | { type: 'blockers_declared'; defendingPlayer: PlayerId; assignments: Record<string, string> }
+  | { type: 'blocker_declared'; defendingPlayer: PlayerId; blockerId: string; attackerId: string }
   | { type: 'fight_resolved' }
   | { type: 'card_defeated'; cardInstanceId: string }
   | { type: 'breach'; attackingPlayer: PlayerId; attackerIds: string[] }

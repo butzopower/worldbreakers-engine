@@ -21,23 +21,13 @@ export function useInteractionMode() {
   }, []);
 
   const startBlockerSelection = useCallback((attackerIds: string[]) => {
-    setMode({ type: 'select_blockers', assignments: {}, attackerIds });
+    setMode({ type: 'select_blocker', selectedBlockerId: null, attackerIds });
   }, []);
 
-  const assignBlocker = useCallback((blockerId: string, attackerId: string) => {
+  const selectBlocker = useCallback((blockerId: string) => {
     setMode(prev => {
-      if (prev.type !== 'select_blockers') return prev;
-      const assignments = { ...prev.assignments, [blockerId]: attackerId };
-      return { ...prev, assignments };
-    });
-  }, []);
-
-  const removeBlockerAssignment = useCallback((blockerId: string) => {
-    setMode(prev => {
-      if (prev.type !== 'select_blockers') return prev;
-      const assignments = { ...prev.assignments };
-      delete assignments[blockerId];
-      return { ...prev, assignments };
+      if (prev.type !== 'select_blocker') return prev;
+      return { ...prev, selectedBlockerId: blockerId };
     });
   }, []);
 
@@ -71,8 +61,7 @@ export function useInteractionMode() {
     startAttackSelection,
     toggleAttacker,
     startBlockerSelection,
-    assignBlocker,
-    removeBlockerAssignment,
+    selectBlocker,
     startTargetSelection,
     startDiscardSelection,
     toggleDiscard,

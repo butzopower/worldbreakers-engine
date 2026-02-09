@@ -53,10 +53,31 @@ describe('combat - basic attack', () => {
       action: { type: 'pass_block' },
     });
 
-    // Combat should be over, power gained (Void Oracle draws, no str buff)
+    // Combat should be over, power gained
     expect(r2.state.combat).toBeNull();
     expectPlayerPower(r2.state, 'player1', 1); // militia scout str 1
     expectEvent(r2.events, 'breach');
+  });
+
+  it('advances turn after combat ends', () => {
+    const state = buildState()
+      .withActivePlayer('player1')
+      .addCard('militia_scout', 'player1', 'board', { instanceId: 'atk1' })
+      .build();
+
+    const r1 = processAction(state, {
+      player: 'player1',
+      action: { type: 'attack', attackerIds: ['atk1'] },
+    });
+
+    const r2 = processAction(r1.state, {
+      player: 'player2',
+      action: { type: 'pass_block' },
+    });
+
+    // Turn should have advanced after combat
+    expect(r2.state.combat).toBeNull();
+    expect(r2.state.activePlayer).toBe('player2');
   });
 });
 
@@ -74,10 +95,10 @@ describe('combat - blocking', () => {
       action: { type: 'attack', attackerIds: ['atk1'] },
     });
 
-    // Block
+    // Block with single declare_blocker
     const r2 = processAction(r1.state, {
       player: 'player2',
-      action: { type: 'declare_blockers', assignments: { 'blk1': 'atk1' } },
+      action: { type: 'declare_blocker', blockerId: 'blk1', attackerId: 'atk1' },
     });
 
     // Star warden (2 str) deals 2 wounds to shield bearer (3 health) → survives
@@ -108,7 +129,7 @@ describe('combat - blocking', () => {
 
     const r2 = processAction(r1.state, {
       player: 'player2',
-      action: { type: 'declare_blockers', assignments: { 'blk1': 'atk1' } },
+      action: { type: 'declare_blocker', blockerId: 'blk1', attackerId: 'atk1' },
     });
 
     // Militia scout defeated (2 wounds >= 1 health)
@@ -116,6 +137,27 @@ describe('combat - blocking', () => {
     // Star warden survives with 1 wound
     expectCardInZone(r2.state, 'atk1', 'board');
     expectCardCounter(r2.state, 'atk1', 'wound', 1);
+  });
+
+  it('blocker is exhausted after blocking', () => {
+    const state = buildState()
+      .withActivePlayer('player1')
+      .addCard('star_warden', 'player1', 'board', { instanceId: 'atk1' }) // 2/2
+      .addCard('shield_bearer', 'player2', 'board', { instanceId: 'blk1' }) // 1/3
+      .build();
+
+    const r1 = processAction(state, {
+      player: 'player1',
+      action: { type: 'attack', attackerIds: ['atk1'] },
+    });
+
+    const r2 = processAction(r1.state, {
+      player: 'player2',
+      action: { type: 'declare_blocker', blockerId: 'blk1', attackerId: 'atk1' },
+    });
+
+    const blk = getCard(r2.state, 'blk1')!;
+    expect(blk.exhausted).toBe(true);
   });
 });
 
@@ -148,7 +190,7 @@ describe('combat - keywords', () => {
 
     const r2 = processAction(r1.state, {
       player: 'player2',
-      action: { type: 'declare_blockers', assignments: { 'ms1': 'sw1' } },
+      action: { type: 'declare_blocker', blockerId: 'ms1', attackerId: 'sw1' },
     });
 
     // Militia scout defeated, overwhelm grants 1 power
@@ -172,7 +214,7 @@ describe('combat - keywords', () => {
 
     const r2 = processAction(r1.state, {
       player: 'player2',
-      action: { type: 'declare_blockers', assignments: { 'sb1': 'nr1' } },
+      action: { type: 'declare_blocker', blockerId: 'sb1', attackerId: 'nr1' },
     });
 
     // Night raider deals 2 + 1 bloodshed = 3 wounds to shield bearer (3 health) → defeated
@@ -183,7 +225,7 @@ describe('combat - keywords', () => {
 });
 
 describe('combat - multiple attackers', () => {
-  it('handles multiple attackers with partial blocking', () => {
+  it('handles multiple attackers with partial blocking (sequential)', () => {
     const state = buildState()
       .withActivePlayer('player1')
       .addCard('militia_scout', 'player1', 'board', { instanceId: 'atk1' }) // 1/1
@@ -196,17 +238,89 @@ describe('combat - multiple attackers', () => {
       action: { type: 'attack', attackerIds: ['atk1', 'atk2'] },
     });
 
-    // Block only atk1
+    // Block atk1 with blk1 — fight resolves immediately
     const r2 = processAction(r1.state, {
       player: 'player2',
-      action: { type: 'declare_blockers', assignments: { 'blk1': 'atk1' } },
+      action: { type: 'declare_blocker', blockerId: 'blk1', attackerId: 'atk1' },
     });
 
-    // atk1 and blk1 trade (both 1/1), atk2 breaches
+    // atk1 and blk1 trade (both 1/1) — both defeated
     expectCardInZone(r2.state, 'atk1', 'discard');
     expectCardInZone(r2.state, 'blk1', 'discard');
-    // Star warden breaches for 2 power
+
+    // Defender has no more ready followers, so combat proceeds to breach
+    // atk2 breaches for 2 power
+    expect(r2.state.combat).toBeNull();
     expectPlayerPower(r2.state, 'player1', 2);
+  });
+
+  it('allows sequential blocking of multiple attackers', () => {
+    const state = buildState()
+      .withActivePlayer('player1')
+      .addCard('militia_scout', 'player1', 'board', { instanceId: 'atk1' }) // 1/1
+      .addCard('militia_scout', 'player1', 'board', { instanceId: 'atk2' }) // 1/1
+      .addCard('shield_bearer', 'player2', 'board', { instanceId: 'blk1' }) // 1/3
+      .addCard('shield_bearer', 'player2', 'board', { instanceId: 'blk2' }) // 1/3
+      .build();
+
+    const r1 = processAction(state, {
+      player: 'player1',
+      action: { type: 'attack', attackerIds: ['atk1', 'atk2'] },
+    });
+
+    // Block first attacker
+    const r2 = processAction(r1.state, {
+      player: 'player2',
+      action: { type: 'declare_blocker', blockerId: 'blk1', attackerId: 'atk1' },
+    });
+
+    // Fight resolved for atk1 vs blk1. atk1 defeated (1 wound >= 1 health).
+    expectCardInZone(r2.state, 'atk1', 'discard');
+    // blk1 survives with 1 wound (1/3)
+    expectCardInZone(r2.state, 'blk1', 'board');
+
+    // Defender should be asked to block again (blk2 is still ready, atk2 remains)
+    expect(r2.state.pendingChoice).not.toBeNull();
+    expect(r2.state.pendingChoice!.type).toBe('choose_blockers');
+
+    // Block second attacker
+    const r3 = processAction(r2.state, {
+      player: 'player2',
+      action: { type: 'declare_blocker', blockerId: 'blk2', attackerId: 'atk2' },
+    });
+
+    // atk2 defeated, blk2 survives
+    expectCardInZone(r3.state, 'atk2', 'discard');
+    expectCardInZone(r3.state, 'blk2', 'board');
+
+    // No attackers remain — no breach, combat ends
+    expect(r3.state.combat).toBeNull();
+    expectPlayerPower(r3.state, 'player1', 0);
+  });
+
+  it('pass_block skips straight to breach with all remaining attackers', () => {
+    const state = buildState()
+      .withActivePlayer('player1')
+      .addCard('militia_scout', 'player1', 'board', { instanceId: 'atk1' }) // 1/1
+      .addCard('militia_scout', 'player1', 'board', { instanceId: 'atk2' }) // 1/1
+      .addCard('shield_bearer', 'player2', 'board', { instanceId: 'blk1' }) // 1/3
+      .build();
+
+    const r1 = processAction(state, {
+      player: 'player1',
+      action: { type: 'attack', attackerIds: ['atk1', 'atk2'] },
+    });
+
+    // Pass — no blocking at all
+    const r2 = processAction(r1.state, {
+      player: 'player2',
+      action: { type: 'pass_block' },
+    });
+
+    // Both attackers breach for 1+1=2 power
+    expect(r2.state.combat).toBeNull();
+    expectPlayerPower(r2.state, 'player1', 2);
+    expectEvent(r2.events, 'breach');
   });
 });
 

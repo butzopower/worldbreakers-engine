@@ -5,11 +5,10 @@ interface Props {
   state: FilteredGameState;
   playerId: PlayerId;
   onSubmitAction: (action: PlayerAction) => void;
-  onAssignBlocker: (blockerId: string, attackerId: string) => void;
   onCancel: () => void;
 }
 
-export default function InteractionOverlay({ mode, state, playerId, onSubmitAction, onAssignBlocker, onCancel }: Props) {
+export default function InteractionOverlay({ mode, state, playerId, onSubmitAction, onCancel }: Props) {
   if (mode.type === 'none') return null;
 
   const panelStyle: React.CSSProperties = {
@@ -53,35 +52,21 @@ export default function InteractionOverlay({ mode, state, playerId, onSubmitActi
         </div>
       );
 
-    case 'select_blockers':
+    case 'select_blocker':
       return (
         <div style={panelStyle}>
           <div style={{ marginBottom: '6px', fontSize: '12px' }}>
-            Assign blockers: click your follower, then click an attacker.
-            {Object.keys(mode.assignments).length > 0 &&
-              ` (${Object.keys(mode.assignments).length} assigned)`}
+            {mode.selectedBlockerId
+              ? `Blocker selected. ${mode.attackerIds.length > 1 ? 'Click an attacker to block.' : ''}`
+              : 'Click a ready follower to block with.'
+            }
+            {` (${mode.attackerIds.length} attacker${mode.attackerIds.length !== 1 ? 's' : ''} remaining)`}
           </div>
-          {mode.attackerIds.length > 1 && (
-            <div style={{ fontSize: '11px', color: '#aaa', marginBottom: '6px' }}>
-              Attackers: {mode.attackerIds.join(', ')}
-            </div>
-          )}
-          <button
-            onClick={() => {
-              onSubmitAction({
-                type: 'declare_blockers',
-                assignments: mode.assignments,
-              });
-            }}
-            style={btnStyle}
-          >
-            Confirm Blocks ({Object.keys(mode.assignments).length})
-          </button>
           <button
             onClick={() => onSubmitAction({ type: 'pass_block' })}
             style={cancelStyle}
           >
-            Pass (No Blocks)
+            Pass (No Block)
           </button>
         </div>
       );

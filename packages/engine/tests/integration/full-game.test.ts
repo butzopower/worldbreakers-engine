@@ -187,7 +187,7 @@ describe('getLegalActions', () => {
     const types = actions.map(a => a.action.type);
 
     expect(types).toContain('pass_block');
-    expect(types).toContain('declare_blockers');
+    expect(types).toContain('declare_blocker');
     expect(actions.every(a => a.player === 'player2')).toBe(true);
   });
 });
