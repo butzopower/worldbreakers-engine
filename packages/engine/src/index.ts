@@ -7,6 +7,7 @@ export type { GameConfig, DeckConfig } from './state/create.js';
 
 export { registerCard, getCardDefinition, getAllCardDefinitions } from './cards/registry.js';
 export { registerTestCards } from './cards/test-cards/index.js';
+export { registerSetCards } from './cards/sets/index.js';
 
 // Types
 export type { PlayerId, Guild, StandingGuild, Phase, Zone, CombatStep, RallyStep } from './types/core.js';

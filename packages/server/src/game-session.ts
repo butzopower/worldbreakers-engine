@@ -1,5 +1,5 @@
 import {
-  createGameState, processAction, getLegalActions, registerTestCards,
+  createGameState, processAction, getLegalActions, registerTestCards, registerSetCards,
   type GameState, type PlayerId, type PlayerAction, type ActionInput,
   type GameEvent, type PendingChoice, type DeckConfig,
 } from '@worldbreakers/engine';
@@ -8,6 +8,7 @@ import type { FilteredGameState, FilteredCard, HiddenCard } from './types.js';
 const DEFAULT_DECK: DeckConfig = {
   worldbreakerId: 'stone_sentinel',
   cardIds: [
+    'mythium_fund', 'mythium_fund', 'mythium_fund',
     'militia_scout', 'militia_scout', 'militia_scout',
     'shield_bearer', 'shield_bearer',
     'night_raider', 'night_raider',
@@ -26,6 +27,7 @@ let cardsRegistered = false;
 function ensureCardsRegistered() {
   if (!cardsRegistered) {
     registerTestCards();
+    registerSetCards();
     cardsRegistered = true;
   }
 }
