@@ -1,0 +1,110 @@
+import { useState, useEffect } from 'react';
+import { socket } from './socket.js';
+import LobbyView from './components/LobbyView.js';
+import GameView from './components/GameView.js';
+import type { PlayerId, FilteredGameState, PlayerAction, GameEvent } from './types.js';
+
+type AppState =
+  | { screen: 'lobby' }
+  | { screen: 'waiting'; gameId: string }
+  | { screen: 'game'; gameId: string; playerId: PlayerId; state: FilteredGameState; legalActions: PlayerAction[]; events: GameEvent[] };
+
+export default function App() {
+  const [appState, setAppState] = useState<AppState>({ screen: 'lobby' });
+  const [error, setError] = useState<string | null>(null);
+  const [disconnected, setDisconnected] = useState(false);
+
+  useEffect(() => {
+    socket.connect();
+
+    socket.on('game_created', ({ gameId, playerId }) => {
+      setAppState({ screen: 'waiting', gameId });
+    });
+
+    socket.on('game_started', ({ state, legalActions }) => {
+      setAppState(prev => {
+        const gameId = prev.screen === 'waiting' ? prev.gameId :
+          prev.screen === 'game' ? prev.gameId : '';
+        const playerId = getPlayerId(state);
+        return { screen: 'game', gameId, playerId, state, legalActions, events: [] };
+      });
+    });
+
+    socket.on('game_state', ({ state, legalActions, events }) => {
+      setAppState(prev => {
+        if (prev.screen !== 'game') return prev;
+        return { ...prev, state, legalActions, events };
+      });
+    });
+
+    socket.on('error', ({ message }) => {
+      setError(message);
+      setTimeout(() => setError(null), 3000);
+    });
+
+    socket.on('opponent_disconnected', () => {
+      setDisconnected(true);
+    });
+
+    return () => {
+      socket.off('game_created');
+      socket.off('game_started');
+      socket.off('game_state');
+      socket.off('error');
+      socket.off('opponent_disconnected');
+    };
+  }, []);
+
+  function getPlayerId(state: FilteredGameState): PlayerId {
+    // We can tell which player we are by looking at which hand cards are visible
+    const hasVisibleP1Hand = state.cards.some(c =>
+      !('hidden' in c) && c.owner === 'player1' && c.zone === 'hand'
+    );
+    return hasVisibleP1Hand ? 'player1' : 'player2';
+  }
+
+  const returnToLobby = () => {
+    setAppState({ screen: 'lobby' });
+    setDisconnected(false);
+  };
+
+  return (
+    <div style={{ fontFamily: 'monospace', padding: '16px', background: '#1a1a2e', color: '#e0e0e0', minHeight: '100vh' }}>
+      <h1 style={{ margin: '0 0 16px', fontSize: '20px', color: '#e94560' }}>Worldbreakers</h1>
+
+      {error && (
+        <div style={{ background: '#e94560', color: 'white', padding: '8px 12px', borderRadius: '4px', marginBottom: '12px' }}>
+          {error}
+        </div>
+      )}
+
+      {disconnected && (
+        <div style={{ background: '#e94560', color: 'white', padding: '8px 12px', borderRadius: '4px', marginBottom: '12px' }}>
+          Opponent disconnected.{' '}
+          <button onClick={returnToLobby} style={{ background: 'white', color: '#e94560', border: 'none', padding: '4px 8px', cursor: 'pointer' }}>
+            Return to Lobby
+          </button>
+        </div>
+      )}
+
+      {appState.screen === 'lobby' && <LobbyView />}
+
+      {appState.screen === 'waiting' && (
+        <div>
+          <p>Game created: {appState.gameId}</p>
+          <p>Waiting for opponent to join...</p>
+        </div>
+      )}
+
+      {appState.screen === 'game' && (
+        <GameView
+          playerId={appState.playerId}
+          state={appState.state}
+          legalActions={appState.legalActions}
+          events={appState.events}
+          onReturnToLobby={returnToLobby}
+        />
+      )}
+    </div>
+  );
+}

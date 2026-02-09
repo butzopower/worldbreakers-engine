@@ -1,0 +1,134 @@
+import type { InteractionMode, FilteredGameState, PlayerId, PlayerAction } from '../types.js';
+
+interface Props {
+  mode: InteractionMode;
+  state: FilteredGameState;
+  playerId: PlayerId;
+  onSubmitAction: (action: PlayerAction) => void;
+  onAssignBlocker: (blockerId: string, attackerId: string) => void;
+  onCancel: () => void;
+}
+
+export default function InteractionOverlay({ mode, state, playerId, onSubmitAction, onAssignBlocker, onCancel }: Props) {
+  if (mode.type === 'none') return null;
+
+  const panelStyle: React.CSSProperties = {
+    marginTop: '12px',
+    padding: '10px',
+    background: '#0f3460',
+    borderRadius: '6px',
+    border: '1px solid #e94560',
+  };
+
+  const btnStyle: React.CSSProperties = {
+    background: '#e94560', color: 'white', border: 'none',
+    padding: '6px 12px', cursor: 'pointer', borderRadius: '4px',
+    fontSize: '12px', marginRight: '8px',
+  };
+
+  const cancelStyle: React.CSSProperties = {
+    ...btnStyle, background: '#555',
+  };
+
+  switch (mode.type) {
+    case 'select_attackers':
+      return (
+        <div style={panelStyle}>
+          <div style={{ marginBottom: '6px', fontSize: '12px' }}>
+            Select attackers by clicking followers, then confirm.
+            {mode.selected.length > 0 && ` (${mode.selected.length} selected)`}
+          </div>
+          <button
+            onClick={() => {
+              if (mode.selected.length > 0) {
+                onSubmitAction({ type: 'attack', attackerIds: mode.selected });
+              }
+            }}
+            disabled={mode.selected.length === 0}
+            style={{ ...btnStyle, opacity: mode.selected.length === 0 ? 0.5 : 1 }}
+          >
+            Confirm Attack
+          </button>
+          <button onClick={onCancel} style={cancelStyle}>Cancel</button>
+        </div>
+      );
+
+    case 'select_blockers':
+      return (
+        <div style={panelStyle}>
+          <div style={{ marginBottom: '6px', fontSize: '12px' }}>
+            Assign blockers: click your follower, then click an attacker.
+            {Object.keys(mode.assignments).length > 0 &&
+              ` (${Object.keys(mode.assignments).length} assigned)`}
+          </div>
+          {mode.attackerIds.length > 1 && (
+            <div style={{ fontSize: '11px', color: '#aaa', marginBottom: '6px' }}>
+              Attackers: {mode.attackerIds.join(', ')}
+            </div>
+          )}
+          <button
+            onClick={() => {
+              onSubmitAction({
+                type: 'declare_blockers',
+                assignments: mode.assignments,
+              });
+            }}
+            style={btnStyle}
+          >
+            Confirm Blocks ({Object.keys(mode.assignments).length})
+          </button>
+          <button
+            onClick={() => onSubmitAction({ type: 'pass_block' })}
+            style={cancelStyle}
+          >
+            Pass (No Blocks)
+          </button>
+        </div>
+      );
+
+    case 'choose_target':
+      return (
+        <div style={panelStyle}>
+          <div style={{ fontSize: '12px' }}>
+            Choose a target (click a highlighted card). {mode.validTargets.length} valid target(s).
+          </div>
+        </div>
+      );
+
+    case 'choose_discard':
+      return (
+        <div style={panelStyle}>
+          <div style={{ marginBottom: '6px', fontSize: '12px' }}>
+            Select {mode.count} card(s) to discard from hand.
+            {mode.selected.length > 0 && ` (${mode.selected.length}/${mode.count} selected)`}
+          </div>
+          <button
+            onClick={() => {
+              if (mode.selected.length === mode.count) {
+                onSubmitAction({ type: 'choose_discard', cardInstanceIds: mode.selected });
+              }
+            }}
+            disabled={mode.selected.length !== mode.count}
+            style={{ ...btnStyle, opacity: mode.selected.length !== mode.count ? 0.5 : 1 }}
+          >
+            Confirm Discard
+          </button>
+        </div>
+      );
+
+    case 'choose_breach_target':
+      return (
+        <div style={panelStyle}>
+          <div style={{ marginBottom: '6px', fontSize: '12px' }}>
+            Choose a location to breach (click a highlighted location), or skip.
+          </div>
+          <button
+            onClick={() => onSubmitAction({ type: 'skip_breach_damage' })}
+            style={cancelStyle}
+          >
+            Skip Breach
+          </button>
+        </div>
+      );
+  }
+}
