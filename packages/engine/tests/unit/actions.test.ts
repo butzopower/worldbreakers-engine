@@ -111,6 +111,7 @@ describe('play_card action', () => {
     const state = buildState()
       .withActivePlayer('player1')
       .withMythium('player1', 5)
+      .withStanding('player1', 'earth', 1)
       .addCard('watchtower', 'player1', 'hand', { instanceId: 'wt1' })
       .build();
 
@@ -128,6 +129,7 @@ describe('play_card action', () => {
     const state = buildState()
       .withActivePlayer('player1')
       .withMythium('player1', 5)
+      .withStanding('player1', 'earth', 1)
       .addCard('sudden_strike', 'player1', 'hand', { instanceId: 'ss1' })
       .addCard('militia_scout', 'player2', 'board', { instanceId: 'target1' })
       .build();

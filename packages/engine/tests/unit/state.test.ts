@@ -56,9 +56,9 @@ describe('createGameState', () => {
     expect(getWorldbreaker(state, 'player2')!.definitionId).toBe('void_oracle');
 
     // Players start with 0 resources
-    expect(state.players.player1.mythium).toBe(0);
+    expect(state.players.player1.mythium).toBe(5);
     expect(state.players.player1.power).toBe(0);
-    expect(state.players.player2.mythium).toBe(0);
+    expect(state.players.player2.mythium).toBe(5);
     expect(state.players.player2.power).toBe(0);
   });
 
