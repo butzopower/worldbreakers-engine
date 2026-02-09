@@ -111,6 +111,30 @@ describe('victory conditions', () => {
   });
 });
 
+describe('rally empty deck', () => {
+  it('opponent gains 1 power when player cannot draw during rally', () => {
+    // Player 1 has no deck, player 2 has a card to draw
+    const state = buildState()
+      .withActivePlayer('player2')
+      .withFirstPlayer('player1')
+      .addCard('militia_scout', 'player2', 'deck', { instanceId: 'p2d1' })
+      .addCard('stone_sentinel', 'player1', 'worldbreaker', { instanceId: 'wb1' })
+      .addCard('void_oracle', 'player2', 'worldbreaker', { instanceId: 'wb2' })
+      .withActionsTaken(7)
+      .build();
+
+    const result = processAction(state, {
+      player: 'player2',
+      action: { type: 'gain_mythium' },
+    });
+
+    // Player 1 can't draw → player 2 gains 1 power
+    expectPlayerPower(result.state, 'player2', 1);
+    // Player 1 does NOT gain power from their own empty deck
+    expectPlayerPower(result.state, 'player1', 0);
+  });
+});
+
 describe('getLegalActions', () => {
   it('returns basic actions for active player', () => {
     const state = buildState()

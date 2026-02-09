@@ -232,8 +232,7 @@ export function gainStanding(
 export function drawCard(state: GameState, player: PlayerId): MutationResult {
   const deckCards = state.cards.filter(c => c.owner === player && c.zone === 'deck');
   if (deckCards.length === 0) {
-    // Can't draw = gain 1 power instead
-    return gainPower(state, player, 1);
+    return { state, events: [] };
   }
 
   const topCard = deckCards[0];

@@ -1,7 +1,7 @@
 import { PlayerId, opponentOf } from '../types/core.js';
 import { GameState } from '../types/state.js';
 import { GameEvent } from '../types/events.js';
-import { drawCard, gainMythium, readyCard } from '../state/mutate.js';
+import { drawCard, gainMythium, gainPower, readyCard } from '../state/mutate.js';
 import { getCounter } from '../types/counters.js';
 import { removeCounterFromCard } from '../state/mutate.js';
 import { getBoard, getCardDef, getWorldbreaker } from '../state/query.js';
@@ -88,12 +88,20 @@ export function enterRallyPhase(state: GameState, events: GameEvent[]): { state:
     allEvents.push(...mythResult.events);
   }
 
-  // Step 4: Draw a card (1 per player)
+  // Step 4: Draw a card (1 per player; if deck empty, opponent gains 1 power)
   for (const player of ['player1', 'player2'] as PlayerId[]) {
     allEvents.push({ type: 'rally_step', step: 'draw_card', player });
-    const drawResult = drawCard(s, player);
-    s = drawResult.state;
-    allEvents.push(...drawResult.events);
+    const hasDeck = s.cards.some(c => c.owner === player && c.zone === 'deck');
+    if (hasDeck) {
+      const drawResult = drawCard(s, player);
+      s = drawResult.state;
+      allEvents.push(...drawResult.events);
+    } else {
+      const opponent = opponentOf(player);
+      const powerResult = gainPower(s, opponent, 1);
+      s = powerResult.state;
+      allEvents.push(...powerResult.events);
+    }
   }
 
   // Step 5: Victory check

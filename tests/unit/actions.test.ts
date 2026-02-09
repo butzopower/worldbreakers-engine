@@ -45,7 +45,7 @@ describe('draw_card action', () => {
     expectHandSize(result.state, 'player1', 1);
   });
 
-  it('gains 1 power when deck is empty', () => {
+  it('does nothing when deck is empty (no power gain)', () => {
     const state = buildState()
       .withActivePlayer('player1')
       .build();
@@ -55,7 +55,8 @@ describe('draw_card action', () => {
       action: { type: 'draw_card' },
     });
 
-    expectPlayerPower(result.state, 'player1', 1);
+    expectPlayerPower(result.state, 'player1', 0);
+    expectPlayerPower(result.state, 'player2', 0);
   });
 });
 
