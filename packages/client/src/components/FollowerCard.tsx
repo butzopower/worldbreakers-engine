@@ -1,19 +1,19 @@
 import type { VisibleCard, InteractionMode } from '../types.js';
 
 // Card definitions - minimal info for rendering
-const CARD_DATA: Record<string, { name: string; str: number; hp: number; keywords?: string[]; guild: string; cost: number; type: string; stages?: number; description?: string }> = {
+const CARD_DATA: Record<string, { name: string; str: number; hp: number; keywords?: string[]; guild: string; cost: number; type: string; stages?: number; description?: string; standing?: Record<string, number> }> = {
   stone_sentinel: { name: 'Stone Sentinel', str: 0, hp: 0, guild: 'earth', cost: 0, type: 'worldbreaker', description: 'Your Attack: Attackers get +1 str' },
   void_oracle: { name: 'Void Oracle', str: 0, hp: 0, guild: 'void', cost: 0, type: 'worldbreaker', description: 'Your Attack: Draw 1 card' },
-  militia_scout: { name: 'Militia Scout', str: 1, hp: 1, guild: 'earth', cost: 1, type: 'follower' },
-  shield_bearer: { name: 'Shield Bearer', str: 1, hp: 3, keywords: ['stationary'], guild: 'earth', cost: 2, type: 'follower' },
-  night_raider: { name: 'Night Raider', str: 2, hp: 1, keywords: ['bloodshed'], guild: 'moon', cost: 2, type: 'follower' },
-  void_channeler: { name: 'Void Channeler', str: 1, hp: 2, guild: 'void', cost: 3, type: 'follower', description: 'Action: Gain 1 power' },
-  star_warden: { name: 'Star Warden', str: 2, hp: 2, keywords: ['overwhelm'], guild: 'stars', cost: 3, type: 'follower' },
-  earthshaker_giant: { name: 'Earthshaker Giant', str: 3, hp: 4, guild: 'earth', cost: 5, type: 'follower', description: 'Enters: 1 wound to follower' },
-  sudden_strike: { name: 'Sudden Strike', str: 0, hp: 0, guild: 'earth', cost: 1, type: 'event', description: '2 wounds to follower' },
-  void_rift: { name: 'Void Rift', str: 0, hp: 0, guild: 'void', cost: 3, type: 'event', description: 'Each discard 1, gain 1 power' },
-  watchtower: { name: 'Watchtower', str: 0, hp: 0, guild: 'earth', cost: 2, type: 'location', stages: 3 },
-  void_nexus: { name: 'Void Nexus', str: 0, hp: 0, keywords: ['hidden'], guild: 'void', cost: 3, type: 'location', stages: 2 },
+  militia_scout: { name: 'Militia Scout', str: 1, hp: 1, guild: 'neutral', cost: 1, type: 'follower' },
+  shield_bearer: { name: 'Shield Bearer', str: 1, hp: 3, keywords: ['stationary'], guild: 'earth', cost: 2, type: 'follower', standing: { earth: 1 } },
+  night_raider: { name: 'Night Raider', str: 2, hp: 1, keywords: ['bloodshed'], guild: 'moon', cost: 2, type: 'follower', standing: { moon: 1 } },
+  void_channeler: { name: 'Void Channeler', str: 1, hp: 2, guild: 'void', cost: 3, type: 'follower', description: 'Action: Gain 1 power', standing: { void: 2 } },
+  star_warden: { name: 'Star Warden', str: 2, hp: 2, keywords: ['overwhelm'], guild: 'stars', cost: 3, type: 'follower', standing: { stars: 1 } },
+  earthshaker_giant: { name: 'Earthshaker Giant', str: 3, hp: 4, guild: 'earth', cost: 5, type: 'follower', description: 'Enters: 1 wound to follower', standing: { earth: 2 } },
+  sudden_strike: { name: 'Sudden Strike', str: 0, hp: 0, guild: 'earth', cost: 1, type: 'event', description: '2 wounds to follower', standing: { earth: 1 } },
+  void_rift: { name: 'Void Rift', str: 0, hp: 0, guild: 'void', cost: 3, type: 'event', description: 'Each discard 1, gain 1 power', standing: { void: 3 } },
+  watchtower: { name: 'Watchtower', str: 0, hp: 0, guild: 'earth', cost: 2, type: 'location', stages: 3, standing: { earth: 1 } },
+  void_nexus: { name: 'Void Nexus', str: 0, hp: 0, keywords: ['hidden'], guild: 'void', cost: 3, type: 'location', stages: 2, standing: { void: 2 } },
 };
 
 export function getCardData(definitionId: string) {
@@ -55,7 +55,7 @@ export default function FollowerCard({ card, highlighted, selected, dimmed, onCl
       style={{
         border,
         borderRadius: '6px',
-        padding: compact ? '4px 6px' : '6px 8px',
+        padding: compact ? '4px 6px 10px' : '6px 8px 10px',
         background: dimmed ? '#1a1a2e' : '#16213e',
         opacity: dimmed ? 0.5 : card.exhausted ? 0.7 : 1,
         cursor: onClick ? 'pointer' : 'default',
@@ -107,8 +107,27 @@ export default function FollowerCard({ card, highlighted, selected, dimmed, onCl
       )}
 
       {stunned && (
-        <div style={{ fontSize: '9px', color: '#ff8800', position: 'absolute', bottom: '2px', right: '4px' }}>
+        <div style={{ fontSize: '9px', color: '#ff8800', position: 'absolute', bottom: data.standing ? '14px' : '2px', right: '4px' }}>
           STUN
+        </div>
+      )}
+
+      {data.standing && (
+        <div style={{ position: 'absolute', bottom: '3px', right: '4px', display: 'flex', gap: '2px' }}>
+          {Object.entries(data.standing).flatMap(([guild, count]) =>
+            Array.from({ length: count }, (_, i) => (
+              <span
+                key={`${guild}-${i}`}
+                style={{
+                  width: '6px',
+                  height: '6px',
+                  borderRadius: '50%',
+                  background: GUILD_COLORS[guild] ?? '#555',
+                  display: 'inline-block',
+                }}
+              />
+            ))
+          )}
         </div>
       )}
     </div>
