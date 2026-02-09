@@ -1,4 +1,4 @@
-import { PlayerId, Guild, Phase, Zone, CombatStep } from './core.js';
+import { PlayerId, StandingGuild, Phase, Zone, CombatStep } from './core.js';
 import { CounterMap } from './counters.js';
 import { AbilityTiming } from './effects.js';
 
@@ -46,7 +46,7 @@ export interface PendingChoice {
 export interface PlayerState {
   mythium: number;
   power: number;
-  standing: Record<Guild, number>;
+  standing: Record<StandingGuild, number>;
   handSize: number;
 }
 

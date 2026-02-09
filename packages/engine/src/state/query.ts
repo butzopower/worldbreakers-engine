@@ -1,4 +1,4 @@
-import { PlayerId, Guild, Zone, opponentOf } from '../types/core.js';
+import { PlayerId, StandingGuild, Zone, opponentOf } from '../types/core.js';
 import { GameState, CardInstance } from '../types/state.js';
 import { CardDefinition, Keyword } from '../types/cards.js';
 import { getCounter } from '../types/counters.js';
@@ -125,7 +125,7 @@ export function canPlayCard(state: GameState, player: PlayerId, card: CardInstan
   // Check standing requirement
   if (def.standingRequirement) {
     for (const [guild, required] of Object.entries(def.standingRequirement)) {
-      if ((playerState.standing[guild as Guild] ?? 0) < (required ?? 0)) {
+      if ((playerState.standing[guild as StandingGuild] ?? 0) < (required ?? 0)) {
         return false;
       }
     }
@@ -163,11 +163,11 @@ export function canUseAbility(state: GameState, player: PlayerId, card: CardInst
 export function meetsStandingRequirement(
   state: GameState,
   player: PlayerId,
-  requirement: Partial<Record<Guild, number>>,
+  requirement: Partial<Record<StandingGuild, number>>,
 ): boolean {
   const standing = state.players[player].standing;
   for (const [guild, required] of Object.entries(requirement)) {
-    if ((standing[guild as Guild] ?? 0) < (required ?? 0)) {
+    if ((standing[guild as StandingGuild] ?? 0) < (required ?? 0)) {
       return false;
     }
   }

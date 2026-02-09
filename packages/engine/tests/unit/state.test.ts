@@ -60,6 +60,10 @@ describe('createGameState', () => {
     expect(state.players.player1.power).toBe(0);
     expect(state.players.player2.mythium).toBe(5);
     expect(state.players.player2.power).toBe(0);
+
+    // Players start with standing based on their Worldbreaker
+    expect(state.players.player1.standing).toEqual({earth: 1, moon: 0, void: 0, stars: 0});
+    expect(state.players.player2.standing).toEqual({earth: 0, moon: 0, void: 1, stars: 0});
   });
 
   it('produces deterministic state with same seed', () => {

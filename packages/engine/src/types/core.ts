@@ -1,6 +1,7 @@
 export type PlayerId = 'player1' | 'player2';
 
-export type Guild = 'earth' | 'moon' | 'void' | 'stars';
+export type StandingGuild = 'earth' | 'moon' | 'void' | 'stars';
+export type Guild = StandingGuild | 'neutral';
 
 export type Phase = 'action' | 'rally' | 'gameOver';
 

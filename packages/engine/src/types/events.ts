@@ -1,4 +1,4 @@
-import { PlayerId, Guild, Zone, Phase } from './core.js';
+import { PlayerId, StandingGuild, Zone, Phase } from './core.js';
 import { CounterType } from './counters.js';
 
 export type GameEvent =
@@ -7,7 +7,7 @@ export type GameEvent =
   | { type: 'turn_changed'; activePlayer: PlayerId }
   | { type: 'mythium_gained'; player: PlayerId; amount: number }
   | { type: 'card_drawn'; player: PlayerId; cardInstanceId: string }
-  | { type: 'standing_gained'; player: PlayerId; guild: Guild; amount: number }
+  | { type: 'standing_gained'; player: PlayerId; guild: StandingGuild; amount: number }
   | { type: 'card_played'; player: PlayerId; cardInstanceId: string; definitionId: string }
   | { type: 'card_moved'; cardInstanceId: string; from: Zone; to: Zone }
   | { type: 'counter_added'; cardInstanceId: string; counter: CounterType; amount: number; newTotal: number }

@@ -1,9 +1,9 @@
-import { PlayerId, Guild } from './core.js';
+import { PlayerId, StandingGuild } from './core.js';
 
 export type PlayerAction =
   | { type: 'gain_mythium' }
   | { type: 'draw_card' }
-  | { type: 'buy_standing'; guild: Guild }
+  | { type: 'buy_standing'; guild: StandingGuild }
   | { type: 'play_card'; cardInstanceId: string }
   | { type: 'attack'; attackerIds: string[] }
   | { type: 'develop'; locationInstanceId: string }

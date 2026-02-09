@@ -1,4 +1,4 @@
-import { PlayerId, Guild, Zone } from '../types/core.js';
+import { PlayerId, StandingGuild, Zone } from '../types/core.js';
 import { GameState, CardInstance, LastingEffect } from '../types/state.js';
 import { CounterType, addCounter as addCounterToMap, getCounter } from '../types/counters.js';
 import { GameEvent } from '../types/events.js';
@@ -206,7 +206,7 @@ export function gainPower(state: GameState, player: PlayerId, amount: number): M
 export function gainStanding(
   state: GameState,
   player: PlayerId,
-  guild: Guild,
+  guild: StandingGuild,
   amount: number,
 ): MutationResult {
   if (amount <= 0) return { state, events: [] };

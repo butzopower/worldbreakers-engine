@@ -1,4 +1,4 @@
-import { Guild, PlayerId, Zone } from './core.js';
+import { Guild, StandingGuild, PlayerId, Zone } from './core.js';
 import { CounterType } from './counters.js';
 import { CardType, Keyword } from './cards.js';
 
@@ -23,7 +23,7 @@ export type TargetSelector =
 export type EffectPrimitive =
   | { type: 'gain_mythium'; player: PlayerSelector; amount: number }
   | { type: 'draw_cards'; player: PlayerSelector; count: number }
-  | { type: 'gain_standing'; player: PlayerSelector; guild: Guild; amount: number }
+  | { type: 'gain_standing'; player: PlayerSelector; guild: StandingGuild; amount: number }
   | { type: 'gain_power'; player: PlayerSelector; amount: number }
   | { type: 'deal_wounds'; target: TargetSelector; amount: number }
   | { type: 'add_counter'; target: TargetSelector; counter: CounterType; amount: number }

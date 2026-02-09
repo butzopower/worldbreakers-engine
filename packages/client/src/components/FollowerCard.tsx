@@ -25,6 +25,7 @@ const GUILD_COLORS: Record<string, string> = {
   moon: '#4a4a8a',
   void: '#6b2fa0',
   stars: '#c4a800',
+  neutral: '#777777',
 };
 
 interface Props {

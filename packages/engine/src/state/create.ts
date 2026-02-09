@@ -17,7 +17,11 @@ export interface GameConfig {
 }
 
 function createPlayerState(guild: Guild): PlayerState {
-  const standing = { earth: 0, moon: 0, void: 0, stars: 0, [guild]: 1 }
+  const standing = { earth: 0, moon: 0, void: 0, stars: 0 }
+
+  if (guild !== 'neutral') {
+    standing[guild] = 1
+  }
 
   return {
     mythium: 5,

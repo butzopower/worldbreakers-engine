@@ -1,4 +1,4 @@
-import { PlayerId, Guild } from '../types/core.js';
+import { PlayerId, StandingGuild } from '../types/core.js';
 import { GameState } from '../types/state.js';
 import { GameEvent } from '../types/events.js';
 import { spendMythium, gainStanding } from '../state/mutate.js';
@@ -6,7 +6,7 @@ import { spendMythium, gainStanding } from '../state/mutate.js';
 export function handleBuyStanding(
   state: GameState,
   player: PlayerId,
-  guild: Guild,
+  guild: StandingGuild,
 ): { state: GameState; events: GameEvent[] } {
   const events: GameEvent[] = [];
 
