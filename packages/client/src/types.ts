@@ -86,6 +86,7 @@ export interface ClientCardDefinition {
   standingRequirement?: Record<string, number>;
   description?: string;
   cardDescription?: string;
+  locationStages?: { stage: number; description?: string }[];
 }
 
 export type InteractionMode =
