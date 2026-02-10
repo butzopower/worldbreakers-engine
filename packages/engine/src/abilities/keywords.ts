@@ -1,8 +1,8 @@
-import { GameState, CardInstance } from '../types/state.js';
-import { GameEvent } from '../types/events.js';
-import { PlayerId, opponentOf } from '../types/core.js';
-import { hasKeyword, getEffectiveStrength, isHidden, getCardDef } from '../state/query.js';
-import { gainPower, addCounterToCard } from '../state/mutate.js';
+import { GameState, CardInstance } from '../types/state';
+import { GameEvent } from '../types/events';
+import { PlayerId, opponentOf } from '../types/core';
+import { hasKeyword, getEffectiveStrength, isHidden, getCardDef } from '../state/query';
+import { gainPower, addCounterToCard } from '../state/mutate';
 
 /**
  * Stationary: Card cannot attack. Checked in canAttack query.

@@ -1,8 +1,8 @@
-import { PlayerId, StandingGuild, Zone } from '../types/core.js';
-import { GameState, CardInstance, LastingEffect } from '../types/state.js';
-import { CounterType, addCounter as addCounterToMap, getCounter } from '../types/counters.js';
-import { GameEvent } from '../types/events.js';
-import { nextRandom } from '../utils/random.js';
+import { PlayerId, StandingGuild, Zone } from '../types/core';
+import { GameState, CardInstance, LastingEffect } from '../types/state';
+import { CounterType, addCounter as addCounterToMap, getCounter } from '../types/counters';
+import { GameEvent } from '../types/events';
+import { nextRandom } from '../utils/random';
 
 export interface MutationResult {
   state: GameState;

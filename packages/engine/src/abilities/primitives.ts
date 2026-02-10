@@ -1,14 +1,14 @@
-import { PlayerId, opponentOf } from '../types/core.js';
-import { GameState, LastingEffect } from '../types/state.js';
-import { GameEvent } from '../types/events.js';
-import { EffectPrimitive, PlayerSelector, TargetSelector, CardFilter } from '../types/effects.js';
-import { CardInstance } from '../types/state.js';
+import { PlayerId, opponentOf } from '../types/core';
+import { GameState, LastingEffect } from '../types/state';
+import { GameEvent } from '../types/events';
+import { EffectPrimitive, PlayerSelector, TargetSelector, CardFilter } from '../types/effects';
+import { CardInstance } from '../types/state';
 import {
   gainMythium, drawCard, gainStanding, gainPower, addCounterToCard,
   removeCounterFromCard, exhaustCard, readyCard, moveCard, addLastingEffect,
-} from '../state/mutate.js';
-import { getCard, getCardDef, getBoard, getFollowers } from '../state/query.js';
-import { generateEffectId } from '../utils/id.js';
+} from '../state/mutate';
+import { getCard, getCardDef, getBoard, getFollowers } from '../state/query';
+import { generateEffectId } from '../utils/id';
 
 export interface ResolveContext {
   controller: PlayerId;

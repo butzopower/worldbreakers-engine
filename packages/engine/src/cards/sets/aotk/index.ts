@@ -1,5 +1,5 @@
-import { registerCard } from '../../registry.js';
-import { events } from './events.js';
+import { registerCard } from '../../registry';
+import { events } from './events';
 
 export function registerSetCards(): void {
   for (const card of [...events]) {

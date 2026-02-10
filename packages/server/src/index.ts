@@ -4,8 +4,8 @@ import { Server } from 'socket.io';
 import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { GameManager } from './game-manager.js';
-import type { ServerToClientEvents, ClientToServerEvents, ClientCardDefinition } from './types.js';
+import { GameManager } from './game-manager';
+import type { ServerToClientEvents, ClientToServerEvents, ClientCardDefinition } from './types';
 import { getAllCardDefinitions } from '@worldbreakers/engine';
 import type { PlayerId } from '@worldbreakers/engine';
 

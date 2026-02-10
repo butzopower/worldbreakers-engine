@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, type ReactNode } from 'react';
-import type { ClientCardDefinition, VisibleCard } from '../types.js';
+import type { ClientCardDefinition, VisibleCard } from '../types';
 
 const GUILD_COLORS: Record<string, string> = {
   earth: '#8B6914',

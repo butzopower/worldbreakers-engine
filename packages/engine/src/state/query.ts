@@ -1,8 +1,8 @@
-import { PlayerId, StandingGuild, Zone, opponentOf } from '../types/core.js';
-import { GameState, CardInstance } from '../types/state.js';
-import { CardDefinition, Keyword } from '../types/cards.js';
-import { getCounter } from '../types/counters.js';
-import { getCardDefinition } from '../cards/registry.js';
+import { PlayerId, StandingGuild, Zone, opponentOf } from '../types/core';
+import { GameState, CardInstance } from '../types/state';
+import { CardDefinition, Keyword } from '../types/cards';
+import { getCounter } from '../types/counters';
+import { getCardDefinition } from '../cards/registry';
 
 export function getCard(state: GameState, instanceId: string): CardInstance | undefined {
   return state.cards.find(c => c.instanceId === instanceId);

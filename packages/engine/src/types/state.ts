@@ -1,6 +1,6 @@
-import { PlayerId, StandingGuild, Phase, Zone, CombatStep } from './core.js';
-import { CounterMap } from './counters.js';
-import { EffectPrimitive } from './effects.js';
+import { PlayerId, StandingGuild, Phase, Zone, CombatStep } from './core';
+import { CounterMap } from './counters';
+import { EffectPrimitive } from './effects';
 
 export interface CardInstance {
   instanceId: string;

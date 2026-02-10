@@ -1,8 +1,8 @@
-import { GameState } from '../types/state.js';
-import { GameEvent } from '../types/events.js';
-import { getCard, getCardDef, getEffectiveStrength, hasKeyword, isDefeated } from '../state/query.js';
-import { addCounterToCard, gainPower } from '../state/mutate.js';
-import { applyBloodshed, applyOverwhelm } from '../abilities/keywords.js';
+import { GameState } from '../types/state';
+import { GameEvent } from '../types/events';
+import { getCard, getCardDef, getEffectiveStrength, hasKeyword, isDefeated } from '../state/query';
+import { addCounterToCard, gainPower } from '../state/mutate';
+import { applyBloodshed, applyOverwhelm } from '../abilities/keywords';
 
 /**
  * Resolve fight damage between a single attacker and a single blocker.

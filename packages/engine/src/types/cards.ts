@@ -1,5 +1,5 @@
-import { Guild, StandingGuild } from './core.js';
-import { AbilityDefinition } from './effects.js';
+import { Guild, StandingGuild } from './core';
+import { AbilityDefinition } from './effects';
 
 export type CardType = 'worldbreaker' | 'follower' | 'event' | 'location';
 

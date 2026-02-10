@@ -1,9 +1,9 @@
-import { PlayerId } from '../types/core.js';
-import { GameState } from '../types/state.js';
-import { GameEvent } from '../types/events.js';
-import { AbilityDefinition, EffectPrimitive } from '../types/effects.js';
-import { resolvePrimitive, findValidTargets, ResolveContext } from './primitives.js';
-import { getCustomResolver } from './system.js';
+import { PlayerId } from '../types/core';
+import { GameState } from '../types/state';
+import { GameEvent } from '../types/events';
+import { AbilityDefinition, EffectPrimitive } from '../types/effects';
+import { resolvePrimitive, findValidTargets, ResolveContext } from './primitives';
+import { getCustomResolver } from './system';
 
 /**
  * Resolve an ability - either data-driven primitives or custom resolve function.

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { socket } from '../socket.js';
-import type { GameInfo } from '../types.js';
+import { socket } from '../socket';
+import type { GameInfo } from '../types';
 
 export default function LobbyView() {
   const [games, setGames] = useState<GameInfo[]>([]);

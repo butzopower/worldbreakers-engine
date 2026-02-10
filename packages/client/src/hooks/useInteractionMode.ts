@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import type { InteractionMode } from '../types.js';
+import type { InteractionMode } from '../types';
 
 export function useInteractionMode() {
   const [mode, setMode] = useState<InteractionMode>({ type: 'none' });

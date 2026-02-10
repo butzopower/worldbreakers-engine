@@ -1,6 +1,6 @@
-import type { VisibleCard } from '../types.js';
-import { useCardDefinitions } from '../context/CardDefinitions.js';
-import CardTooltip from './CardTooltip.js';
+import type { VisibleCard } from '../types';
+import { useCardDefinitions } from '../context/CardDefinitions';
+import CardTooltip from './CardTooltip';
 
 interface Props {
   card: VisibleCard;

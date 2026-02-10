@@ -1,5 +1,5 @@
 import { createContext, useContext } from 'react';
-import type { ClientCardDefinition } from '../types.js';
+import type { ClientCardDefinition } from '../types';
 
 const CardDefinitionsContext = createContext<Record<string, ClientCardDefinition>>({});
 

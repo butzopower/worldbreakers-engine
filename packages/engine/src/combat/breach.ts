@@ -1,9 +1,9 @@
-import { GameState } from '../types/state.js';
-import { GameEvent } from '../types/events.js';
-import { getCard, isHidden } from '../state/query.js';
-import { removeCounterFromCard } from '../state/mutate.js';
-import { runCleanup } from '../engine/cleanup.js';
-import { endCombat } from './combat.js';
+import { GameState } from '../types/state';
+import { GameEvent } from '../types/events';
+import { getCard, isHidden } from '../state/query';
+import { removeCounterFromCard } from '../state/mutate';
+import { runCleanup } from '../engine/cleanup';
+import { endCombat } from './combat';
 
 /**
  * Handle breach location damage choice.

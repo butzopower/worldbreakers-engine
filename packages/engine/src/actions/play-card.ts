@@ -1,10 +1,10 @@
-import { PlayerId } from '../types/core.js';
-import { GameState } from '../types/state.js';
-import { GameEvent } from '../types/events.js';
-import { getCard, getCardDef } from '../state/query.js';
-import { spendMythium, moveCard, addCounterToCard } from '../state/mutate.js';
-import { runCleanup } from '../engine/cleanup.js';
-import { resolveAbility } from '../abilities/resolver.js';
+import { PlayerId } from '../types/core';
+import { GameState } from '../types/state';
+import { GameEvent } from '../types/events';
+import { getCard, getCardDef } from '../state/query';
+import { spendMythium, moveCard, addCounterToCard } from '../state/mutate';
+import { runCleanup } from '../engine/cleanup';
+import { resolveAbility } from '../abilities/resolver';
 
 export function handlePlayCard(
   state: GameState,

@@ -1,12 +1,12 @@
-import { PlayerId, PLAYERS, opponentOf } from '../types/core.js';
-import { GameState } from '../types/state.js';
-import { GameEvent } from '../types/events.js';
-import { drawCard, gainMythium, gainPower, readyCard } from '../state/mutate.js';
-import { getCounter } from '../types/counters.js';
-import { removeCounterFromCard } from '../state/mutate.js';
-import { getBoard, getCardDef, getWorldbreaker } from '../state/query.js';
-import { expireLastingEffects, runCleanup } from './cleanup.js';
-import { resolveTriggeredAbilities } from '../abilities/triggers.js';
+import { PlayerId, PLAYERS, opponentOf } from '../types/core';
+import { GameState } from '../types/state';
+import { GameEvent } from '../types/events';
+import { drawCard, gainMythium, gainPower, readyCard } from '../state/mutate';
+import { getCounter } from '../types/counters';
+import { removeCounterFromCard } from '../state/mutate';
+import { getBoard, getCardDef, getWorldbreaker } from '../state/query';
+import { expireLastingEffects, runCleanup } from './cleanup';
+import { resolveTriggeredAbilities } from '../abilities/triggers';
 
 const ACTIONS_PER_ROUND = 8; // 4 per player, alternating
 

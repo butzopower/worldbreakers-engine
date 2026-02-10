@@ -1,5 +1,5 @@
-import { PlayerId, StandingGuild, Zone, Phase } from './core.js';
-import { CounterType } from './counters.js';
+import { PlayerId, StandingGuild, Zone, Phase } from './core';
+import { CounterType } from './counters';
 
 export type GameEvent =
   | { type: 'game_started'; firstPlayer: PlayerId }

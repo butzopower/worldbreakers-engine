@@ -1,5 +1,5 @@
-import type { VisibleCard, InteractionMode, PlayerAction } from '../types.js';
-import FollowerCard from './FollowerCard.js';
+import type { VisibleCard, InteractionMode, PlayerAction } from '../types';
+import FollowerCard from './FollowerCard';
 
 interface Props {
   cards: VisibleCard[];

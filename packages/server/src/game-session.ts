@@ -3,7 +3,7 @@ import {
   type GameState, type PlayerId, type PlayerAction, type ActionInput,
   type GameEvent, type PendingChoice, type DeckConfig,
 } from '@worldbreakers/engine';
-import type { FilteredGameState, FilteredCard, HiddenCard } from './types.js';
+import type { FilteredGameState, FilteredCard, HiddenCard } from './types';
 
 const DEFAULT_DECK: DeckConfig = {
   worldbreakerId: 'stone_sentinel',

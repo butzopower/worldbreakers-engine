@@ -1,4 +1,4 @@
-import { CardDefinition } from '../types/cards.js';
+import { CardDefinition } from '../types/cards';
 
 const cardRegistry = new Map<string, CardDefinition>();
 

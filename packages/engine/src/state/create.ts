@@ -1,8 +1,8 @@
-import { PlayerId, Guild, PLAYERS } from '../types/core.js';
-import { GameState, PlayerState, CardInstance } from '../types/state.js';
-import { generateInstanceId, resetIdCounter } from '../utils/id.js';
-import { seededShuffle } from '../utils/random.js';
-import { getCardDefinition } from "../cards/registry.js";
+import { PlayerId, Guild, PLAYERS } from '../types/core';
+import { GameState, PlayerState, CardInstance } from '../types/state';
+import { generateInstanceId, resetIdCounter } from '../utils/id';
+import { seededShuffle } from '../utils/random';
+import { getCardDefinition } from "../cards/registry";
 
 export interface DeckConfig {
   worldbreakerId: string;

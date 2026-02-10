@@ -1,4 +1,4 @@
-import type { FilteredGameState, PlayerId } from '../types.js';
+import type { FilteredGameState, PlayerId } from '../types';
 
 interface Props {
   state: FilteredGameState;

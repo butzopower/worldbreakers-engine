@@ -1,11 +1,11 @@
-import { PlayerId, opponentOf } from '../types/core.js';
-import { GameState, CombatState } from '../types/state.js';
-import { GameEvent } from '../types/events.js';
-import { exhaustCard, gainPower } from '../state/mutate.js';
-import { getCard, getCardDef, getLocations, isHidden, getEffectiveStrength, getFollowers, canBlock } from '../state/query.js';
-import { resolveTriggeredAbilities } from '../abilities/triggers.js';
-import { resolveSingleFight } from './damage.js';
-import { runCleanup, expireLastingEffects } from '../engine/cleanup.js';
+import { PlayerId, opponentOf } from '../types/core';
+import { GameState, CombatState } from '../types/state';
+import { GameEvent } from '../types/events';
+import { exhaustCard, gainPower } from '../state/mutate';
+import { getCard, getCardDef, getLocations, isHidden, getEffectiveStrength, getFollowers, canBlock } from '../state/query';
+import { resolveTriggeredAbilities } from '../abilities/triggers';
+import { resolveSingleFight } from './damage';
+import { runCleanup, expireLastingEffects } from '../engine/cleanup';
 
 /**
  * Initiate combat: exhaust attackers, create combat state, trigger abilities.

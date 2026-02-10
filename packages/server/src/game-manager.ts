@@ -1,6 +1,6 @@
-import { GameSession } from './game-session.js';
+import { GameSession } from './game-session';
 import type { DeckConfig, PlayerId } from '@worldbreakers/engine';
-import type { GameInfo } from './types.js';
+import type { GameInfo } from './types';
 
 let nextGameId = 1;
 

@@ -3,18 +3,19 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "build": "tsc",
+    "build": "tsdown src/index.ts --format esm --out-dir dist",
     "dev": "tsx watch src/index.ts"
   },
   "dependencies": {
     "@worldbreakers/engine": "*",
+    "cors": "^2.8.5",
     "express": "^4.21.0",
-    "socket.io": "^4.8.0",
-    "cors": "^2.8.5"
+    "socket.io": "^4.8.0"
   },
   "devDependencies": {
-    "@types/express": "^5.0.0",
     "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.0",
+    "tsdown": "^0.20.3",
     "tsx": "^4.19.0",
     "typescript": "^5.7.0"
   }

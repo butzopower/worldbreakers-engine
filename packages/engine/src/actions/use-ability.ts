@@ -1,10 +1,10 @@
-import { PlayerId } from '../types/core.js';
-import { GameState } from '../types/state.js';
-import { GameEvent } from '../types/events.js';
-import { getCard, getCardDef } from '../state/query.js';
-import { exhaustCard } from '../state/mutate.js';
-import { resolveAbility } from '../abilities/resolver.js';
-import { runCleanup } from '../engine/cleanup.js';
+import { PlayerId } from '../types/core';
+import { GameState } from '../types/state';
+import { GameEvent } from '../types/events';
+import { getCard, getCardDef } from '../state/query';
+import { exhaustCard } from '../state/mutate';
+import { resolveAbility } from '../abilities/resolver';
+import { runCleanup } from '../engine/cleanup';
 
 export function handleUseAbility(
   state: GameState,

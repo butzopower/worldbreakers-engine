@@ -1,28 +1,28 @@
-import { GameState, PendingChoice } from '../types/state.js';
-import { ActionInput, PlayerAction } from '../types/actions.js';
-import { GameEvent } from '../types/events.js';
-import { PlayerId, STANDING_GUILDS, opponentOf } from '../types/core.js';
-import { validateAction } from './validator.js';
-import { advanceTurn } from './phases.js';
-import { runCleanup } from './cleanup.js';
+import { GameState, PendingChoice } from '../types/state';
+import { ActionInput, PlayerAction } from '../types/actions';
+import { GameEvent } from '../types/events';
+import { PlayerId, STANDING_GUILDS, opponentOf } from '../types/core';
+import { validateAction } from './validator';
+import { advanceTurn } from './phases';
+import { runCleanup } from './cleanup';
 
-import { handleGainMythium } from '../actions/gain-mythium.js';
-import { handleDrawCard } from '../actions/draw-card.js';
-import { handleBuyStanding } from '../actions/buy-standing.js';
-import { handlePlayCard } from '../actions/play-card.js';
-import { handleAttack } from '../actions/attack.js';
-import { handleDevelop } from '../actions/develop.js';
-import { handleUseAbility } from '../actions/use-ability.js';
-import { declareBlocker, passBlock, endCombat } from '../combat/combat.js';
-import { handleBreachDamage, handleSkipBreachDamage } from '../combat/breach.js';
-import { resolveEffects } from '../abilities/resolver.js';
-import { ResolveContext } from '../abilities/primitives.js';
-import { moveCard, gainPower } from '../state/mutate.js';
-import { getCard, getHand, getCardDef } from '../state/query.js';
+import { handleGainMythium } from '../actions/gain-mythium';
+import { handleDrawCard } from '../actions/draw-card';
+import { handleBuyStanding } from '../actions/buy-standing';
+import { handlePlayCard } from '../actions/play-card';
+import { handleAttack } from '../actions/attack';
+import { handleDevelop } from '../actions/develop';
+import { handleUseAbility } from '../actions/use-ability';
+import { declareBlocker, passBlock, endCombat } from '../combat/combat';
+import { handleBreachDamage, handleSkipBreachDamage } from '../combat/breach';
+import { resolveEffects } from '../abilities/resolver';
+import { ResolveContext } from '../abilities/primitives';
+import { moveCard, gainPower } from '../state/mutate';
+import { getCard, getHand, getCardDef } from '../state/query';
 import {
   canPlayCard, canAttack, canBlock, canDevelop, canUseAbility,
   getFollowers, getLocations, getBoard,
-} from '../state/query.js';
+} from '../state/query';
 
 export interface ProcessResult {
   state: GameState;

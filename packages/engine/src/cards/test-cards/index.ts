@@ -1,5 +1,5 @@
-import { CardDefinition } from '../../types/cards.js';
-import { registerCard } from '../registry.js';
+import { CardDefinition } from '../../types/cards';
+import { registerCard } from '../registry';
 
 const testCards: CardDefinition[] = [
   // Worldbreakers

@@ -1,7 +1,7 @@
-import type { PlayerId, FilteredGameState, VisibleCard, InteractionMode } from '../types.js';
-import { isVisible } from '../types.js';
-import FollowerCard from './FollowerCard.js';
-import LocationCard from './LocationCard.js';
+import type { PlayerId, FilteredGameState, VisibleCard, InteractionMode } from '../types';
+import { isVisible } from '../types';
+import FollowerCard from './FollowerCard';
+import LocationCard from './LocationCard';
 
 interface Props {
   state: FilteredGameState;

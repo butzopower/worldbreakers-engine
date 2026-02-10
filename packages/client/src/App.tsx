@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
-import { socket } from './socket.js';
-import LobbyView from './components/LobbyView.js';
-import GameView from './components/GameView.js';
-import { CardDefinitionsProvider } from './context/CardDefinitions.js';
-import type { PlayerId, FilteredGameState, PlayerAction, GameEvent, ClientCardDefinition } from './types.js';
+import { socket } from './socket';
+import LobbyView from './components/LobbyView';
+import GameView from './components/GameView';
+import { CardDefinitionsProvider } from './context/CardDefinitions';
+import type { PlayerId, FilteredGameState, PlayerAction, GameEvent, ClientCardDefinition } from './types';
 
 type AppState =
   | { screen: 'lobby' }

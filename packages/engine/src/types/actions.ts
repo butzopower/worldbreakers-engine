@@ -1,4 +1,4 @@
-import { PlayerId, StandingGuild } from './core.js';
+import { PlayerId, StandingGuild } from './core';
 
 export type PlayerAction =
   | { type: 'gain_mythium' }

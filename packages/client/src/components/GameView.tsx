@@ -1,13 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
-import { socket } from '../socket.js';
-import { useInteractionMode } from '../hooks/useInteractionMode.js';
-import GameBoard from './GameBoard.js';
-import ActionPanel from './ActionPanel.js';
-import InteractionOverlay from './InteractionOverlay.js';
-import GameStatus from './GameStatus.js';
-import GameLog from './GameLog.js';
-import type { PlayerId, FilteredGameState, PlayerAction, GameEvent, VisibleCard } from '../types.js';
-import { isVisible } from '../types.js';
+import { socket } from '../socket';
+import { useInteractionMode } from '../hooks/useInteractionMode';
+import GameBoard from './GameBoard';
+import ActionPanel from './ActionPanel';
+import InteractionOverlay from './InteractionOverlay';
+import GameStatus from './GameStatus';
+import GameLog from './GameLog';
+import type { PlayerId, FilteredGameState, PlayerAction, GameEvent, VisibleCard } from '../types';
+import { isVisible } from '../types';
 
 interface Props {
   playerId: PlayerId;

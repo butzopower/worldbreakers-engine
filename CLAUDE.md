@@ -33,7 +33,7 @@ Engine tests: `npm run test --workspace=@worldbreakers/engine`
 ## Code Conventions
 
 - TypeScript strict mode everywhere.
-- ES modules (`"type": "module"`). Use `.js` extensions in relative imports within engine and server.
+- ES modules (`"type": "module"`). Do NOT use `.js` extensions or `/index` suffixes in imports — tsdown resolves them at build time.
 - Named exports only — no default exports in engine or server. Client components use default exports (React convention).
 - Types that cross package boundaries go through engine's `src/index.ts` barrel export.
 - Engine functions must remain pure. No `console.log`, no `Date.now()`, no randomness outside the seeded RNG.

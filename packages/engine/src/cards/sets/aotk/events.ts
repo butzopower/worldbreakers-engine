@@ -1,4 +1,4 @@
-import { CardDefinition } from '../../../types/cards.js';
+import { CardDefinition } from '../../../types/cards';
 
 export const events: CardDefinition[] = [
   {

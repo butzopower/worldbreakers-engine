@@ -1,7 +1,7 @@
-import { PlayerId } from '../types/core.js';
-import { GameState } from '../types/state.js';
-import { GameEvent } from '../types/events.js';
-import { initiateAttack } from '../combat/combat.js';
+import { PlayerId } from '../types/core';
+import { GameState } from '../types/state';
+import { GameEvent } from '../types/events';
+import { initiateAttack } from '../combat/combat';
 
 export function handleAttack(
   state: GameState,

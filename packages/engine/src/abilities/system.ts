@@ -1,10 +1,10 @@
-import { PlayerId } from '../types/core.js';
-import { GameState } from '../types/state.js';
-import { GameEvent } from '../types/events.js';
-import { ResolveContext } from './primitives.js';
-import { gainPower, drawCard, moveCard } from '../state/mutate.js';
-import { getHand } from '../state/query.js';
-import { opponentOf } from '../types/core.js';
+import { PlayerId } from '../types/core';
+import { GameState } from '../types/state';
+import { GameEvent } from '../types/events';
+import { ResolveContext } from './primitives';
+import { gainPower, drawCard, moveCard } from '../state/mutate';
+import { getHand } from '../state/query';
+import { opponentOf } from '../types/core';
 
 export type CustomResolverFn = (
   state: GameState,

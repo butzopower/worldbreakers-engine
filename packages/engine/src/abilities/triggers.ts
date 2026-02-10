@@ -1,9 +1,9 @@
-import { PlayerId } from '../types/core.js';
-import { GameState } from '../types/state.js';
-import { GameEvent } from '../types/events.js';
-import { AbilityTiming } from '../types/effects.js';
-import { getCardDef, getBoard, getWorldbreaker } from '../state/query.js';
-import { resolveAbility } from './resolver.js';
+import { PlayerId } from '../types/core';
+import { GameState } from '../types/state';
+import { GameEvent } from '../types/events';
+import { AbilityTiming } from '../types/effects';
+import { getCardDef, getBoard, getWorldbreaker } from '../state/query';
+import { resolveAbility } from './resolver';
 
 interface TriggerContext {
   triggeringCardId?: string;

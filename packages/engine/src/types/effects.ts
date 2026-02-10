@@ -1,6 +1,6 @@
-import { Guild, StandingGuild, PlayerId, Zone } from './core.js';
-import { CounterType } from './counters.js';
-import { CardType, Keyword } from './cards.js';
+import { Guild, StandingGuild, PlayerId, Zone } from './core';
+import { CounterType } from './counters';
+import { CardType, Keyword } from './cards';
 
 export type PlayerSelector = 'self' | 'opponent' | 'both' | 'active' | 'controller';
 

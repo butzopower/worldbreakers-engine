@@ -1,5 +1,5 @@
 import { useRef, useEffect } from 'react';
-import type { GameEvent } from '../types.js';
+import type { GameEvent } from '../types';
 
 interface Props {
   events: GameEvent[];

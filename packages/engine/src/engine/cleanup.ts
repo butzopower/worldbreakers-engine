@@ -1,7 +1,7 @@
-import { GameState } from '../types/state.js';
-import { GameEvent } from '../types/events.js';
-import { getCardDef, isDefeated, isLocationDepleted } from '../state/query.js';
-import { moveCard, removeLastingEffect } from '../state/mutate.js';
+import { GameState } from '../types/state';
+import { GameEvent } from '../types/events';
+import { getCardDef, isDefeated, isLocationDepleted } from '../state/query';
+import { moveCard, removeLastingEffect } from '../state/mutate';
 
 /**
  * Recursive cleanup loop. After every state-changing operation:
