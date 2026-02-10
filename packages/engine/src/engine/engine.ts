@@ -252,12 +252,18 @@ function handlePendingChoice(
     }
 
     case 'choose_breach_target': {
+      let result: { state: GameState; events: GameEvent[] };
       if (action.type === 'damage_location') {
-        return handleBreachDamage(s, action.locationInstanceId);
+        result = handleBreachDamage(s, action.locationInstanceId);
       } else if (action.type === 'skip_breach_damage') {
-        return handleSkipBreachDamage(s);
+        result = handleSkipBreachDamage(s);
+      } else {
+        throw new Error('Expected damage_location or skip_breach_damage');
       }
-      throw new Error('Expected damage_location or skip_breach_damage');
+      if (!result.state.combat && !result.state.pendingChoice) {
+        return advanceTurn(result.state, result.events);
+      }
+      return result;
     }
   }
 

@@ -386,4 +386,62 @@ describe('combat - breach location damage', () => {
     expectCardCounter(r3.state, 'wt1', 'stage', 3);
     expect(r3.state.combat).toBeNull();
   });
+
+  it('advances turn after breach location damage', () => {
+    const state = buildState()
+      .withActivePlayer('player1')
+      .addCard('militia_scout', 'player1', 'board', { instanceId: 'atk1' })
+      .addCard('watchtower', 'player2', 'board', { instanceId: 'wt1', counters: { stage: 3 } })
+      .addCard('stone_sentinel', 'player1', 'worldbreaker', { instanceId: 'wb1' })
+      .addCard('void_oracle', 'player2', 'worldbreaker', { instanceId: 'wb2' })
+      .build();
+
+    const r1 = processAction(state, {
+      player: 'player1',
+      action: { type: 'attack', attackerIds: ['atk1'] },
+    });
+
+    const r2 = processAction(r1.state, {
+      player: 'player2',
+      action: { type: 'pass_block' },
+    });
+
+    const r3 = processAction(r2.state, {
+      player: 'player1',
+      action: { type: 'damage_location', locationInstanceId: 'wt1' },
+    });
+
+    // Turn should advance to player2 after breach damage
+    expect(r3.state.combat).toBeNull();
+    expect(r3.state.activePlayer).toBe('player2');
+  });
+
+  it('advances turn after skipping breach damage', () => {
+    const state = buildState()
+      .withActivePlayer('player1')
+      .addCard('militia_scout', 'player1', 'board', { instanceId: 'atk1' })
+      .addCard('watchtower', 'player2', 'board', { instanceId: 'wt1', counters: { stage: 3 } })
+      .addCard('stone_sentinel', 'player1', 'worldbreaker', { instanceId: 'wb1' })
+      .addCard('void_oracle', 'player2', 'worldbreaker', { instanceId: 'wb2' })
+      .build();
+
+    const r1 = processAction(state, {
+      player: 'player1',
+      action: { type: 'attack', attackerIds: ['atk1'] },
+    });
+
+    const r2 = processAction(r1.state, {
+      player: 'player2',
+      action: { type: 'pass_block' },
+    });
+
+    const r3 = processAction(r2.state, {
+      player: 'player1',
+      action: { type: 'skip_breach_damage' },
+    });
+
+    // Turn should advance to player2 after skipping breach damage
+    expect(r3.state.combat).toBeNull();
+    expect(r3.state.activePlayer).toBe('player2');
+  });
 });
