@@ -7,6 +7,7 @@ export const events: CardDefinition[] = [
     type: 'event',
     guild: 'neutral',
     cost: 5,
+    description: 'Gain 9 Mythium.',
     abilities: [{
       timing: 'enters',
       effects: [{ type: 'gain_mythium', player: 'self', amount: 9 }],

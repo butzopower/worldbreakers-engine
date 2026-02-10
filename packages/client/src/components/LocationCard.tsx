@@ -17,6 +17,7 @@ export default function LocationCard({ card, canDevelop, highlighted, onClick, o
   return (
     <div
       onClick={onClick}
+      title={cardDef.cardDescription}
       style={{
         border: highlighted ? '2px solid #ffff00' : '2px solid #555',
         borderRadius: '6px',

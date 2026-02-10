@@ -12,6 +12,7 @@ export interface ClientCardDefinition {
   keywords?: string[];
   standingRequirement?: Record<string, number>;
   description?: string;
+  cardDescription?: string;
 }
 
 export interface GameInfo {

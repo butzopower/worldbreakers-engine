@@ -45,6 +45,7 @@ function buildClientCardDefs(): Record<string, ClientCardDefinition> {
       ...(def.keywords?.length && { keywords: def.keywords }),
       ...(def.standingRequirement && { standingRequirement: def.standingRequirement as Record<string, number> }),
       ...(description && { description }),
+      ...(def.description && { cardDescription: def.description }),
     };
   }
   return defs;

@@ -36,6 +36,7 @@ export default function FollowerCard({ card, highlighted, selected, dimmed, onCl
   return (
     <div
       onClick={onClick}
+      title={cardDef.cardDescription}
       style={{
         border,
         borderRadius: '6px',
