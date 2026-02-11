@@ -174,27 +174,20 @@ function handlePendingChoice(
       if (action.type !== 'choose_target') throw new Error('Expected choose_target');
       s = { ...s, pendingChoice: null };
 
-      // Check if this is a play_card effect - delegate to handlePlayCard
-      const playCardEffect = choice.effects.find(e => e.type === 'play_card');
-      if (playCardEffect && playCardEffect.type === 'play_card') {
-        const playResult = handlePlayCard(s, choice.playerId, action.targetInstanceId, { costReduction: playCardEffect.costReduction });
-        s = playResult.state;
-        events.push(...playResult.events);
-      } else {
-        const ctx: ResolveContext = {
-          controller: choice.playerId,
-          sourceCardId: choice.sourceCardId,
-          triggeringCardId: choice.triggeringCardId,
-          chosenTargets: [action.targetInstanceId],
-        };
-        const effectResult = resolveEffects(s, choice.effects, ctx);
-        s = effectResult.state;
-        events.push(...effectResult.events);
+      const ctx: ResolveContext = {
+        controller: choice.playerId,
+        sourceCardId: choice.sourceCardId,
+        triggeringCardId: choice.triggeringCardId,
+        chosenTargets: [action.targetInstanceId],
+      };
+      const effectResult = resolveEffects(s, choice.effects, ctx);
+      s = effectResult.state;
+      events.push(...effectResult.events);
 
-        const cleanupResult = runCleanup(s);
-        s = cleanupResult.state;
-        events.push(...cleanupResult.events);
-      }
+      const cleanupResult = runCleanup(s);
+      s = cleanupResult.state;
+      events.push(...cleanupResult.events);
+
       break;
     }
 

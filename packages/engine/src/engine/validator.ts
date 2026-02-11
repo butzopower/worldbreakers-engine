@@ -1,11 +1,10 @@
-import { GameState } from '../types/state';
+import { GameState, PendingChoiceChooseTarget } from '../types/state';
 import { ActionInput, PlayerAction } from '../types/actions';
 import { PlayerId, opponentOf } from '../types/core';
 import {
   getCard, getCardDef, canPlayCard, canAttack, canBlock, canDevelop, canUseAbility, canPay,
   getFollowers, getHand, getLocations,
 } from '../state/query';
-import type { PendingChoice } from '../types/state';
 
 export interface ValidationResult {
   valid: boolean;
@@ -198,7 +197,7 @@ function validateChooseTarget(
   state: GameState,
   player: PlayerId,
   targetInstanceId: string,
-  choice: Extract<PendingChoice, { type: 'choose_target' }>,
+  choice: PendingChoiceChooseTarget,
 ): ValidationResult {
   const card = getCard(state, targetInstanceId);
   if (!card) return { valid: false, reason: 'Target not found' };

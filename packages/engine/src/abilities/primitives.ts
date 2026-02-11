@@ -9,6 +9,7 @@ import {
 } from '../state/mutate';
 import { getCard, getCardDef, getBoard, getFollowers, canPay } from '../state/query';
 import { generateEffectId } from '../utils/id';
+import { handlePlayCard } from "../actions/play-card";
 
 export interface ResolveContext {
   controller: PlayerId;
@@ -209,9 +210,14 @@ export function resolvePrimitive(
       break;
     }
     case 'play_card': {
-      // Handled by handlePlayCard via the engine after choose_target resolves.
-      // The chosen target is the card to play - this is a no-op in resolvePrimitive
-      // because the engine's choose_target handler delegates to handlePlayCard.
+      const targets = resolveTargets(s, effect.target, ctx);
+
+      if (targets.length === 1) {
+        const r = handlePlayCard(s, ctx.controller, targets[0], {costReduction: effect.costReduction});
+        s = r.state;
+        events.push(...r.events);
+      }
+
       break;
     }
   }

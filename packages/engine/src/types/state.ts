@@ -32,9 +32,11 @@ export interface CombatState {
   damageDealt: boolean;
 }
 
+export type PendingChoiceChooseTarget = { type: 'choose_target'; playerId: PlayerId; sourceCardId: string; abilityIndex: number; effects: EffectPrimitive[]; triggeringCardId?: string }
+
 export type PendingChoice =
   | { type: 'choose_blockers'; playerId: PlayerId; attackerIds: string[] }
-  | { type: 'choose_target'; playerId: PlayerId; sourceCardId: string; abilityIndex: number; effects: EffectPrimitive[]; triggeringCardId?: string }
+  | PendingChoiceChooseTarget
   | { type: 'choose_discard'; playerId: PlayerId; count: number; sourceCardId: string; phase?: string; nextPhase?: string }
   | { type: 'choose_breach_target'; playerId: PlayerId; validLocationIds: string[] }
   | { type: 'choose_mode'; playerId: PlayerId; sourceCardId: string; modes: { label: string; effects: EffectPrimitive[] }[] };
