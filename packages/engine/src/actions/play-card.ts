@@ -10,6 +10,7 @@ export function handlePlayCard(
   state: GameState,
   player: PlayerId,
   cardInstanceId: string,
+  opts?: { costReduction?: number },
 ): { state: GameState; events: GameEvent[] } {
   const card = getCard(state, cardInstanceId)!;
   const def = getCardDef(card);
@@ -17,8 +18,9 @@ export function handlePlayCard(
   let s = state;
 
   // Pay mythium cost
-  if (def.cost > 0) {
-    const payResult = spendMythium(s, player, def.cost);
+  const actualCost = Math.max(0, def.cost - (opts?.costReduction ?? 0));
+  if (actualCost > 0) {
+    const payResult = spendMythium(s, player, actualCost);
     s = payResult.state;
     events.push(...payResult.events);
   }

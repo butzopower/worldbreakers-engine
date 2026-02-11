@@ -2,10 +2,9 @@ import { PlayerId } from '../types/core';
 import { GameState } from '../types/state';
 import { GameEvent } from '../types/events';
 import { ResolveContext } from './primitives';
-import { gainPower, drawCard, moveCard, spendMythium } from '../state/mutate';
-import { getCard, getHand, getCardDef, meetsStandingRequirement } from '../state/query';
-import { resolveAbility } from './resolver';
-import { runCleanup } from '../engine/cleanup';
+import { gainPower, drawCard, moveCard } from '../state/mutate';
+import { getHand, getCardDef, meetsStandingRequirement } from '../state/query';
+import { handlePlayCard } from '../actions/play-card';
 import { opponentOf } from '../types/core';
 
 export type CustomResolverFn = (
@@ -125,42 +124,6 @@ registerCustomResolver('gratuitous_gift', (state: GameState, ctx: ResolveContext
 
 // Choice resolver: play the chosen follower at reduced cost
 registerChoiceResolver('gratuitous_gift_play', (state, playerId, chosenCardInstanceId, choiceData) => {
-  let s = state;
-  const events: GameEvent[] = [];
-  const chosenCard = getCard(s, chosenCardInstanceId)!;
-  const chosenDef = getCardDef(chosenCard);
   const costReduction = (choiceData.costReduction as number) ?? 0;
-  const reducedCost = Math.max(0, chosenDef.cost - costReduction);
-
-  // Pay the reduced cost
-  if (reducedCost > 0) {
-    const payResult = spendMythium(s, playerId, reducedCost);
-    s = payResult.state;
-    events.push(...payResult.events);
-  }
-
-  // Play the follower to board
-  const moveResult = moveCard(s, chosenCardInstanceId, 'board');
-  s = moveResult.state;
-  events.push(...moveResult.events);
-  events.push({ type: 'card_played', player: playerId, cardInstanceId: chosenCardInstanceId, definitionId: chosenDef.id });
-
-  // Resolve enters abilities
-  if (chosenDef.abilities) {
-    for (let i = 0; i < chosenDef.abilities.length; i++) {
-      const ability = chosenDef.abilities[i];
-      if (ability.timing === 'enters') {
-        const abilityResult = resolveAbility(s, playerId, chosenCardInstanceId, ability, i);
-        s = abilityResult.state;
-        events.push(...abilityResult.events);
-      }
-    }
-  }
-
-  // Run cleanup
-  const cleanupResult = runCleanup(s);
-  s = cleanupResult.state;
-  events.push(...cleanupResult.events);
-
-  return { state: s, events };
+  return handlePlayCard(state, playerId, chosenCardInstanceId, { costReduction });
 });
