@@ -1,8 +1,8 @@
-import { PlayerId, StandingGuild, Zone, opponentOf } from '../types/core';
-import { GameState, CardInstance } from '../types/state';
-import { CardDefinition, Keyword } from '../types/cards';
-import { getCounter } from '../types/counters';
-import { getCardDefinition } from '../cards/registry';
+import {PlayerId, StandingGuild, Zone, opponentOf} from '../types/core';
+import {GameState, CardInstance} from '../types/state';
+import {CardDefinition, Keyword} from '../types/cards';
+import {getCounter} from '../types/counters';
+import {getCardDefinition} from '../cards/registry';
 
 export function getCard(state: GameState, instanceId: string): CardInstance | undefined {
   return state.cards.find(c => c.instanceId === instanceId);
@@ -112,15 +112,21 @@ export function getLocationStage(card: CardInstance): number {
   return def.stages - remaining + 1;
 }
 
-export function canPlayCard(state: GameState, player: PlayerId, card: CardInstance): boolean {
-  if (card.zone !== 'hand') return false;
+export function canPay(
+  state: GameState,
+  player: PlayerId,
+  card: CardInstance,
+  opts?: { costReduction?: number },
+): boolean {
   if (card.owner !== player) return false;
 
   const def = getCardDef(card);
   const playerState = state.players[player];
 
+  const mythiumCost = Math.max(0, def.cost - (opts?.costReduction ?? 0));
+
   // Check mythium cost
-  if (playerState.mythium < def.cost) return false;
+  if (playerState.mythium < mythiumCost) return false;
 
   // Check standing requirement
   if (def.standingRequirement) {
@@ -132,6 +138,14 @@ export function canPlayCard(state: GameState, player: PlayerId, card: CardInstan
   }
 
   return true;
+}
+
+
+export function canPlayCard(state: GameState, player: PlayerId, card: CardInstance): boolean {
+  if (card.zone !== 'hand') return false;
+  if (card.owner !== player) return false;
+
+  return canPay(state, player, card);
 }
 
 export function canDevelop(state: GameState, player: PlayerId, card: CardInstance): boolean {

@@ -2,8 +2,8 @@ import { PlayerId } from '../types/core';
 import { GameState } from '../types/state';
 import { GameEvent } from '../types/events';
 import { ResolveContext } from './primitives';
-import { gainPower, drawCard, moveCard } from '../state/mutate';
-import { getHand, getCardDef, meetsStandingRequirement } from '../state/query';
+import { gainPower, } from '../state/mutate';
+import { getHand, getCardDef, canPay } from '../state/query';
 import { handlePlayCard } from '../actions/play-card';
 import { opponentOf } from '../types/core';
 
@@ -90,16 +90,11 @@ registerCustomResolver('void_rift', (state: GameState, ctx: ResolveContext) => {
 // Gratuitous Gift: Play a follower card, paying 2 mythium less.
 registerCustomResolver('gratuitous_gift', (state: GameState, ctx: ResolveContext) => {
   const costReduction = 2;
-  const hand = getHand(state, ctx.controller);
-  const playerState = state.players[ctx.controller];
+  const player = ctx.controller;
+  const hand = getHand(state, player);
 
   const validFollowers = hand.filter(card => {
-    const def = getCardDef(card);
-    if (def.type !== 'follower') return false;
-    const reducedCost = Math.max(0, def.cost - costReduction);
-    if (playerState.mythium < reducedCost) return false;
-    if (def.standingRequirement && !meetsStandingRequirement(state, ctx.controller, def.standingRequirement)) return false;
-    return true;
+    return getCardDef(card).type === 'follower' && canPay(state, player, card, { costReduction });
   });
 
   if (validFollowers.length === 0) {
