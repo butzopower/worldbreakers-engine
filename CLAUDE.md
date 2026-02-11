@@ -49,6 +49,8 @@ Engine tests: `npm run test --workspace=@worldbreakers/engine`
 - Test helpers: `buildState()` for constructing test game states, assertion helpers in `tests/helpers/`.
 - Always call `clearRegistry()` + `registerTestCards()` in `beforeEach`.
 - Engine changes must have tests. Server/client are tested manually via two browser tabs for now.
+- Prefer to assert on visible / public board state instead of drilling deep into engine specific fields in the state
+- Try to avoid using functions from the engine other than processAction
 - Run tests before considering any engine change complete.
 
 ### Test card set
@@ -59,4 +61,10 @@ Engine tests: `npm run test --workspace=@worldbreakers/engine`
 - Events: `sudden_strike`, `void_rift`
 - Locations: `watchtower`, `void_nexus`
 
-Use these in tests. Add new test cards to that file when testing new mechanics.
+Use these in tests. Add new test cards to that file when testing new mechanics. Never import real cards into unit and integration tests.
+
+### Real card set
+
+- Real card implementations live in `packages/engine/src/cards/sets/`
+- Tests for these cards live in `packages/engine/tests/cards/sets/`:
+- Prefer to write tests for real cards using other real cards, but you can use test cards if there are no valid real cards to use
