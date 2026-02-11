@@ -59,10 +59,6 @@ export function useInteractionMode() {
     setMode({ type: 'choose_mode', modes });
   }, []);
 
-  const startCardSelection = useCallback((validCards: string[]) => {
-    setMode({ type: 'choose_card', validCards });
-  }, []);
-
   return {
     mode,
     reset,
@@ -75,6 +71,5 @@ export function useInteractionMode() {
     toggleDiscard,
     startBreachSelection,
     startModeSelection,
-    startCardSelection,
   };
 }

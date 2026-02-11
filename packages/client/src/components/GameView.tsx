@@ -62,14 +62,6 @@ export default function GameView({ playerId, state, legalActions, events, onRetu
         interaction.startModeSelection(choice.modes);
         break;
       }
-      case 'choose_card': {
-        const validCards = legalActions
-          .filter((a): a is PlayerAction & { cardInstanceId: string } =>
-            a.type === 'choose_card' && typeof a.cardInstanceId === 'string')
-          .map(a => a.cardInstanceId);
-        interaction.startCardSelection(validCards);
-        break;
-      }
     }
   }, [state.pendingChoice?.type, state.version]);
 
@@ -117,12 +109,6 @@ export default function GameView({ playerId, state, legalActions, events, onRetu
       case 'choose_breach_target': {
         if (mode.validLocations.includes(card.instanceId)) {
           submitAction({ type: 'damage_location', locationInstanceId: card.instanceId });
-        }
-        break;
-      }
-      case 'choose_card': {
-        if (mode.validCards.includes(card.instanceId)) {
-          submitAction({ type: 'choose_card', cardInstanceId: card.instanceId });
         }
         break;
       }

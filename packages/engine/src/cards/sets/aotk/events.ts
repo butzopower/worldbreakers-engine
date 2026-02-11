@@ -23,7 +23,7 @@ export const events: CardDefinition[] = [
     description: 'Play a follower card, paying 2 mythium less.',
     abilities: [{
       timing: 'enters',
-      customResolve: 'gratuitous_gift',
+      effects: [{ type: 'play_card', target: { kind: 'choose', filter: { type: 'follower', zone: ['hand'], owner: 'controller', canPay: { costReduction: 2 } }, count: 1 }, costReduction: 2 }],
       description: 'Play a follower card, paying 2 mythium less.',
     }],
   },

@@ -2,9 +2,10 @@ import { GameState } from '../types/state';
 import { ActionInput, PlayerAction } from '../types/actions';
 import { PlayerId, opponentOf } from '../types/core';
 import {
-  getCard, getCardDef, canPlayCard, canAttack, canBlock, canDevelop, canUseAbility,
-  getFollowers, getHand, getLocations, meetsStandingRequirement,
+  getCard, getCardDef, canPlayCard, canAttack, canBlock, canDevelop, canUseAbility, canPay,
+  getFollowers, getHand, getLocations,
 } from '../state/query';
+import type { PendingChoice } from '../types/state';
 
 export interface ValidationResult {
   valid: boolean;
@@ -133,7 +134,7 @@ function validatePendingChoice(state: GameState, player: PlayerId, action: Playe
       if (action.type !== 'choose_target') {
         return { valid: false, reason: 'Must choose a target' };
       }
-      return { valid: true };
+      return validateChooseTarget(state, player, action.targetInstanceId, choice);
 
     case 'choose_discard':
       if (action.type !== 'choose_discard') {
@@ -155,12 +156,6 @@ function validatePendingChoice(state: GameState, player: PlayerId, action: Playe
         return { valid: false, reason: 'Invalid mode index' };
       }
       return { valid: true };
-
-    case 'choose_card':
-      if (action.type !== 'choose_card') {
-        return { valid: false, reason: 'Must choose a card' };
-      }
-      return validateChooseCard(state, player, action.cardInstanceId, choice);
 
     default:
       return { valid: false, reason: 'Unknown choice type' };
@@ -199,30 +194,34 @@ function validateDiscardChoice(state: GameState, player: PlayerId, cardIds: stri
   return { valid: true };
 }
 
-function validateChooseCard(
+function validateChooseTarget(
   state: GameState,
   player: PlayerId,
-  cardInstanceId: string,
-  choice: { type: 'choose_card'; filter: { type?: string | string[] }; costReduction?: number },
+  targetInstanceId: string,
+  choice: Extract<PendingChoice, { type: 'choose_target' }>,
 ): ValidationResult {
-  const card = getCard(state, cardInstanceId);
-  if (!card) return { valid: false, reason: 'Card not found' };
-  if (card.owner !== player) return { valid: false, reason: 'Card is not yours' };
-  if (card.zone !== 'hand') return { valid: false, reason: 'Card is not in your hand' };
+  const card = getCard(state, targetInstanceId);
+  if (!card) return { valid: false, reason: 'Target not found' };
 
-  const def = getCardDef(card);
-  if (choice.filter.type) {
-    const types = Array.isArray(choice.filter.type) ? choice.filter.type : [choice.filter.type];
-    if (!types.includes(def.type)) return { valid: false, reason: 'Card does not match required type' };
-  }
-
-  const reducedCost = Math.max(0, def.cost - (choice.costReduction ?? 0));
-  if (state.players[player].mythium < reducedCost) {
-    return { valid: false, reason: 'Not enough mythium' };
-  }
-
-  if (def.standingRequirement && !meetsStandingRequirement(state, player, def.standingRequirement)) {
-    return { valid: false, reason: 'Standing requirement not met' };
+  const firstEffect = choice.effects[0];
+  if (firstEffect && 'target' in firstEffect && firstEffect.target) {
+    const filter = firstEffect.target.kind === 'choose' ? firstEffect.target.filter : undefined;
+    if (filter) {
+      const def = getCardDef(card);
+      if (filter.type) {
+        const types = Array.isArray(filter.type) ? filter.type : [filter.type];
+        if (!types.includes(def.type)) return { valid: false, reason: 'Target does not match required type' };
+      }
+      if (filter.zone) {
+        const zones = Array.isArray(filter.zone) ? filter.zone : [filter.zone];
+        if (!zones.includes(card.zone)) return { valid: false, reason: 'Target is not in valid zone' };
+      }
+      if (filter.owner === 'controller' && card.owner !== player) return { valid: false, reason: 'Target is not yours' };
+      if (filter.owner === 'opponent' && card.owner === player) return { valid: false, reason: 'Target must belong to opponent' };
+      if (filter.canPay && !canPay(state, player, card, { costReduction: filter.canPay.costReduction })) {
+        return { valid: false, reason: 'Cannot afford this card' };
+      }
+    }
   }
 
   return { valid: true };

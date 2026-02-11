@@ -57,33 +57,49 @@ export function resolveAbility(
   // Check if any effect needs target selection
   for (const effect of ability.effects) {
     if (needsTargetChoice(effect)) {
-      const targetSelector = getTargetSelector(effect);
-      if (targetSelector && targetSelector.kind === 'choose') {
-        const validTargets = findValidTargets(state, targetSelector, ctx);
-        if (validTargets.length === 0) {
-          // No valid targets - skip this ability
-          return { state, events: [] };
-        }
-        if (validTargets.length === 1) {
-          // Auto-select single target
-          ctx.chosenTargets = [validTargets[0]];
-        } else {
-          // Need player choice - set pending
-          return {
-            state: {
-              ...state,
-              pendingChoice: {
-                type: 'choose_target',
-                playerId: controller,
-                sourceCardId,
-                abilityIndex,
-                effects: ability.effects,
-                triggeringCardId,
-              },
+      const targetSelector = getTargetSelector(effect)!;
+      if (targetSelector.kind !== 'choose') continue;
+
+      const validTargets = findValidTargets(state, targetSelector, ctx);
+      if (validTargets.length === 0) {
+        return { state, events: [] };
+      }
+
+      // play_card always requires a pending choice (engine handles play logic)
+      if (effect.type === 'play_card') {
+        return {
+          state: {
+            ...state,
+            pendingChoice: {
+              type: 'choose_target',
+              playerId: controller,
+              sourceCardId,
+              abilityIndex,
+              effects: ability.effects,
+              triggeringCardId,
             },
-            events: [],
-          };
-        }
+          },
+          events: [],
+        };
+      }
+
+      if (validTargets.length === 1) {
+        ctx.chosenTargets = [validTargets[0]];
+      } else {
+        return {
+          state: {
+            ...state,
+            pendingChoice: {
+              type: 'choose_target',
+              playerId: controller,
+              sourceCardId,
+              abilityIndex,
+              effects: ability.effects,
+              triggeringCardId,
+            },
+          },
+          events: [],
+        };
       }
     }
   }

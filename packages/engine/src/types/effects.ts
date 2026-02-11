@@ -11,6 +11,7 @@ export interface CardFilter {
   owner?: PlayerSelector;
   keyword?: Keyword;
   excludeSelf?: boolean;
+  canPay?: { costReduction?: number };
 }
 
 export type TargetSelector =
@@ -32,7 +33,8 @@ export type EffectPrimitive =
   | { type: 'exhaust'; target: TargetSelector }
   | { type: 'ready'; target: TargetSelector }
   | { type: 'buff_attackers'; counter: 'strength_buff'; amount: number }
-  | { type: 'choose_one'; modes: { label: string; effects: EffectPrimitive[] }[] };
+  | { type: 'choose_one'; modes: { label: string; effects: EffectPrimitive[] }[] }
+  | { type: 'play_card'; target: TargetSelector; costReduction?: number };
 
 export type AbilityTiming =
   | 'enters'

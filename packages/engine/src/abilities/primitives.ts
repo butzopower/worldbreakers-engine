@@ -7,7 +7,7 @@ import {
   gainMythium, drawCard, gainStanding, gainPower, addCounterToCard,
   removeCounterFromCard, exhaustCard, readyCard, moveCard, addLastingEffect,
 } from '../state/mutate';
-import { getCard, getCardDef, getBoard, getFollowers } from '../state/query';
+import { getCard, getCardDef, getBoard, getFollowers, canPay } from '../state/query';
 import { generateEffectId } from '../utils/id';
 
 export interface ResolveContext {
@@ -32,7 +32,7 @@ function resolvePlayerSelector(selector: PlayerSelector, ctx: ResolveContext): P
   }
 }
 
-function matchesFilter(card: CardInstance, filter: CardFilter, ctx: ResolveContext): boolean {
+function matchesFilter(state: GameState, card: CardInstance, filter: CardFilter, ctx: ResolveContext): boolean {
   const def = getCardDef(card);
 
   if (filter.type) {
@@ -52,6 +52,7 @@ function matchesFilter(card: CardInstance, filter: CardFilter, ctx: ResolveConte
     if (!owners.includes(card.owner)) return false;
   }
   if (filter.excludeSelf && card.instanceId === ctx.sourceCardId) return false;
+  if (filter.canPay && !canPay(state, ctx.controller, card, { costReduction: filter.canPay.costReduction })) return false;
 
   return true;
 }
@@ -66,7 +67,7 @@ function resolveTargets(state: GameState, selector: TargetSelector, ctx: Resolve
       return [ctx.sourceCardId];
     case 'all':
       return state.cards
-        .filter(c => matchesFilter(c, selector.filter, ctx))
+        .filter(c => matchesFilter(state, c, selector.filter, ctx))
         .map(c => c.instanceId);
     case 'choose':
       // Use pre-chosen targets if available
@@ -207,6 +208,12 @@ export function resolvePrimitive(
       }
       break;
     }
+    case 'play_card': {
+      // Handled by handlePlayCard via the engine after choose_target resolves.
+      // The chosen target is the card to play - this is a no-op in resolvePrimitive
+      // because the engine's choose_target handler delegates to handlePlayCard.
+      break;
+    }
   }
 
   return { state: s, events };
@@ -218,6 +225,6 @@ export function resolvePrimitive(
 export function findValidTargets(state: GameState, selector: TargetSelector, ctx: ResolveContext): string[] {
   if (selector.kind !== 'choose') return [];
   return state.cards
-    .filter(c => matchesFilter(c, selector.filter, ctx))
+    .filter(c => matchesFilter(state, c, selector.filter, ctx))
     .map(c => c.instanceId);
 }

@@ -136,13 +136,5 @@ export default function InteractionOverlay({ mode, state, playerId, onSubmitActi
         </div>
       );
 
-    case 'choose_card':
-      return (
-        <div style={panelStyle}>
-          <div style={{ fontSize: '12px' }}>
-            Choose a card from your hand (click a highlighted card). {mode.validCards.length} option(s).
-          </div>
-        </div>
-      );
   }
 }

@@ -14,8 +14,7 @@ export type PlayerAction =
   | { type: 'choose_discard'; cardInstanceIds: string[] }
   | { type: 'damage_location'; locationInstanceId: string }
   | { type: 'skip_breach_damage' }
-  | { type: 'choose_mode'; modeIndex: number }
-  | { type: 'choose_card'; cardInstanceId: string };
+  | { type: 'choose_mode'; modeIndex: number };
 
 export interface ActionInput {
   player: PlayerId;

@@ -1,10 +1,8 @@
-import { PlayerId } from '../types/core';
 import { GameState } from '../types/state';
 import { GameEvent } from '../types/events';
 import { ResolveContext } from './primitives';
-import { gainPower, } from '../state/mutate';
-import { getHand, getCardDef, canPay } from '../state/query';
-import { handlePlayCard } from '../actions/play-card';
+import { gainPower } from '../state/mutate';
+import { getHand } from '../state/query';
 import { opponentOf } from '../types/core';
 
 export type CustomResolverFn = (
@@ -20,23 +18,6 @@ export function registerCustomResolver(key: string, fn: CustomResolverFn): void 
 
 export function getCustomResolver(key: string): CustomResolverFn | undefined {
   return customResolvers.get(key);
-}
-
-export type ChoiceResolverFn = (
-  state: GameState,
-  playerId: PlayerId,
-  chosenCardInstanceId: string,
-  choiceData: Record<string, unknown>,
-) => { state: GameState; events: GameEvent[] };
-
-const choiceResolvers = new Map<string, ChoiceResolverFn>();
-
-export function registerChoiceResolver(key: string, fn: ChoiceResolverFn): void {
-  choiceResolvers.set(key, fn);
-}
-
-export function getChoiceResolver(key: string): ChoiceResolverFn | undefined {
-  return choiceResolvers.get(key);
 }
 
 // Register built-in custom resolvers
@@ -87,38 +68,3 @@ registerCustomResolver('void_rift', (state: GameState, ctx: ResolveContext) => {
   return { state: powerResult.state, events: [...events, ...powerResult.events] };
 });
 
-// Gratuitous Gift: Play a follower card, paying 2 mythium less.
-registerCustomResolver('gratuitous_gift', (state: GameState, ctx: ResolveContext) => {
-  const costReduction = 2;
-  const player = ctx.controller;
-  const hand = getHand(state, player);
-
-  const validFollowers = hand.filter(card => {
-    return getCardDef(card).type === 'follower' && canPay(state, player, card, { costReduction });
-  });
-
-  if (validFollowers.length === 0) {
-    return { state, events: [] };
-  }
-
-  return {
-    state: {
-      ...state,
-      pendingChoice: {
-        type: 'choose_card',
-        playerId: ctx.controller,
-        sourceCardId: ctx.sourceCardId,
-        filter: { type: 'follower', zone: ['hand'], owner: 'controller' },
-        resolve: 'gratuitous_gift_play',
-        costReduction,
-      },
-    },
-    events: [],
-  };
-});
-
-// Choice resolver: play the chosen follower at reduced cost
-registerChoiceResolver('gratuitous_gift_play', (state, playerId, chosenCardInstanceId, choiceData) => {
-  const costReduction = (choiceData.costReduction as number) ?? 0;
-  return handlePlayCard(state, playerId, chosenCardInstanceId, { costReduction });
-});

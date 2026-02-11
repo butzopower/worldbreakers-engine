@@ -13,7 +13,7 @@ beforeEach(() => {
 });
 
 describe('Gratuitous Gift', () => {
-  it('creates a choose_card pending choice when a valid follower is in hand', () => {
+  it('creates a choose_target pending choice when a valid follower is in hand', () => {
     const state = buildState()
       .withActivePlayer('player1')
       .withMythium('player1', 5)
@@ -27,10 +27,7 @@ describe('Gratuitous Gift', () => {
     });
 
     expect(result.state.pendingChoice).not.toBeNull();
-    expect(result.state.pendingChoice!.type).toBe('choose_card');
-    if (result.state.pendingChoice!.type === 'choose_card') {
-      expect(result.state.pendingChoice!.costReduction).toBe(2);
-    }
+    expect(result.state.pendingChoice!.type).toBe('choose_target');
   });
 
   it('choosing a follower plays it at reduced cost (cost-3 follower pays 1)', () => {
@@ -47,9 +44,11 @@ describe('Gratuitous Gift', () => {
       action: { type: 'play_card', cardInstanceId: 'gg1' },
     });
 
+    expect(playResult.state.pendingChoice!.type).toBe('choose_target');
+
     const chooseResult = processAction(playResult.state, {
       player: 'player1',
-      action: { type: 'choose_card', cardInstanceId: 'vc1' },
+      action: { type: 'choose_target', targetInstanceId: 'vc1' },
     });
 
     // void_channeler costs 3, reduced by 2 = 1 mythium spent
@@ -73,7 +72,7 @@ describe('Gratuitous Gift', () => {
 
     const chooseResult = processAction(playResult.state, {
       player: 'player1',
-      action: { type: 'choose_card', cardInstanceId: 'ms1' },
+      action: { type: 'choose_target', targetInstanceId: 'ms1' },
     });
 
     // militia_scout costs 1, reduced by 2 = 0 mythium spent
@@ -98,7 +97,7 @@ describe('Gratuitous Gift', () => {
 
     const chooseResult = processAction(playResult.state, {
       player: 'player1',
-      action: { type: 'choose_card', cardInstanceId: 'eg1' },
+      action: { type: 'choose_target', targetInstanceId: 'eg1' },
     });
 
     // earthshaker_giant has "Enters: Deal 1 wound to target follower"
@@ -173,14 +172,14 @@ describe('Gratuitous Gift', () => {
 
     const chooseResult = processAction(playResult.state, {
       player: 'player1',
-      action: { type: 'choose_card', cardInstanceId: 'ms1' },
+      action: { type: 'choose_target', targetInstanceId: 'ms1' },
     });
 
     expect(chooseResult.state.activePlayer).toBe('player2');
     expect(chooseResult.state.actionsTaken).toBe(1);
   });
 
-  it('getLegalActions returns valid choose_card actions when pending', () => {
+  it('getLegalActions returns valid choose_target actions when pending', () => {
     const state = buildState()
       .withActivePlayer('player1')
       .withMythium('player1', 5)
@@ -200,11 +199,11 @@ describe('Gratuitous Gift', () => {
     expect(legalActions).toHaveLength(1);
     expect(legalActions[0]).toEqual({
       player: 'player1',
-      action: { type: 'choose_card', cardInstanceId: 'ms1' },
+      action: { type: 'choose_target', targetInstanceId: 'ms1' },
     });
   });
 
-  it('rejects choosing a non-follower card', () => {
+  it('rejects choosing an invalid target', () => {
     const state = buildState()
       .withActivePlayer('player1')
       .withMythium('player1', 5)
@@ -217,10 +216,10 @@ describe('Gratuitous Gift', () => {
       action: { type: 'play_card', cardInstanceId: 'gg1' },
     });
 
-    // Try to choose the gratuitous_gift event (already in discard, but test the validator)
+    // Try to choose the gratuitous_gift event (in discard, not a valid target)
     expect(() => processAction(playResult.state, {
       player: 'player1',
-      action: { type: 'choose_card', cardInstanceId: 'gg1' },
+      action: { type: 'choose_target', targetInstanceId: 'gg1' },
     })).toThrow('Invalid action');
   });
 });
