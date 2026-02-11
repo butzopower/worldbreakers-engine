@@ -115,5 +115,25 @@ export default function InteractionOverlay({ mode, state, playerId, onSubmitActi
           </button>
         </div>
       );
+
+    case 'choose_mode':
+      return (
+        <div style={panelStyle}>
+          <div style={{ marginBottom: '6px', fontSize: '12px' }}>
+            Choose one:
+          </div>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            {mode.modes.map((m, i) => (
+              <button
+                key={i}
+                onClick={() => onSubmitAction({ type: 'choose_mode', modeIndex: i })}
+                style={btnStyle}
+              >
+                {m.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      );
   }
 }

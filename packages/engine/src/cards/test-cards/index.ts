@@ -131,6 +131,25 @@ const testCards: CardDefinition[] = [
     }],
   },
 
+  {
+    id: 'strategic_insight',
+    name: 'Strategic Insight',
+    type: 'event',
+    guild: 'neutral',
+    cost: 0,
+    abilities: [{
+      timing: 'enters',
+      effects: [{
+        type: 'choose_one',
+        modes: [
+          { label: 'Gain 2 mythium', effects: [{ type: 'gain_mythium', player: 'self', amount: 2 }] },
+          { label: 'Draw 2 cards', effects: [{ type: 'draw_cards', player: 'self', count: 2 }] },
+        ],
+      }],
+      description: 'Choose one: Gain 2 mythium, or draw 2 cards.',
+    }],
+  },
+
   // Locations
   {
     id: 'watchtower',

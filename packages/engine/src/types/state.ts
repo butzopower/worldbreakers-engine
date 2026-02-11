@@ -36,7 +36,8 @@ export type PendingChoice =
   | { type: 'choose_blockers'; playerId: PlayerId; attackerIds: string[] }
   | { type: 'choose_target'; playerId: PlayerId; sourceCardId: string; abilityIndex: number; effects: EffectPrimitive[]; triggeringCardId?: string }
   | { type: 'choose_discard'; playerId: PlayerId; count: number; sourceCardId: string; phase?: string; nextPhase?: string }
-  | { type: 'choose_breach_target'; playerId: PlayerId; validLocationIds: string[] };
+  | { type: 'choose_breach_target'; playerId: PlayerId; validLocationIds: string[] }
+  | { type: 'choose_mode'; playerId: PlayerId; sourceCardId: string; modes: { label: string; effects: EffectPrimitive[] }[] };
 
 export interface PlayerState {
   mythium: number;

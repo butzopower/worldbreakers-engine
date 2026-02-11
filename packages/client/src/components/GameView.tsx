@@ -58,6 +58,10 @@ export default function GameView({ playerId, state, legalActions, events, onRetu
         interaction.startBreachSelection(choice.validLocationIds);
         break;
       }
+      case 'choose_mode': {
+        interaction.startModeSelection(choice.modes);
+        break;
+      }
     }
   }, [state.pendingChoice?.type, state.version]);
 

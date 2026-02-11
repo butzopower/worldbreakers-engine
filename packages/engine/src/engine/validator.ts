@@ -147,6 +147,15 @@ function validatePendingChoice(state: GameState, player: PlayerId, action: Playe
       }
       return { valid: true };
 
+    case 'choose_mode':
+      if (action.type !== 'choose_mode') {
+        return { valid: false, reason: 'Must choose a mode' };
+      }
+      if (action.modeIndex < 0 || action.modeIndex >= choice.modes.length) {
+        return { valid: false, reason: 'Invalid mode index' };
+      }
+      return { valid: true };
+
     default:
       return { valid: false, reason: 'Unknown choice type' };
   }

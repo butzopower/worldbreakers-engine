@@ -40,7 +40,8 @@ export type PendingChoice =
   | { type: 'choose_blockers'; playerId: PlayerId; attackerIds: string[] }
   | { type: 'choose_target'; playerId: PlayerId; sourceCardId: string; abilityIndex: number; effects: unknown[]; triggeringCardId?: string }
   | { type: 'choose_discard'; playerId: PlayerId; count: number; sourceCardId: string; phase?: string; nextPhase?: string }
-  | { type: 'choose_breach_target'; playerId: PlayerId; validLocationIds: string[] };
+  | { type: 'choose_breach_target'; playerId: PlayerId; validLocationIds: string[] }
+  | { type: 'choose_mode'; playerId: PlayerId; sourceCardId: string; modes: { label: string; effects: unknown[] }[] };
 
 export interface FilteredGameState {
   version: number;
@@ -95,4 +96,5 @@ export type InteractionMode =
   | { type: 'select_blocker'; selectedBlockerId: string | null; attackerIds: string[] }
   | { type: 'choose_target'; validTargets: string[] }
   | { type: 'choose_discard'; count: number; selected: string[] }
-  | { type: 'choose_breach_target'; validLocations: string[] };
+  | { type: 'choose_breach_target'; validLocations: string[] }
+  | { type: 'choose_mode'; modes: { label: string }[] };

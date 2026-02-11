@@ -55,6 +55,10 @@ export function useInteractionMode() {
     setMode({ type: 'choose_breach_target', validLocations });
   }, []);
 
+  const startModeSelection = useCallback((modes: { label: string }[]) => {
+    setMode({ type: 'choose_mode', modes });
+  }, []);
+
   return {
     mode,
     reset,
@@ -66,5 +70,6 @@ export function useInteractionMode() {
     startDiscardSelection,
     toggleDiscard,
     startBreachSelection,
+    startModeSelection,
   };
 }

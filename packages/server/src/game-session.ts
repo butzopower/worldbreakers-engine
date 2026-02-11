@@ -8,14 +8,14 @@ import type { FilteredGameState, FilteredCard, HiddenCard } from './types';
 const DEFAULT_DECK: DeckConfig = {
   worldbreakerId: 'stone_sentinel',
   cardIds: [
-    'mythium_fund', 'mythium_fund', 'mythium_fund',
+    'mythium_fund', 'mythium_fund',
+    'strategic_insight', 'strategic_insight', 'strategic_insight',
     'militia_scout', 'militia_scout', 'militia_scout',
     'shield_bearer', 'shield_bearer',
     'night_raider', 'night_raider',
     'void_channeler',
     'star_warden', 'star_warden',
     'earthshaker_giant',
-    'sudden_strike', 'sudden_strike',
     'void_rift',
     'watchtower', 'watchtower',
     'void_nexus',

@@ -265,6 +265,24 @@ function handlePendingChoice(
       }
       return result;
     }
+
+    case 'choose_mode': {
+      if (action.type !== 'choose_mode') throw new Error('Expected choose_mode');
+      s = { ...s, pendingChoice: null };
+      const selectedMode = choice.modes[action.modeIndex];
+      const ctx: ResolveContext = {
+        controller: choice.playerId,
+        sourceCardId: choice.sourceCardId,
+      };
+      const effectResult = resolveEffects(s, selectedMode.effects, ctx);
+      s = effectResult.state;
+      events.push(...effectResult.events);
+
+      const cleanupResult = runCleanup(s);
+      s = cleanupResult.state;
+      events.push(...cleanupResult.events);
+      break;
+    }
   }
 
   // If no more pending and no combat, may need to advance turn
@@ -409,6 +427,12 @@ function getLegalChoiceActions(state: GameState): ActionInput[] {
       actions.push({ player, action: { type: 'skip_breach_damage' } });
       for (const locId of choice.validLocationIds) {
         actions.push({ player, action: { type: 'damage_location', locationInstanceId: locId } });
+      }
+      break;
+    }
+    case 'choose_mode': {
+      for (let i = 0; i < choice.modes.length; i++) {
+        actions.push({ player, action: { type: 'choose_mode', modeIndex: i } });
       }
       break;
     }

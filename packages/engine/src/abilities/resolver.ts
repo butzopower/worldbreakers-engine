@@ -36,6 +36,24 @@ export function resolveAbility(
     return { state, events: [] };
   }
 
+  // Check if any effect needs a mode choice
+  for (const effect of ability.effects) {
+    if (needsModeChoice(effect)) {
+      return {
+        state: {
+          ...state,
+          pendingChoice: {
+            type: 'choose_mode',
+            playerId: controller,
+            sourceCardId,
+            modes: effect.modes,
+          },
+        },
+        events: [],
+      };
+    }
+  }
+
   // Check if any effect needs target selection
   for (const effect of ability.effects) {
     if (needsTargetChoice(effect)) {
@@ -91,6 +109,10 @@ export function resolveEffects(
   }
 
   return { state: s, events };
+}
+
+function needsModeChoice(effect: EffectPrimitive): effect is { type: 'choose_one'; modes: { label: string; effects: EffectPrimitive[] }[] } {
+  return effect.type === 'choose_one';
 }
 
 function needsTargetChoice(effect: EffectPrimitive): boolean {

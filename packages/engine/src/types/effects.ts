@@ -31,7 +31,8 @@ export type EffectPrimitive =
   | { type: 'discard'; player: PlayerSelector; count: number }
   | { type: 'exhaust'; target: TargetSelector }
   | { type: 'ready'; target: TargetSelector }
-  | { type: 'buff_attackers'; counter: 'strength_buff'; amount: number };
+  | { type: 'buff_attackers'; counter: 'strength_buff'; amount: number }
+  | { type: 'choose_one'; modes: { label: string; effects: EffectPrimitive[] }[] };
 
 export type AbilityTiming =
   | 'enters'
