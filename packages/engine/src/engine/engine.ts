@@ -17,8 +17,9 @@ import { declareBlocker, passBlock, endCombat } from '../combat/combat';
 import { handleBreachDamage, handleSkipBreachDamage } from '../combat/breach';
 import { resolveEffects } from '../abilities/resolver';
 import { ResolveContext } from '../abilities/primitives';
+import { getChoiceResolver } from '../abilities/system';
 import { moveCard, gainPower } from '../state/mutate';
-import { getCard, getHand, getCardDef } from '../state/query';
+import { getCard, getHand, getCardDef, meetsStandingRequirement } from '../state/query';
 import {
   canPlayCard, canAttack, canBlock, canDevelop, canUseAbility,
   getFollowers, getLocations, getBoard,
@@ -283,6 +284,17 @@ function handlePendingChoice(
       events.push(...cleanupResult.events);
       break;
     }
+
+    case 'choose_card': {
+      if (action.type !== 'choose_card') throw new Error('Expected choose_card');
+      s = { ...s, pendingChoice: null };
+      const choiceResolver = getChoiceResolver(choice.resolve);
+      if (!choiceResolver) throw new Error(`No choice resolver found for: ${choice.resolve}`);
+      const choiceResult = choiceResolver(s, choice.playerId, action.cardInstanceId, { costReduction: choice.costReduction });
+      s = choiceResult.state;
+      events.push(...choiceResult.events);
+      break;
+    }
   }
 
   // If no more pending and no combat, may need to advance turn
@@ -433,6 +445,23 @@ function getLegalChoiceActions(state: GameState): ActionInput[] {
     case 'choose_mode': {
       for (let i = 0; i < choice.modes.length; i++) {
         actions.push({ player, action: { type: 'choose_mode', modeIndex: i } });
+      }
+      break;
+    }
+    case 'choose_card': {
+      const hand = getHand(state, player);
+      const costReduction = choice.costReduction ?? 0;
+      const playerState = state.players[player];
+      for (const card of hand) {
+        const def = getCardDef(card);
+        if (choice.filter.type) {
+          const types = Array.isArray(choice.filter.type) ? choice.filter.type : [choice.filter.type];
+          if (!types.includes(def.type)) continue;
+        }
+        const reducedCost = Math.max(0, def.cost - costReduction);
+        if (playerState.mythium < reducedCost) continue;
+        if (def.standingRequirement && !meetsStandingRequirement(state, player, def.standingRequirement)) continue;
+        actions.push({ player, action: { type: 'choose_card', cardInstanceId: card.instanceId } });
       }
       break;
     }

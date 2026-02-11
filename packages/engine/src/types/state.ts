@@ -1,6 +1,6 @@
 import { PlayerId, StandingGuild, Phase, Zone, CombatStep } from './core';
 import { CounterMap } from './counters';
-import { EffectPrimitive } from './effects';
+import { CardFilter, EffectPrimitive } from './effects';
 
 export interface CardInstance {
   instanceId: string;
@@ -37,7 +37,8 @@ export type PendingChoice =
   | { type: 'choose_target'; playerId: PlayerId; sourceCardId: string; abilityIndex: number; effects: EffectPrimitive[]; triggeringCardId?: string }
   | { type: 'choose_discard'; playerId: PlayerId; count: number; sourceCardId: string; phase?: string; nextPhase?: string }
   | { type: 'choose_breach_target'; playerId: PlayerId; validLocationIds: string[] }
-  | { type: 'choose_mode'; playerId: PlayerId; sourceCardId: string; modes: { label: string; effects: EffectPrimitive[] }[] };
+  | { type: 'choose_mode'; playerId: PlayerId; sourceCardId: string; modes: { label: string; effects: EffectPrimitive[] }[] }
+  | { type: 'choose_card'; playerId: PlayerId; sourceCardId: string; filter: CardFilter; resolve: string; costReduction?: number };
 
 export interface PlayerState {
   mythium: number;

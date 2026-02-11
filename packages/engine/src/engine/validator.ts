@@ -3,7 +3,7 @@ import { ActionInput, PlayerAction } from '../types/actions';
 import { PlayerId, opponentOf } from '../types/core';
 import {
   getCard, getCardDef, canPlayCard, canAttack, canBlock, canDevelop, canUseAbility,
-  getFollowers, getHand, getLocations,
+  getFollowers, getHand, getLocations, meetsStandingRequirement,
 } from '../state/query';
 
 export interface ValidationResult {
@@ -156,6 +156,12 @@ function validatePendingChoice(state: GameState, player: PlayerId, action: Playe
       }
       return { valid: true };
 
+    case 'choose_card':
+      if (action.type !== 'choose_card') {
+        return { valid: false, reason: 'Must choose a card' };
+      }
+      return validateChooseCard(state, player, action.cardInstanceId, choice);
+
     default:
       return { valid: false, reason: 'Unknown choice type' };
   }
@@ -190,6 +196,35 @@ function validateDiscardChoice(state: GameState, player: PlayerId, cardIds: stri
       return { valid: false, reason: `Card ${id} is not in your hand` };
     }
   }
+  return { valid: true };
+}
+
+function validateChooseCard(
+  state: GameState,
+  player: PlayerId,
+  cardInstanceId: string,
+  choice: { type: 'choose_card'; filter: { type?: string | string[] }; costReduction?: number },
+): ValidationResult {
+  const card = getCard(state, cardInstanceId);
+  if (!card) return { valid: false, reason: 'Card not found' };
+  if (card.owner !== player) return { valid: false, reason: 'Card is not yours' };
+  if (card.zone !== 'hand') return { valid: false, reason: 'Card is not in your hand' };
+
+  const def = getCardDef(card);
+  if (choice.filter.type) {
+    const types = Array.isArray(choice.filter.type) ? choice.filter.type : [choice.filter.type];
+    if (!types.includes(def.type)) return { valid: false, reason: 'Card does not match required type' };
+  }
+
+  const reducedCost = Math.max(0, def.cost - (choice.costReduction ?? 0));
+  if (state.players[player].mythium < reducedCost) {
+    return { valid: false, reason: 'Not enough mythium' };
+  }
+
+  if (def.standingRequirement && !meetsStandingRequirement(state, player, def.standingRequirement)) {
+    return { valid: false, reason: 'Standing requirement not met' };
+  }
+
   return { valid: true };
 }
 

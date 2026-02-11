@@ -130,7 +130,6 @@ const testCards: CardDefinition[] = [
       description: 'Each player discards 1 card. Gain 1 power.',
     }],
   },
-
   {
     id: 'strategic_insight',
     name: 'Strategic Insight',

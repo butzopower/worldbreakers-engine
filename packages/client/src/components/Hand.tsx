@@ -25,12 +25,14 @@ export default function Hand({ cards, interactionMode, legalActions, onCardClick
           );
           const isDiscardTarget = interactionMode.type === 'choose_discard' &&
             interactionMode.selected.includes(card.instanceId);
+          const isChooseCardTarget = interactionMode.type === 'choose_card' &&
+            interactionMode.validCards.includes(card.instanceId);
 
           return (
             <FollowerCard
               key={card.instanceId}
               card={card}
-              highlighted={canPlay && interactionMode.type === 'none'}
+              highlighted={(canPlay && interactionMode.type === 'none') || isChooseCardTarget}
               selected={isDiscardTarget}
               onClick={() => onCardClick(card)}
               compact

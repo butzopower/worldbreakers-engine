@@ -14,4 +14,17 @@ export const events: CardDefinition[] = [
       description: 'Gain 9 Mythium.',
     }],
   },
+  {
+    id: 'gratuitous_gift',
+    name: 'Gratuitous Gift',
+    type: 'event',
+    guild: 'neutral',
+    cost: 0,
+    description: 'Play a follower card, paying 2 mythium less.',
+    abilities: [{
+      timing: 'enters',
+      customResolve: 'gratuitous_gift',
+      description: 'Play a follower card, paying 2 mythium less.',
+    }],
+  },
 ];

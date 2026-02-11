@@ -9,7 +9,8 @@ const DEFAULT_DECK: DeckConfig = {
   worldbreakerId: 'stone_sentinel',
   cardIds: [
     'mythium_fund', 'mythium_fund',
-    'strategic_insight', 'strategic_insight', 'strategic_insight',
+    'gratuitous_gift', 'gratuitous_gift', 'gratuitous_gift',
+    'gratuitous_gift', 'gratuitous_gift', 'gratuitous_gift',
     'militia_scout', 'militia_scout', 'militia_scout',
     'shield_bearer', 'shield_bearer',
     'night_raider', 'night_raider',
