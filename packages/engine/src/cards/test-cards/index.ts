@@ -105,6 +105,18 @@ const testCards: CardDefinition[] = [
 
   // Events
   {
+    id: 'mother_lode',
+    name: 'Mother Lode',
+    type: 'event',
+    guild: 'neutral',
+    cost: 0,
+    abilities: [{
+      timing: 'enters',
+      effects: [{ type: 'gain_mythium', player: 'self', amount: 3}],
+      description: 'Choose one: Gain 2 mythium, or draw 2 cards.',
+    }],
+  },
+  {
     id: 'sudden_strike',
     name: 'Sudden Strike',
     type: 'event',

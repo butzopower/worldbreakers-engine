@@ -65,42 +65,20 @@ export function resolveAbility(
         return { state, events: [] };
       }
 
-      // play_card always requires a pending choice (engine handles play logic)
-      if (effect.type === 'play_card') {
-        return {
-          state: {
-            ...state,
-            pendingChoice: {
-              type: 'choose_target',
-              playerId: controller,
-              sourceCardId,
-              abilityIndex,
-              effects: ability.effects,
-              triggeringCardId,
-            },
+      return {
+        state: {
+          ...state,
+          pendingChoice: {
+            type: 'choose_target',
+            playerId: controller,
+            sourceCardId,
+            abilityIndex,
+            effects: ability.effects,
+            triggeringCardId,
           },
-          events: [],
-        };
-      }
-
-      if (validTargets.length === 1) {
-        ctx.chosenTargets = [validTargets[0]];
-      } else {
-        return {
-          state: {
-            ...state,
-            pendingChoice: {
-              type: 'choose_target',
-              playerId: controller,
-              sourceCardId,
-              abilityIndex,
-              effects: ability.effects,
-              triggeringCardId,
-            },
-          },
-          events: [],
-        };
-      }
+        },
+        events: [],
+      };
     }
   }
 

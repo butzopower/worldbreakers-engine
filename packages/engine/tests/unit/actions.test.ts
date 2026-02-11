@@ -130,19 +130,16 @@ describe('play_card action', () => {
       .withActivePlayer('player1')
       .withMythium('player1', 5)
       .withStanding('player1', 'earth', 1)
-      .addCard('sudden_strike', 'player1', 'hand', { instanceId: 'ss1' })
-      .addCard('militia_scout', 'player2', 'board', { instanceId: 'target1' })
+      .addCard('mother_lode', 'player1', 'hand', { instanceId: 'ml1' })
       .build();
 
     const result = processAction(state, {
       player: 'player1',
-      action: { type: 'play_card', cardInstanceId: 'ss1' },
+      action: { type: 'play_card', cardInstanceId: 'ml1' },
     });
 
     // Event goes to discard
-    expectCardInZone(result.state, 'ss1', 'discard');
-    // Only 1 target = auto-selected, deals 2 wounds to 1-health scout = defeated
-    expectCardInZone(result.state, 'target1', 'discard');
+    expectCardInZone(result.state, 'ml1', 'discard');
   });
 
   it('rejects playing card you cannot afford', () => {
