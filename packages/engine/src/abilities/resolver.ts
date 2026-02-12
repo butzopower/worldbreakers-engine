@@ -74,6 +74,7 @@ export function resolveAbility(
             sourceCardId,
             abilityIndex,
             effects: ability.effects,
+            filter: targetSelector.filter,
             triggeringCardId,
           },
         },

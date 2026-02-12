@@ -381,29 +381,24 @@ function getLegalChoiceActions(state: GameState): ActionInput[] {
 
   switch (choice.type) {
     case 'choose_target': {
-      const firstEffect = choice.effects[0];
-      if (firstEffect && 'target' in firstEffect && firstEffect.target) {
-        const filter = firstEffect.target.kind === 'choose' ? firstEffect.target.filter : undefined;
-        if (filter) {
-          const validCards = state.cards.filter(c => {
-            const def = getCardDef(c);
-            if (filter.type) {
-              const types = Array.isArray(filter.type) ? filter.type : [filter.type];
-              if (!types.includes(def.type)) return false;
-            }
-            if (filter.zone) {
-              const zones = Array.isArray(filter.zone) ? filter.zone : [filter.zone];
-              if (!zones.includes(c.zone)) return false;
-            }
-            if (filter.owner === 'controller' && c.owner !== player) return false;
-            if (filter.owner === 'opponent' && c.owner === player) return false;
-            if (filter.canPay && !canPay(state, player, c, { costReduction: filter.canPay.costReduction })) return false;
-            return true;
-          });
-          for (const card of validCards) {
-            actions.push({ player, action: { type: 'choose_target', targetInstanceId: card.instanceId } });
-          }
+      const { filter } = choice;
+      const validCards = state.cards.filter(c => {
+        const def = getCardDef(c);
+        if (filter.type) {
+          const types = Array.isArray(filter.type) ? filter.type : [filter.type];
+          if (!types.includes(def.type)) return false;
         }
+        if (filter.zone) {
+          const zones = Array.isArray(filter.zone) ? filter.zone : [filter.zone];
+          if (!zones.includes(c.zone)) return false;
+        }
+        if (filter.owner === 'controller' && c.owner !== player) return false;
+        if (filter.owner === 'opponent' && c.owner === player) return false;
+        if (filter.canPay && !canPay(state, player, c, { costReduction: filter.canPay.costReduction })) return false;
+        return true;
+      });
+      for (const card of validCards) {
+        actions.push({ player, action: { type: 'choose_target', targetInstanceId: card.instanceId } });
       }
       break;
     }

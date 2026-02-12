@@ -1,6 +1,6 @@
 import { PlayerId, StandingGuild, Phase, Zone, CombatStep } from './core';
 import { CounterMap } from './counters';
-import { EffectPrimitive } from './effects';
+import { CardFilter, EffectPrimitive } from './effects';
 
 export interface CardInstance {
   instanceId: string;
@@ -32,7 +32,7 @@ export interface CombatState {
   damageDealt: boolean;
 }
 
-export type PendingChoiceChooseTarget = { type: 'choose_target'; playerId: PlayerId; sourceCardId: string; abilityIndex: number; effects: EffectPrimitive[]; triggeringCardId?: string }
+export type PendingChoiceChooseTarget = { type: 'choose_target'; playerId: PlayerId; sourceCardId: string; abilityIndex: number; effects: EffectPrimitive[]; filter: CardFilter; triggeringCardId?: string }
 
 export type PendingChoice =
   | { type: 'choose_blockers'; playerId: PlayerId; attackerIds: string[] }

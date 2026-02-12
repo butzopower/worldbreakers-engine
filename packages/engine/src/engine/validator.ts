@@ -202,25 +202,20 @@ function validateChooseTarget(
   const card = getCard(state, targetInstanceId);
   if (!card) return { valid: false, reason: 'Target not found' };
 
-  const firstEffect = choice.effects[0];
-  if (firstEffect && 'target' in firstEffect && firstEffect.target) {
-    const filter = firstEffect.target.kind === 'choose' ? firstEffect.target.filter : undefined;
-    if (filter) {
-      const def = getCardDef(card);
-      if (filter.type) {
-        const types = Array.isArray(filter.type) ? filter.type : [filter.type];
-        if (!types.includes(def.type)) return { valid: false, reason: 'Target does not match required type' };
-      }
-      if (filter.zone) {
-        const zones = Array.isArray(filter.zone) ? filter.zone : [filter.zone];
-        if (!zones.includes(card.zone)) return { valid: false, reason: 'Target is not in valid zone' };
-      }
-      if (filter.owner === 'controller' && card.owner !== player) return { valid: false, reason: 'Target is not yours' };
-      if (filter.owner === 'opponent' && card.owner === player) return { valid: false, reason: 'Target must belong to opponent' };
-      if (filter.canPay && !canPay(state, player, card, { costReduction: filter.canPay.costReduction })) {
-        return { valid: false, reason: 'Cannot afford this card' };
-      }
-    }
+  const { filter } = choice;
+  const def = getCardDef(card);
+  if (filter.type) {
+    const types = Array.isArray(filter.type) ? filter.type : [filter.type];
+    if (!types.includes(def.type)) return { valid: false, reason: 'Target does not match required type' };
+  }
+  if (filter.zone) {
+    const zones = Array.isArray(filter.zone) ? filter.zone : [filter.zone];
+    if (!zones.includes(card.zone)) return { valid: false, reason: 'Target is not in valid zone' };
+  }
+  if (filter.owner === 'controller' && card.owner !== player) return { valid: false, reason: 'Target is not yours' };
+  if (filter.owner === 'opponent' && card.owner === player) return { valid: false, reason: 'Target must belong to opponent' };
+  if (filter.canPay && !canPay(state, player, card, { costReduction: filter.canPay.costReduction })) {
+    return { valid: false, reason: 'Cannot afford this card' };
   }
 
   return { valid: true };
