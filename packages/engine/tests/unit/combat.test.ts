@@ -230,12 +230,13 @@ describe('combat - multiple attackers', () => {
       .withActivePlayer('player1')
       .addCard('militia_scout', 'player1', 'board', { instanceId: 'atk1' }) // 1/1
       .addCard('star_warden', 'player1', 'board', { instanceId: 'atk2' }) // 2/2
+      .addCard('star_warden', 'player1', 'board', { instanceId: 'atk3' }) // 2/2
       .addCard('militia_scout', 'player2', 'board', { instanceId: 'blk1' }) // 1/1
       .build();
 
     const r1 = processAction(state, {
       player: 'player1',
-      action: { type: 'attack', attackerIds: ['atk1', 'atk2'] },
+      action: { type: 'attack', attackerIds: ['atk1', 'atk2', 'atk3'] },
     });
 
     // Block atk1 with blk1 — fight resolves immediately
@@ -249,7 +250,7 @@ describe('combat - multiple attackers', () => {
     expectCardInZone(r2.state, 'blk1', 'discard');
 
     // Defender has no more ready followers, so combat proceeds to breach
-    // atk2 breaches for 2 power
+    // atk2 and atk3 breaches for 2 power
     expect(r2.state.combat).toBeNull();
     expectPlayerPower(r2.state, 'player1', 2);
   });

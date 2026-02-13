@@ -180,7 +180,7 @@ function proceedToBreach(
     for (const id of livingAttackerIds) {
       const card = getCard(s, id);
       if (card) {
-        breachPower += getEffectiveStrength(s, card);
+        breachPower++;
       }
     }
 

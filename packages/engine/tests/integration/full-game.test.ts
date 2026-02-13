@@ -219,7 +219,7 @@ describe('worldbreaker abilities', () => {
       action: { type: 'pass_block' },
     });
 
-    expectPlayerPower(r2.state, 'player1', 2); // 1 base + 1 buff
+    expectPlayerPower(r2.state, 'player1', 1); // 1 power gained per breaching follower
     // Lasting effect should be expired after combat
     expect(r2.state.lastingEffects.length).toBe(0);
   });
