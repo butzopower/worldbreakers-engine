@@ -1,9 +1,17 @@
-import type { PlayerId, FilteredGameState, VisibleCard, InteractionMode, PlayerAction } from '../types';
+import type {
+  PlayerId,
+  FilteredGameState,
+  VisibleCard,
+  InteractionMode,
+  PlayerAction,
+  ClientCardDefinition
+} from '../types';
 import { isVisible } from '../types';
 import FollowerCard from './FollowerCard';
 import LocationCard from './LocationCard';
 import Hand from './Hand';
 import { socket } from '../socket';
+import { useCardDefinitions } from "../context/CardDefinitions";
 
 interface Props {
   state: FilteredGameState;
@@ -14,12 +22,14 @@ interface Props {
 }
 
 export default function PlayerArea({ state, playerId, interactionMode, onCardClick, legalActions }: Props) {
+  const cardDefs = useCardDefinitions();
+
   const player = state.players[playerId];
   const allCards = state.cards.filter(c => isVisible(c) && c.owner === playerId) as VisibleCard[];
 
   const worldbreaker = allCards.find(c => c.zone === 'worldbreaker');
-  const followers = allCards.filter(c => c.zone === 'board' && !isLocation(c));
-  const locations = allCards.filter(c => c.zone === 'board' && isLocation(c));
+  const followers = allCards.filter(c => c.zone === 'board' && isFollower(cardDefs[c.definitionId]));
+  const locations = allCards.filter(c => c.zone === 'board' && isLocation(cardDefs[c.definitionId]));
   const hand = allCards.filter(c => c.zone === 'hand');
 
   return (
@@ -133,7 +143,10 @@ export default function PlayerArea({ state, playerId, interactionMode, onCardCli
   );
 }
 
-function isLocation(card: VisibleCard): boolean {
-  const locations = ['watchtower', 'void_nexus'];
-  return locations.includes(card.definitionId);
+function isFollower(card: ClientCardDefinition): boolean {
+  return card.type === 'follower';
+}
+
+function isLocation(card: ClientCardDefinition): boolean {
+  return card.type === 'location';
 }

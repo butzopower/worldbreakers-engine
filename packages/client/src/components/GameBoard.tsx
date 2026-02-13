@@ -1,5 +1,4 @@
 import type { PlayerId, FilteredGameState, VisibleCard, InteractionMode, PlayerAction } from '../types';
-import { isVisible } from '../types';
 import PlayerArea from './PlayerArea';
 import OpponentArea from './OpponentArea';
 

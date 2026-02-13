@@ -16,12 +16,12 @@ function formatEvent(event: GameEvent): string {
     case 'standing_gained': return `${event.player} +${event.amount} ${event.guild} standing`;
     case 'card_drawn': return `${event.player} drew a card`;
     case 'card_played': return `${event.player} played ${event.definitionId ?? 'card'}`;
-    case 'card_moved': return `Card → ${event.toZone}`;
+    case 'card_moved': return `Card moved ${event.from} → ${event.to}`;
     case 'card_exhausted': return `Card tapped`;
     case 'card_readied': return `Card readied`;
     case 'card_discarded': return `${event.player} discarded`;
-    case 'counter_added': return `+${event.amount} ${event.counterType} counter`;
-    case 'counter_removed': return `-${event.amount} ${event.counterType} counter`;
+    case 'counter_added': return `+${event.amount} ${event.counter} counter`;
+    case 'counter_removed': return `-${event.amount} ${event.counter} counter`;
     case 'combat_started': return `${event.attackingPlayer} attacks!`;
     case 'blockers_declared': return 'Blockers declared';
     case 'fight_resolved': return 'Fight resolved';

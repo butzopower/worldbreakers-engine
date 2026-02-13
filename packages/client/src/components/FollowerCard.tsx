@@ -42,7 +42,7 @@ export default function FollowerCard({ card, highlighted, selected, dimmed, onCl
           border,
           borderRadius: '6px',
           padding: compact ? '4px 6px 10px' : '6px 8px 10px',
-          background: dimmed ? '#1a1a2e' : '#16213e',
+          background: dimmed ? '#1a1a2e' : highlighted ? 'rgba(255,255,0,0.1)' : '#16213e',
           opacity: dimmed ? 0.5 : card.exhausted ? 0.7 : 1,
           cursor: onClick ? 'pointer' : 'default',
           minWidth: compact ? '90px' : '120px',

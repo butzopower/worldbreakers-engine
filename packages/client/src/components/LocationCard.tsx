@@ -23,7 +23,7 @@ export default function LocationCard({ card, canDevelop, highlighted, onClick, o
           border: highlighted ? '2px solid #ffff00' : '2px solid #555',
           borderRadius: '6px',
           padding: '6px 8px',
-          background: '#16213e',
+          background: highlighted ? 'rgba(255,255,0,0.1)' : '#16213e',
           minWidth: '120px',
           fontSize: '12px',
           cursor: onClick ? 'pointer' : 'default',
