@@ -1,4 +1,4 @@
-import { PlayerId, opponentOf } from '../types/core';
+import { PlayerId, opponentOf, STANDING_GUILDS } from '../types/core';
 import { GameState, LastingEffect } from '../types/state';
 import { GameEvent } from '../types/events';
 import { EffectPrimitive, PlayerSelector, TargetSelector, CardFilter } from '../types/effects';
@@ -106,6 +106,22 @@ export function resolvePrimitive(
       break;
     }
     case 'gain_standing': {
+      if (effect.guild === 'choose') {
+        const player = resolvePlayerSelector(effect.player, ctx)[0];
+        s = {
+          ...s,
+          pendingChoice: {
+            type: 'choose_mode',
+            playerId: player,
+            sourceCardId: ctx.sourceCardId,
+            modes: STANDING_GUILDS.map(g => ({
+              label: `Gain ${effect.amount} ${g.charAt(0).toUpperCase() + g.slice(1)} standing`,
+              effects: [{ type: 'gain_standing' as const, player: effect.player, guild: g, amount: effect.amount }],
+            })),
+          },
+        };
+        break;
+      }
       const players = resolvePlayerSelector(effect.player, ctx);
       for (const p of players) {
         const r = gainStanding(s, p, effect.guild, effect.amount);

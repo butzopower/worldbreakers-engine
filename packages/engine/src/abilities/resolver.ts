@@ -85,6 +85,9 @@ export function resolveAbility(
     const result = resolvePrimitive(s, effect, ctx);
     s = result.state;
     events.push(...result.events);
+    if (s.pendingChoice) {
+      return { state: s, events };
+    }
   }
 
   return { state: s, events };

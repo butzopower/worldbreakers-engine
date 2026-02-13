@@ -30,7 +30,7 @@ export interface Condition {
 export type EffectPrimitive =
   | { type: 'gain_mythium'; player: PlayerSelector; amount: number }
   | { type: 'draw_cards'; player: PlayerSelector; count: number }
-  | { type: 'gain_standing'; player: PlayerSelector; guild: StandingGuild; amount: number }
+  | { type: 'gain_standing'; player: PlayerSelector; guild: StandingGuild | 'choose'; amount: number }
   | { type: 'gain_power'; player: PlayerSelector; amount: number }
   | { type: 'deal_wounds'; target: TargetSelector; amount: number }
   | { type: 'add_counter'; target: TargetSelector; counter: CounterType; amount: number }

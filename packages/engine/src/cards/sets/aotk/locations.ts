@@ -23,15 +23,7 @@ export const locations: CardDefinition[] = [
           timing: 'enters',
           effects: [
             { type: 'draw_cards', player: 'self', count: 1 },
-            {
-              type: 'choose_one',
-              modes: [
-                { label: 'Gain 1 Earth standing', effects: [{ type: 'gain_standing', player: 'self', guild: 'earth', amount: 1 }] },
-                { label: 'Gain 1 Moon standing', effects: [{ type: 'gain_standing', player: 'self', guild: 'moon', amount: 1 }] },
-                { label: 'Gain 1 Void standing', effects: [{ type: 'gain_standing', player: 'self', guild: 'void', amount: 1 }] },
-                { label: 'Gain 1 Stars standing', effects: [{ type: 'gain_standing', player: 'self', guild: 'stars', amount: 1 }] },
-              ],
-            },
+            { type: 'gain_standing', player: 'self', guild: 'choose', amount: 1 },
           ],
           description: 'Draw 1 card and gain 1 standing with any guild.',
         },

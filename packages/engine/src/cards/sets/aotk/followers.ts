@@ -44,15 +44,7 @@ export const followers: CardDefinition[] = [
     abilities: [
       {
         timing: 'enters',
-        effects: [{
-          type: 'choose_one',
-          modes: [
-            { label: 'Gain 1 Earth standing', effects: [{ type: 'gain_standing', player: 'self', guild: 'earth', amount: 1 }] },
-            { label: 'Gain 1 Moon standing', effects: [{ type: 'gain_standing', player: 'self', guild: 'moon', amount: 1 }] },
-            { label: 'Gain 1 Void standing', effects: [{ type: 'gain_standing', player: 'self', guild: 'void', amount: 1 }] },
-            { label: 'Gain 1 Stars standing', effects: [{ type: 'gain_standing', player: 'self', guild: 'stars', amount: 1 }] },
-          ],
-        }],
+        effects: [{ type: 'gain_standing', player: 'self', guild: 'choose', amount: 1 }],
         description: 'Gain 1 standing with any guild.',
       },
     ],
