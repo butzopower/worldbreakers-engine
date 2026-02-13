@@ -21,6 +21,12 @@ export type TargetSelector =
   | { kind: 'triggering_card' }
   | { kind: 'source_card' };
 
+export interface Condition {
+  type: 'min_card_count';
+  filter: CardFilter;
+  count: number;
+}
+
 export type EffectPrimitive =
   | { type: 'gain_mythium'; player: PlayerSelector; amount: number }
   | { type: 'draw_cards'; player: PlayerSelector; count: number }
@@ -34,7 +40,8 @@ export type EffectPrimitive =
   | { type: 'ready'; target: TargetSelector }
   | { type: 'buff_attackers'; counter: 'strength_buff'; amount: number }
   | { type: 'choose_one'; modes: { label: string; effects: EffectPrimitive[] }[] }
-  | { type: 'play_card'; target: TargetSelector; costReduction?: number };
+  | { type: 'play_card'; target: TargetSelector; costReduction?: number }
+  | { type: 'conditional'; condition: Condition; effects: EffectPrimitive[] };
 
 export type AbilityTiming =
   | 'enters'

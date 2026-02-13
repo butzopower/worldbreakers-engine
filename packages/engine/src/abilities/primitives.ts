@@ -220,6 +220,20 @@ export function resolvePrimitive(
 
       break;
     }
+    case 'conditional': {
+      const { condition, effects: innerEffects } = effect;
+      if (condition.type === 'min_card_count') {
+        const matching = s.cards.filter(c => matchesFilter(s, c, condition.filter, ctx));
+        if (matching.length >= condition.count) {
+          for (const inner of innerEffects) {
+            const r = resolvePrimitive(s, inner, ctx);
+            s = r.state;
+            events.push(...r.events);
+          }
+        }
+      }
+      break;
+    }
   }
 
   return { state: s, events };
