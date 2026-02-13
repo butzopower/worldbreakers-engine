@@ -36,12 +36,15 @@ export function resolveAbility(
     return { state, events: [] };
   }
 
-  // Check if any effect needs a mode choice
+  // Resolve effects sequentially, stopping at the first that needs a choice
+  let s = state;
+  const events: GameEvent[] = [];
+
   for (const effect of ability.effects) {
     if (needsModeChoice(effect)) {
       return {
         state: {
-          ...state,
+          ...s,
           pendingChoice: {
             type: 'choose_mode',
             playerId: controller,
@@ -49,41 +52,42 @@ export function resolveAbility(
             modes: effect.modes,
           },
         },
-        events: [],
+        events,
       };
     }
-  }
 
-  // Check if any effect needs target selection
-  for (const effect of ability.effects) {
     if (needsTargetChoice(effect)) {
       const targetSelector = getTargetSelector(effect)!;
-      if (targetSelector.kind !== 'choose') continue;
+      if (targetSelector.kind === 'choose') {
+        const validTargets = findValidTargets(s, targetSelector, ctx);
+        if (validTargets.length === 0) {
+          return { state: s, events };
+        }
 
-      const validTargets = findValidTargets(state, targetSelector, ctx);
-      if (validTargets.length === 0) {
-        return { state, events: [] };
-      }
-
-      return {
-        state: {
-          ...state,
-          pendingChoice: {
-            type: 'choose_target',
-            playerId: controller,
-            sourceCardId,
-            abilityIndex,
-            effects: ability.effects,
-            filter: targetSelector.filter,
-            triggeringCardId,
+        return {
+          state: {
+            ...s,
+            pendingChoice: {
+              type: 'choose_target',
+              playerId: controller,
+              sourceCardId,
+              abilityIndex,
+              effects: ability.effects,
+              filter: targetSelector.filter,
+              triggeringCardId,
+            },
           },
-        },
-        events: [],
-      };
+          events,
+        };
+      }
     }
+
+    const result = resolvePrimitive(s, effect, ctx);
+    s = result.state;
+    events.push(...result.events);
   }
 
-  return resolveEffects(state, ability.effects, ctx);
+  return { state: s, events };
 }
 
 /**
