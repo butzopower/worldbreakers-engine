@@ -49,4 +49,22 @@ export const followers: CardDefinition[] = [
       },
     ],
   },
+  {
+    id: 'astute_tactician',
+    name: 'Astute Tactician',
+    type: 'follower',
+    guild: 'earth',
+    cost: 5,
+    standingRequirement: { earth: 2 },
+    strength: 5,
+    health: 3,
+    abilities: [
+      {
+        timing: 'attacks',
+        effects: [{ type: 'gain_mythium', player: 'self', amount: 2 }],
+        description: 'Gain 2 Mythium.',
+      },
+    ],
+    description: 'Attacks: Gain 2 Mythium.',
+  }
 ];
