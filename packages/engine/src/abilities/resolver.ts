@@ -68,22 +68,22 @@ export function resolveAbility(
         }
 
         const remainingEffects = ability.effects.slice(i + 1);
-        return {
-          state: {
-            ...s,
-            pendingChoice: {
-              type: 'choose_target',
-              playerId: controller,
-              sourceCardId,
-              abilityIndex,
-              effects: [effect],
-              filter: targetSelector.filter,
-              triggeringCardId,
-              remainingEffects: remainingEffects.length > 0 ? remainingEffects : undefined,
-            },
+        const newState: GameState = {
+          ...s,
+          pendingChoice: {
+            type: 'choose_target',
+            playerId: controller,
+            sourceCardId,
+            abilityIndex,
+            effects: [effect],
+            filter: targetSelector.filter,
+            triggeringCardId,
           },
-          events,
         };
+        if (remainingEffects.length > 0) {
+          newState.remainingEffects = { effects: remainingEffects, controller, sourceCardId, triggeringCardId };
+        }
+        return { state: newState, events };
       }
     }
 

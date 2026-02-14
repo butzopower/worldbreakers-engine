@@ -32,7 +32,7 @@ export interface CombatState {
   damageDealt: boolean;
 }
 
-export type PendingChoiceChooseTarget = { type: 'choose_target'; playerId: PlayerId; sourceCardId: string; abilityIndex: number; effects: EffectPrimitive[]; filter: CardFilter; triggeringCardId?: string; remainingEffects?: EffectPrimitive[] }
+export type PendingChoiceChooseTarget = { type: 'choose_target'; playerId: PlayerId; sourceCardId: string; abilityIndex: number; effects: EffectPrimitive[]; filter: CardFilter; triggeringCardId?: string }
 
 export type PendingChoice =
   | { type: 'choose_blockers'; playerId: PlayerId; attackerIds: string[] }
@@ -68,4 +68,6 @@ export interface GameState {
   rngState: number;
   /** Winner, if game is over */
   winner: PlayerId | 'draw' | null;
+  /** Effects remaining to resolve after the current pending choice completes */
+  remainingEffects?: { effects: EffectPrimitive[]; controller: PlayerId; sourceCardId: string; triggeringCardId?: string };
 }

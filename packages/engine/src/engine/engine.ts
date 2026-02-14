@@ -188,47 +188,6 @@ function handlePendingChoice(
       s = cleanupResult.state;
       events.push(...cleanupResult.events);
 
-      // Process remaining effects if no pending choice was set by the resolved effects
-      if (!s.pendingChoice && choice.remainingEffects && choice.remainingEffects.length > 0) {
-        const remainCtx: ResolveContext = {
-          controller: choice.playerId,
-          sourceCardId: choice.sourceCardId,
-          triggeringCardId: choice.triggeringCardId,
-        };
-
-        for (let i = 0; i < choice.remainingEffects.length; i++) {
-          const remainingEffect = choice.remainingEffects[i];
-
-          if ('target' in remainingEffect && remainingEffect.target && remainingEffect.target.kind === 'choose') {
-            const validTargets = findValidTargets(s, remainingEffect.target, remainCtx);
-            if (validTargets.length === 0) {
-              continue;
-            }
-
-            const nextRemaining = choice.remainingEffects.slice(i + 1);
-            s = {
-              ...s,
-              pendingChoice: {
-                type: 'choose_target',
-                playerId: choice.playerId,
-                sourceCardId: choice.sourceCardId,
-                abilityIndex: choice.abilityIndex,
-                effects: [remainingEffect],
-                filter: remainingEffect.target.filter,
-                triggeringCardId: choice.triggeringCardId,
-                remainingEffects: nextRemaining.length > 0 ? nextRemaining : undefined,
-              },
-            };
-            break;
-          }
-
-          const r = resolvePrimitive(s, remainingEffect, remainCtx);
-          s = r.state;
-          events.push(...r.events);
-          if (s.pendingChoice) break;
-        }
-      }
-
       break;
     }
 
@@ -327,6 +286,52 @@ function handlePendingChoice(
       break;
     }
 
+  }
+
+  // Process remaining effects if no pending choice was set
+  if (!s.pendingChoice && s.remainingEffects) {
+    const remaining = s.remainingEffects;
+    s = { ...s, remainingEffects: undefined };
+
+    const remainCtx: ResolveContext = {
+      controller: remaining.controller,
+      sourceCardId: remaining.sourceCardId,
+      triggeringCardId: remaining.triggeringCardId,
+    };
+
+    for (let i = 0; i < remaining.effects.length; i++) {
+      const effect = remaining.effects[i];
+
+      if ('target' in effect && effect.target && effect.target.kind === 'choose') {
+        const validTargets = findValidTargets(s, effect.target, remainCtx);
+        if (validTargets.length === 0) {
+          continue;
+        }
+
+        const nextRemaining = remaining.effects.slice(i + 1);
+        s = {
+          ...s,
+          pendingChoice: {
+            type: 'choose_target',
+            playerId: remaining.controller,
+            sourceCardId: remaining.sourceCardId,
+            abilityIndex: 0,
+            effects: [effect],
+            filter: effect.target.filter,
+            triggeringCardId: remaining.triggeringCardId,
+          },
+        };
+        if (nextRemaining.length > 0) {
+          s.remainingEffects = { effects: nextRemaining, controller: remaining.controller, sourceCardId: remaining.sourceCardId, triggeringCardId: remaining.triggeringCardId };
+        }
+        break;
+      }
+
+      const r = resolvePrimitive(s, effect, remainCtx);
+      s = r.state;
+      events.push(...r.events);
+      if (s.pendingChoice) break;
+    }
   }
 
   // If no more pending and no combat, may need to advance turn
