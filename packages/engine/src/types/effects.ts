@@ -41,7 +41,8 @@ export type EffectPrimitive =
   | { type: 'buff_attackers'; counter: 'strength_buff'; amount: number }
   | { type: 'choose_one'; modes: { label: string; effects: EffectPrimitive[] }[] }
   | { type: 'play_card'; target: TargetSelector; costReduction?: number }
-  | { type: 'conditional'; condition: Condition; effects: EffectPrimitive[] };
+  | { type: 'conditional'; condition: Condition; effects: EffectPrimitive[] }
+  | { type: 'develop'; target: TargetSelector };
 
 export type AbilityTiming =
   | 'enters'

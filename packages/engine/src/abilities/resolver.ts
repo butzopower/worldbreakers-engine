@@ -40,7 +40,9 @@ export function resolveAbility(
   let s = state;
   const events: GameEvent[] = [];
 
-  for (const effect of ability.effects) {
+  for (let i = 0; i < ability.effects.length; i++) {
+    const effect = ability.effects[i];
+
     if (needsModeChoice(effect)) {
       return {
         state: {
@@ -61,9 +63,11 @@ export function resolveAbility(
       if (targetSelector.kind === 'choose') {
         const validTargets = findValidTargets(s, targetSelector, ctx);
         if (validTargets.length === 0) {
-          return { state: s, events };
+          // Skip this effect but continue with remaining effects
+          continue;
         }
 
+        const remainingEffects = ability.effects.slice(i + 1);
         return {
           state: {
             ...s,
@@ -72,9 +76,10 @@ export function resolveAbility(
               playerId: controller,
               sourceCardId,
               abilityIndex,
-              effects: ability.effects,
+              effects: [effect],
               filter: targetSelector.filter,
               triggeringCardId,
+              remainingEffects: remainingEffects.length > 0 ? remainingEffects : undefined,
             },
           },
           events,

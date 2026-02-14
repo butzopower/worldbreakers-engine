@@ -16,7 +16,7 @@ import { handleUseAbility } from '../actions/use-ability';
 import { declareBlocker, passBlock, endCombat } from '../combat/combat';
 import { handleBreachDamage, handleSkipBreachDamage } from '../combat/breach';
 import { resolveEffects } from '../abilities/resolver';
-import { ResolveContext } from '../abilities/primitives';
+import { ResolveContext, findValidTargets, resolvePrimitive } from '../abilities/primitives';
 import { moveCard, gainPower } from '../state/mutate';
 import { getCard, getHand, getCardDef, canPay } from '../state/query';
 import {
@@ -187,6 +187,47 @@ function handlePendingChoice(
       const cleanupResult = runCleanup(s);
       s = cleanupResult.state;
       events.push(...cleanupResult.events);
+
+      // Process remaining effects if no pending choice was set by the resolved effects
+      if (!s.pendingChoice && choice.remainingEffects && choice.remainingEffects.length > 0) {
+        const remainCtx: ResolveContext = {
+          controller: choice.playerId,
+          sourceCardId: choice.sourceCardId,
+          triggeringCardId: choice.triggeringCardId,
+        };
+
+        for (let i = 0; i < choice.remainingEffects.length; i++) {
+          const remainingEffect = choice.remainingEffects[i];
+
+          if ('target' in remainingEffect && remainingEffect.target && remainingEffect.target.kind === 'choose') {
+            const validTargets = findValidTargets(s, remainingEffect.target, remainCtx);
+            if (validTargets.length === 0) {
+              continue;
+            }
+
+            const nextRemaining = choice.remainingEffects.slice(i + 1);
+            s = {
+              ...s,
+              pendingChoice: {
+                type: 'choose_target',
+                playerId: choice.playerId,
+                sourceCardId: choice.sourceCardId,
+                abilityIndex: choice.abilityIndex,
+                effects: [remainingEffect],
+                filter: remainingEffect.target.filter,
+                triggeringCardId: choice.triggeringCardId,
+                remainingEffects: nextRemaining.length > 0 ? nextRemaining : undefined,
+              },
+            };
+            break;
+          }
+
+          const r = resolvePrimitive(s, remainingEffect, remainCtx);
+          s = r.state;
+          events.push(...r.events);
+          if (s.pendingChoice) break;
+        }
+      }
 
       break;
     }

@@ -27,4 +27,21 @@ export const events: CardDefinition[] = [
       description: 'Play a follower card, paying 2 mythium less.',
     }],
   },
+  {
+    id: 'frantic_getaway',
+    name: 'Frantic Getaway',
+    type: 'event',
+    guild: 'stars',
+    cost: 1,
+    standingRequirement: { stars: 2 },
+    description: 'Develop a location you control. Develop a location you control.',
+    abilities: [{
+      timing: 'enters',
+      effects: [
+        { type: 'develop', target: { kind: 'choose', filter: { type: 'location', zone: ['board'], owner: 'controller' }, count: 1 } },
+        { type: 'develop', target: { kind: 'choose', filter: { type: 'location', zone: ['board'], owner: 'controller' }, count: 1 } },
+      ],
+      description: 'Develop a location you control. Develop a location you control.',
+    }],
+  },
 ];

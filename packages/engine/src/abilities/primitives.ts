@@ -7,7 +7,8 @@ import {
   gainMythium, drawCard, gainStanding, gainPower, addCounterToCard,
   removeCounterFromCard, exhaustCard, readyCard, moveCard, addLastingEffect,
 } from '../state/mutate';
-import { getCard, getCardDef, getBoard, getFollowers, canPay } from '../state/query';
+import { getCard, getCardDef, getBoard, getFollowers, canPay, canDevelop } from '../state/query';
+import { handleDevelop } from '../actions/develop';
 import { generateEffectId } from '../utils/id';
 import { handlePlayCard } from "../actions/play-card";
 
@@ -234,6 +235,18 @@ export function resolvePrimitive(
         events.push(...r.events);
       }
 
+      break;
+    }
+    case 'develop': {
+      const targets = resolveTargets(s, effect.target, ctx);
+      for (const targetId of targets) {
+        const card = getCard(s, targetId);
+        if (card && canDevelop(s, ctx.controller, card)) {
+          const r = handleDevelop(s, ctx.controller, targetId);
+          s = r.state;
+          events.push(...r.events);
+        }
+      }
       break;
     }
     case 'conditional': {
