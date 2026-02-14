@@ -21,11 +21,9 @@ export type TargetSelector =
   | { kind: 'triggering_card' }
   | { kind: 'source_card' };
 
-export interface Condition {
-  type: 'min_card_count';
-  filter: CardFilter;
-  count: number;
-}
+export type Condition =
+  | { type: 'min_card_count'; filter: CardFilter; count: number }
+  | { type: 'attacking_alone' };
 
 export type EffectPrimitive =
   | { type: 'gain_mythium'; player: PlayerSelector; amount: number }

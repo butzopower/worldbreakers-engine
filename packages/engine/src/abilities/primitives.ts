@@ -251,14 +251,18 @@ export function resolvePrimitive(
     }
     case 'conditional': {
       const { condition, effects: innerEffects } = effect;
+      let conditionMet = false;
       if (condition.type === 'min_card_count') {
         const matching = s.cards.filter(c => matchesFilter(s, c, condition.filter, ctx));
-        if (matching.length >= condition.count) {
-          for (const inner of innerEffects) {
-            const r = resolvePrimitive(s, inner, ctx);
-            s = r.state;
-            events.push(...r.events);
-          }
+        conditionMet = matching.length >= condition.count;
+      } else if (condition.type === 'attacking_alone') {
+        conditionMet = s.combat !== null && s.combat.attackerIds.length === 1;
+      }
+      if (conditionMet) {
+        for (const inner of innerEffects) {
+          const r = resolvePrimitive(s, inner, ctx);
+          s = r.state;
+          events.push(...r.events);
         }
       }
       break;

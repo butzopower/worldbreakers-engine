@@ -189,4 +189,52 @@ export const locations: CardDefinition[] = [
     ],
     description: 'I: Gain 2 mythium and 1 power. II: Gain 2 mythium and 1 standing with any guild.',
   },
+  {
+    id: 'alamut_castle',
+    name: 'Alamut Castle',
+    type: 'location',
+    guild: 'void',
+    cost: 7,
+    standingRequirement: { void: 2 },
+    stages: 3,
+    locationStages: [
+      {
+        stage: 1,
+        ability: {
+          timing: 'enters',
+          effects: [{ type: 'gain_power', player: 'self', amount: 1 }],
+          description: 'Gain 1 power.',
+        },
+      },
+      {
+        stage: 2,
+        ability: {
+          timing: 'enters',
+          effects: [{ type: 'gain_power', player: 'self', amount: 1 }],
+          description: 'Gain 1 power.',
+        },
+      },
+      {
+        stage: 3,
+        ability: {
+          timing: 'enters',
+          effects: [{ type: 'gain_power', player: 'self', amount: 2 }],
+          description: 'Gain 2 power.',
+        },
+      },
+    ],
+    abilities: [{
+      timing: 'your_attack',
+      effects: [{
+        type: 'conditional',
+        condition: { type: 'attacking_alone' },
+        effects: [
+          { type: 'ready', target: { kind: 'all', filter: { zone: ['worldbreaker'], owner: 'controller' } } },
+          { type: 'develop', target: { kind: 'self' } },
+        ],
+      }],
+      description: 'Your Attack: If one of your followers is attacking alone → Ready your Worldbreaker and develop Alamut Castle.',
+    }],
+    description: 'I: Gain 1 power. II: Gain 1 power. III: Gain 2 power. Your Attack: If one of your followers is attacking alone → Ready your Worldbreaker and develop Alamut Castle.',
+  },
 ];
