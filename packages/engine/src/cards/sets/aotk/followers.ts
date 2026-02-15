@@ -66,5 +66,16 @@ export const followers: CardDefinition[] = [
       },
     ],
     description: 'Attacks: Gain 2 Mythium.',
+  },
+  {
+    id: 'alamut_emissary',
+    name: 'Alamut Emissary',
+    type: 'follower',
+    guild: 'void',
+    cost: 4,
+    standingRequirement: { void: 2 },
+    strength: 2,
+    health: 4,
+    keywords: ['bloodshed']
   }
 ];
