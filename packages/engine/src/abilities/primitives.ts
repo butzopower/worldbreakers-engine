@@ -7,7 +7,7 @@ import {
   gainMythium, drawCard, gainStanding, gainPower, addCounterToCard,
   removeCounterFromCard, exhaustCard, readyCard, moveCard, addLastingEffect,
 } from '../state/mutate';
-import { getCard, getCardDef, getBoard, getFollowers, canPay, canDevelop } from '../state/query';
+import { getCard, getCardDef, getBoard, getFollowers, canPay, canDevelop, canAttack } from '../state/query';
 import { handleDevelop } from '../actions/develop';
 import { generateEffectId } from '../utils/id';
 import { handlePlayCard } from "../actions/play-card";
@@ -266,6 +266,19 @@ export function resolvePrimitive(
           s = r.state;
           events.push(...r.events);
         }
+      }
+      break;
+    }
+    case 'initiate_attack': {
+      const attackable = getFollowers(s, ctx.controller).filter(f => canAttack(s, f));
+      if (attackable.length > 0) {
+        s = {
+          ...s,
+          pendingChoice: {
+            type: 'choose_attackers',
+            playerId: ctx.controller,
+          },
+        };
       }
       break;
     }

@@ -156,6 +156,12 @@ function validatePendingChoice(state: GameState, player: PlayerId, action: Playe
       }
       return { valid: true };
 
+    case 'choose_attackers':
+      if (action.type !== 'choose_attackers') {
+        return { valid: false, reason: 'Must choose attackers' };
+      }
+      return validateAttack(state, player, action.attackerIds);
+
     default:
       return { valid: false, reason: 'Unknown choice type' };
   }

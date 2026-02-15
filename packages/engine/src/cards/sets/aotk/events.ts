@@ -44,4 +44,24 @@ export const events: CardDefinition[] = [
       description: 'Develop a location you control. Develop a location you control.',
     }],
   },
+  {
+    id: 'amazing_arithmetic',
+    name: 'Amazing Arithmetic',
+    type: 'event',
+    guild: 'void',
+    cost: 0,
+    standingRequirement: { void: 1 },
+    description: 'Gain 2 Mythium. You may attack.',
+    abilities: [{
+      timing: 'enters',
+      effects: [
+        { type: 'gain_mythium', player: 'self', amount: 2 },
+        { type: 'choose_one', modes: [
+          { label: 'Attack', effects: [{ type: 'initiate_attack' }] },
+          { label: 'Pass', effects: [] },
+        ]},
+      ],
+      description: 'Gain 2 Mythium. You may attack.',
+    }],
+  },
 ];

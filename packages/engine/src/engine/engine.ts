@@ -13,7 +13,7 @@ import { handlePlayCard } from '../actions/play-card';
 import { handleAttack } from '../actions/attack';
 import { handleDevelop } from '../actions/develop';
 import { handleUseAbility } from '../actions/use-ability';
-import { declareBlocker, passBlock, endCombat, resumeBreach } from '../combat/combat';
+import { declareBlocker, passBlock, endCombat, resumeBreach, initiateAttack } from '../combat/combat';
 import { handleBreachDamage, handleSkipBreachDamage } from '../combat/breach';
 import { resolveEffects } from '../abilities/resolver';
 import { ResolveContext, findValidTargets, resolvePrimitive } from '../abilities/primitives';
@@ -287,6 +287,15 @@ function handlePendingChoice(
       break;
     }
 
+    case 'choose_attackers': {
+      if (action.type !== 'choose_attackers') throw new Error('Expected choose_attackers');
+      s = { ...s, pendingChoice: null };
+      const attackResult = initiateAttack(s, choice.playerId, action.attackerIds);
+      s = attackResult.state;
+      events.push(...attackResult.events);
+      break;
+    }
+
   }
 
   // Process remaining effects if no pending choice was set
@@ -489,6 +498,16 @@ function getLegalChoiceActions(state: GameState): ActionInput[] {
     case 'choose_mode': {
       for (let i = 0; i < choice.modes.length; i++) {
         actions.push({ player, action: { type: 'choose_mode', modeIndex: i } });
+      }
+      break;
+    }
+    case 'choose_attackers': {
+      const attackable = getFollowers(state, player).filter(f => canAttack(state, f));
+      for (const f of attackable) {
+        actions.push({ player, action: { type: 'choose_attackers', attackerIds: [f.instanceId] } });
+      }
+      if (attackable.length > 1) {
+        actions.push({ player, action: { type: 'choose_attackers', attackerIds: attackable.map(f => f.instanceId) } });
       }
       break;
     }

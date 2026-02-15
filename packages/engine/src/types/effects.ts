@@ -41,7 +41,8 @@ export type EffectPrimitive =
   | { type: 'choose_one'; modes: { label: string; effects: EffectPrimitive[] }[] }
   | { type: 'play_card'; target: TargetSelector; costReduction?: number }
   | { type: 'conditional'; condition: Condition; effects: EffectPrimitive[] }
-  | { type: 'develop'; target: TargetSelector };
+  | { type: 'develop'; target: TargetSelector }
+  | { type: 'initiate_attack' };
 
 export type AbilityTiming =
   | 'enters'
