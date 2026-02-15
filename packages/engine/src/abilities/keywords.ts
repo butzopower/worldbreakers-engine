@@ -18,7 +18,7 @@ export function applyBloodshed(
   attackerCard: CardInstance,
   _defenderCard: CardInstance,
 ): { state: GameState; events: GameEvent[] } {
-  if (!hasKeyword(attackerCard, 'bloodshed')) return { state, events: [] };
+  if (!hasKeyword(state, attackerCard, 'bloodshed')) return { state, events: [] };
 
   const def = getCardDef(attackerCard);
   const amount = def.bloodshedAmount ?? 0;
@@ -42,6 +42,6 @@ export function applyOverwhelm(
   attackerCard: CardInstance,
   player: PlayerId,
 ): { state: GameState; events: GameEvent[] } {
-  if (!hasKeyword(attackerCard, 'overwhelm')) return { state, events: [] };
+  if (!hasKeyword(state, attackerCard, 'overwhelm')) return { state, events: [] };
   return gainPower(state, player, 1);
 }

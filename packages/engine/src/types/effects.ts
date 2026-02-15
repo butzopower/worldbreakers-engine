@@ -23,7 +23,8 @@ export type TargetSelector =
 
 export type Condition =
   | { type: 'min_card_count'; filter: CardFilter; count: number }
-  | { type: 'attacking_alone' };
+  | { type: 'attacking_alone' }
+  | { type: 'standing_less_than'; guild: StandingGuild; amount: number };
 
 export type EffectPrimitive =
   | { type: 'gain_mythium'; player: PlayerSelector; amount: number }

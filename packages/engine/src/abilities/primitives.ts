@@ -257,6 +257,8 @@ export function resolvePrimitive(
         conditionMet = matching.length >= condition.count;
       } else if (condition.type === 'attacking_alone') {
         conditionMet = s.combat !== null && s.combat.attackerIds.length === 1;
+      } else if (condition.type === 'standing_less_than') {
+        conditionMet = s.players[ctx.controller].standing[condition.guild] < condition.amount;
       }
       if (conditionMet) {
         for (const inner of innerEffects) {

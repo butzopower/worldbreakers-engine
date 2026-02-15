@@ -79,6 +79,21 @@ export const followers: CardDefinition[] = [
     keywords: ['bloodshed']
   },
   {
+    id: 'alert_warden',
+    name: 'Alert Warden',
+    type: 'follower',
+    guild: 'moon',
+    cost: 3,
+    standingRequirement: { moon: 1 },
+    strength: 4,
+    health: 3,
+    conditionalKeywords: [{
+      keyword: 'stationary',
+      condition: { type: 'standing_less_than', guild: 'moon', amount: 4 },
+    }],
+    description: 'While you have less than 4 Moon standing, Alert Warden has stationary.',
+  },
+  {
     id: 'alamut_saboteur',
     name: 'Alamut Saboteur',
     type: 'follower',

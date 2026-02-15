@@ -16,7 +16,7 @@ export function handleBreachDamage(
   const events: GameEvent[] = [];
 
   const location = getCard(s, locationInstanceId);
-  if (!location || isHidden(location)) {
+  if (!location || isHidden(s, location)) {
     return endCombat(s, events);
   }
 

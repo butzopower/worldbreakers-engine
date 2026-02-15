@@ -117,8 +117,8 @@ describe('State queries', () => {
       .addCard('militia_scout', 'player1', 'board', { instanceId: 'ms1' })
       .build();
 
-    expect(hasKeyword(getCard(state, 'sb1')!, 'stationary')).toBe(true);
-    expect(hasKeyword(getCard(state, 'ms1')!, 'stationary')).toBe(false);
+    expect(hasKeyword(state, getCard(state, 'sb1')!, 'stationary')).toBe(true);
+    expect(hasKeyword(state, getCard(state, 'ms1')!, 'stationary')).toBe(false);
   });
 
   it('canAttack respects exhaustion and stationary', () => {

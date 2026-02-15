@@ -1,5 +1,5 @@
 import { Guild, StandingGuild } from './core';
-import { AbilityDefinition } from './effects';
+import { AbilityDefinition, Condition } from './effects';
 
 export type CardType = 'worldbreaker' | 'follower' | 'event' | 'location';
 
@@ -25,6 +25,10 @@ export interface CardDefinition {
   stages?: number;
   locationStages?: LocationStage[];
   keywords?: Keyword[];
+  conditionalKeywords?: Array<{
+    keyword: Keyword;
+    condition: Condition;
+  }>;
   /** Bloodshed damage amount, if keyword is present */
   bloodshedAmount?: number;
   /** Standing requirement: { guild: count } */

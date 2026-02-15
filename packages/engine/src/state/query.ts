@@ -77,16 +77,27 @@ export function isDefeated(card: CardInstance): boolean {
   return wounds >= (def.health ?? 0);
 }
 
-export function hasKeyword(card: CardInstance, keyword: Keyword): boolean {
+export function hasKeyword(state: GameState, card: CardInstance, keyword: Keyword): boolean {
   const def = getCardDef(card);
-  return def.keywords?.includes(keyword) ?? false;
+  if (def.keywords?.includes(keyword)) return true;
+  if (def.conditionalKeywords) {
+    for (const ck of def.conditionalKeywords) {
+      if (ck.keyword !== keyword) continue;
+      const owner = card.owner;
+      const { condition } = ck;
+      if (condition.type === 'standing_less_than') {
+        if (state.players[owner].standing[condition.guild] < condition.amount) return true;
+      }
+    }
+  }
+  return false;
 }
 
 export function canAttack(state: GameState, card: CardInstance): boolean {
   if (card.zone !== 'board') return false;
   if (card.exhausted) return false;
   if (getCardDef(card).type !== 'follower') return false;
-  if (hasKeyword(card, 'stationary')) return false;
+  if (hasKeyword(state, card, 'stationary')) return false;
   if (getCounter(card.counters, 'stun') > 0) return false;
   return true;
 }
@@ -188,6 +199,6 @@ export function meetsStandingRequirement(
   return true;
 }
 
-export function isHidden(card: CardInstance): boolean {
-  return hasKeyword(card, 'hidden');
+export function isHidden(state: GameState, card: CardInstance): boolean {
+  return hasKeyword(state, card, 'hidden');
 }

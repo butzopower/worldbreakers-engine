@@ -225,7 +225,7 @@ function completeBreachFlow(
 
   // Check if defender has locations to damage
   const defender = opponentOf(s.combat!.attackingPlayer);
-  const defenderLocations = getLocations(s, defender).filter(loc => !isHidden(loc));
+  const defenderLocations = getLocations(s, defender).filter(loc => !isHidden(s, loc));
 
   if (defenderLocations.length > 0) {
     // Attacker can optionally damage a location
