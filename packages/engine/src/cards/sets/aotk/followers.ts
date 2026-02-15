@@ -77,5 +77,23 @@ export const followers: CardDefinition[] = [
     strength: 2,
     health: 4,
     keywords: ['bloodshed']
-  }
+  },
+  {
+    id: 'alamut_saboteur',
+    name: 'Alamut Saboteur',
+    type: 'follower',
+    guild: 'void',
+    cost: 3,
+    standingRequirement: { void: 2 },
+    strength: 1,
+    health: 4,
+    abilities: [
+      {
+        timing: 'breach',
+        effects: [{ type: 'discard', player: 'opponent', count: 1 }],
+        description: 'Defending player discards a card.',
+      },
+    ],
+    description: 'Breach: Defending player discards a card.',
+  },
 ];

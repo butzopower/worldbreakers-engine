@@ -13,7 +13,7 @@ import { handlePlayCard } from '../actions/play-card';
 import { handleAttack } from '../actions/attack';
 import { handleDevelop } from '../actions/develop';
 import { handleUseAbility } from '../actions/use-ability';
-import { declareBlocker, passBlock, endCombat } from '../combat/combat';
+import { declareBlocker, passBlock, endCombat, resumeBreach } from '../combat/combat';
 import { handleBreachDamage, handleSkipBreachDamage } from '../combat/breach';
 import { resolveEffects } from '../abilities/resolver';
 import { ResolveContext, findValidTargets, resolvePrimitive } from '../abilities/primitives';
@@ -231,6 +231,7 @@ function handlePendingChoice(
         s = powerResult.state;
         events.push(...powerResult.events);
       }
+
       break;
     }
 
@@ -332,6 +333,14 @@ function handlePendingChoice(
       events.push(...r.events);
       if (s.pendingChoice) break;
     }
+  }
+
+  // If a pending choice was resolved during breach, resume the breach flow
+  // (power gain + location damage choice).
+  if (!s.pendingChoice && s.combat?.step === 'breach') {
+    const breachResult = resumeBreach(s);
+    s = breachResult.state;
+    events.push(...breachResult.events);
   }
 
   // If no more pending and no combat, may need to advance turn

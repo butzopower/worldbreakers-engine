@@ -175,45 +175,81 @@ function proceedToBreach(
     s = breachTriggerResult.state;
     allEvents.push(...breachTriggerResult.events);
 
-    // Calculate breach power
-    let breachPower = 0;
-    for (const id of livingAttackerIds) {
-      const card = getCard(s, id);
-      if (card) {
-        breachPower++;
-      }
-    }
-
-    // Gain power from breach
-    if (breachPower > 0) {
-      const powerResult = gainPower(s, s.combat!.attackingPlayer, breachPower);
-      s = powerResult.state;
-      allEvents.push(...powerResult.events);
-    }
-
-    // Check if defender has locations to damage
-    const defender = opponentOf(s.combat!.attackingPlayer);
-    const defenderLocations = getLocations(s, defender).filter(loc => !isHidden(loc));
-
-    if (defenderLocations.length > 0) {
-      // Attacker can optionally damage a location
-      s = {
-        ...s,
-        pendingChoice: {
-          type: 'choose_breach_target',
-          playerId: s.combat!.attackingPlayer,
-          validLocationIds: defenderLocations.map(l => l.instanceId),
-        },
-      };
+    // If a breach ability created a pending choice (e.g. discard), pause here.
+    // The remaining breach work will be completed via resumeBreach after the choice resolves.
+    if (s.pendingChoice) {
       return { state: s, events: allEvents };
     }
 
-    // No locations to damage - end combat
-    return endCombat(s, allEvents);
+    // Complete remaining breach work (power gain + location damage)
+    return completeBreachFlow(s, allEvents);
   }
 
   // No living attackers - end combat
   return endCombat(s, allEvents);
+}
+
+/**
+ * Complete the remaining breach flow: calculate and grant breach power,
+ * then check for defender locations or end combat.
+ */
+function completeBreachFlow(
+  state: GameState,
+  events: GameEvent[],
+): { state: GameState; events: GameEvent[] } {
+  let s = state;
+  const allEvents = [...events];
+
+  if (!s.combat) return { state: s, events: allEvents };
+
+  // Get living attackers
+  const livingAttackerIds = s.combat.attackerIds.filter(
+    id => s.cards.some(c => c.instanceId === id && c.zone === 'board')
+  );
+
+  // Calculate breach power
+  let breachPower = 0;
+  for (const id of livingAttackerIds) {
+    const card = getCard(s, id);
+    if (card) {
+      breachPower++;
+    }
+  }
+
+  // Gain power from breach
+  if (breachPower > 0) {
+    const powerResult = gainPower(s, s.combat!.attackingPlayer, breachPower);
+    s = powerResult.state;
+    allEvents.push(...powerResult.events);
+  }
+
+  // Check if defender has locations to damage
+  const defender = opponentOf(s.combat!.attackingPlayer);
+  const defenderLocations = getLocations(s, defender).filter(loc => !isHidden(loc));
+
+  if (defenderLocations.length > 0) {
+    // Attacker can optionally damage a location
+    s = {
+      ...s,
+      pendingChoice: {
+        type: 'choose_breach_target',
+        playerId: s.combat!.attackingPlayer,
+        validLocationIds: defenderLocations.map(l => l.instanceId),
+      },
+    };
+    return { state: s, events: allEvents };
+  }
+
+  // No locations to damage - end combat
+  return endCombat(s, allEvents);
+}
+
+/**
+ * Resume breach flow after a pending choice (e.g. discard) has been resolved.
+ * Completes the remaining breach work: power gain + location damage choice.
+ */
+export function resumeBreach(state: GameState): { state: GameState; events: GameEvent[] } {
+  return completeBreachFlow(state, []);
 }
 
 /**
