@@ -4,7 +4,7 @@ import { GameEvent } from '../types/events';
 import { EffectPrimitive, PlayerSelector, TargetSelector, CardFilter } from '../types/effects';
 import { CardInstance } from '../types/state';
 import {
-  gainMythium, drawCard, gainStanding, gainPower, addCounterToCard,
+  gainMythium, drawCard, gainStanding, loseStanding, gainPower, addCounterToCard,
   removeCounterFromCard, exhaustCard, readyCard, moveCard, addLastingEffect,
 } from '../state/mutate';
 import { getCard, getCardDef, getBoard, getFollowers, canPay, canDevelop, canAttack } from '../state/query';
@@ -277,6 +277,54 @@ export function resolvePrimitive(
           pendingChoice: {
             type: 'choose_attackers',
             playerId: ctx.controller,
+          },
+        };
+      }
+      break;
+    }
+    case 'lose_standing': {
+      const players = resolvePlayerSelector(effect.player, ctx);
+      for (const p of players) {
+        const r = loseStanding(s, p, effect.guild, effect.amount);
+        s = r.state;
+        events.push(...r.events);
+      }
+      break;
+    }
+    case 'migrate': {
+      const controller = ctx.controller;
+      const hasEarth = s.players[controller].standing.earth >= 1;
+
+      const modes: { label: string; effects: EffectPrimitive[] }[] = [
+        {
+          label: 'Gain 1 Earth standing',
+          effects: [{ type: 'gain_standing', player: 'controller', guild: 'earth', amount: 1 }],
+        },
+      ];
+
+      if (hasEarth) {
+        modes.push({
+          label: 'Migrate',
+          effects: [
+            { type: 'lose_standing', player: 'controller', guild: 'earth', amount: 1 },
+            ...effect.effects,
+          ],
+        });
+      }
+
+      if (modes.length === 1) {
+        // Only one option - auto-resolve gain standing
+        const r = gainStanding(s, controller, 'earth', 1);
+        s = r.state;
+        events.push(...r.events);
+      } else {
+        s = {
+          ...s,
+          pendingChoice: {
+            type: 'choose_mode',
+            playerId: controller,
+            sourceCardId: ctx.sourceCardId,
+            modes,
           },
         };
       }

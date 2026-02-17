@@ -111,4 +111,22 @@ export const followers: CardDefinition[] = [
     ],
     description: 'Breach: Defending player discards a card.',
   },
+  {
+    id: 'dogtamer',
+    name: 'Dogtamer',
+    type: 'follower',
+    guild: 'earth',
+    cost: 1,
+    standingRequirement: { earth: 1 },
+    strength: 1,
+    health: 1,
+    description: 'Enters: Migrate → Gain 3 Mythium. (Either gain 1 Earth standing, or spend 1 Earth standing to gain 3 Mythium.)',
+    abilities: [{
+      timing: 'enters',
+      effects: [
+        { type: 'migrate', effects: [{ type: 'gain_mythium', player: 'self', amount: 3 }] },
+      ],
+      description: 'Migrate → Gain 3 Mythium.',
+    }],
+  },
 ];

@@ -42,7 +42,9 @@ export type EffectPrimitive =
   | { type: 'play_card'; target: TargetSelector; costReduction?: number }
   | { type: 'conditional'; condition: Condition; effects: EffectPrimitive[] }
   | { type: 'develop'; target: TargetSelector }
-  | { type: 'initiate_attack' };
+  | { type: 'initiate_attack' }
+  | { type: 'lose_standing'; player: PlayerSelector; guild: StandingGuild; amount: number }
+  | { type: 'migrate'; effects: EffectPrimitive[] };
 
 export type AbilityTiming =
   | 'enters'

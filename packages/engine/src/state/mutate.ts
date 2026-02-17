@@ -229,6 +229,35 @@ export function gainStanding(
   };
 }
 
+export function loseStanding(
+  state: GameState,
+  player: PlayerId,
+  guild: StandingGuild,
+  amount: number,
+): MutationResult {
+  if (amount <= 0) return { state, events: [] };
+  const current = state.players[player].standing[guild];
+  const loss = Math.min(amount, current);
+  if (loss === 0) return { state, events: [] };
+  const newState = bump({
+    ...state,
+    players: {
+      ...state.players,
+      [player]: {
+        ...state.players[player],
+        standing: {
+          ...state.players[player].standing,
+          [guild]: current - loss,
+        },
+      },
+    },
+  });
+  return {
+    state: newState,
+    events: [{ type: 'standing_gained', player, guild, amount: -loss }],
+  };
+}
+
 export function drawCard(state: GameState, player: PlayerId): MutationResult {
   const deckCards = state.cards.filter(c => c.owner === player && c.zone === 'deck');
   if (deckCards.length === 0) {
