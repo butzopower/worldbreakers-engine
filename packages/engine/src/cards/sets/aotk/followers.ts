@@ -159,4 +159,19 @@ export const followers: CardDefinition[] = [
       },
     ],
   },
+  {
+    id: 'yam_operator',
+    name: 'Yam Operator',
+    type: 'follower',
+    guild: 'neutral',
+    cost: 1,
+    strength: 1,
+    health: 1,
+    description: 'Enters: Play an event card, paying 1 mythium less.',
+    abilities: [{
+      timing: 'enters',
+      effects: [{ type: 'play_card', target: { kind: 'choose', filter: { type: 'event', zone: ['hand'], owner: 'controller', canPay: { costReduction: 1 } }, count: 1 }, costReduction: 1 }],
+      description: 'Play an event card, paying 1 mythium less.',
+    }],
+  },
 ];
