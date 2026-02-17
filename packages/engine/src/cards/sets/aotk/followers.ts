@@ -129,4 +129,34 @@ export const followers: CardDefinition[] = [
       description: 'Migrate → Gain 3 Mythium.',
     }],
   },
+  {
+    id: 'stars_apprentice',
+    name: 'Stars Apprentice',
+    type: 'follower',
+    guild: 'neutral',
+    cost: 3,
+    strength: 2,
+    health: 2,
+    description: 'Enters: Gain 1 Stars Standing. Enters: If you control a location, draw 1 card.',
+    abilities: [
+      {
+        timing: 'enters',
+        effects: [{ type: 'gain_standing', player: 'self', guild: 'stars', amount: 1 }],
+        description: 'Gain 1 Stars Standing.',
+      },
+      {
+        timing: 'enters',
+        effects: [{
+          type: 'conditional',
+          condition: {
+            type: 'min_card_count',
+            filter: { type: 'location', zone: ['board'], owner: 'controller' },
+            count: 1,
+          },
+          effects: [{ type: 'draw_cards', player: 'self', count: 1 }],
+        }],
+        description: 'If you control a location, draw 1 card.',
+      },
+    ],
+  },
 ];
