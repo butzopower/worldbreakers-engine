@@ -65,6 +65,9 @@ Use these in tests. Add new test cards to that file when testing new mechanics. 
 
 ### Real card set
 
-- Real card implementations live in `packages/engine/src/cards/sets/`
+- Real card implementations live in `packages/engine/src/cards/sets/`:
+- Organize cards into files by their type, e.g. `events.ts`, `followers.ts`, etc.
+- Keep the implementations sorted by id alphabetically
+
 - Tests for these cards live in `packages/engine/tests/cards/sets/`:
 - Prefer to write tests for real cards using other real cards, but you can use test cards if there are no valid real cards to use
