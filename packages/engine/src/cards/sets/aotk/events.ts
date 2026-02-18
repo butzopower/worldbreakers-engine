@@ -2,6 +2,20 @@ import { CardDefinition } from '../../../types/cards';
 
 export const events: CardDefinition[] = [
   {
+    id: 'lay_siege',
+    name: 'Lay Siege',
+    type: 'event',
+    guild: 'earth',
+    cost: 3,
+    standingRequirement: { earth: 2 },
+    description: 'Deplete a non-hidden location. (It is placed in its owner\'s discard pile.)',
+    abilities: [{
+      timing: 'enters',
+      effects: [{ type: 'deplete', target: { kind: 'choose', filter: { type: 'location', zone: ['board'], notKeyword: 'hidden' }, count: 1 } }],
+      description: 'Deplete a non-hidden location.',
+    }],
+  },
+  {
     id: 'mythium_fund',
     name: 'Mythium Fund',
     type: 'event',

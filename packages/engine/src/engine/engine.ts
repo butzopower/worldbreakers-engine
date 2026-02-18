@@ -18,7 +18,7 @@ import { handleBreachDamage, handleSkipBreachDamage } from '../combat/breach';
 import { resolveEffects } from '../abilities/resolver';
 import { ResolveContext, findValidTargets, resolvePrimitive } from '../abilities/primitives';
 import { moveCard, gainPower } from '../state/mutate';
-import { getCard, getHand, getCardDef, canPay } from '../state/query';
+import { getCard, getHand, getCardDef, canPay, hasKeyword } from '../state/query';
 import {
   canPlayCard, canAttack, canBlock, canDevelop, canUseAbility,
   getFollowers, getLocations, getBoard,
@@ -458,6 +458,8 @@ function getLegalChoiceActions(state: GameState): ActionInput[] {
         }
         if (filter.owner === 'controller' && c.owner !== player) return false;
         if (filter.owner === 'opponent' && c.owner === player) return false;
+        if (filter.keyword && !hasKeyword(state, c, filter.keyword)) return false;
+        if (filter.notKeyword && hasKeyword(state, c, filter.notKeyword)) return false;
         if (filter.canPay && !canPay(state, player, c, { costReduction: filter.canPay.costReduction })) return false;
         return true;
       });

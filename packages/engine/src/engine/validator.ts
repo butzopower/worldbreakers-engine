@@ -3,7 +3,7 @@ import { ActionInput, PlayerAction } from '../types/actions';
 import { PlayerId, opponentOf } from '../types/core';
 import {
   getCard, getCardDef, canPlayCard, canAttack, canBlock, canDevelop, canUseAbility, canPay,
-  getFollowers, getHand, getLocations,
+  getFollowers, getHand, getLocations, hasKeyword,
 } from '../state/query';
 
 export interface ValidationResult {
@@ -220,6 +220,8 @@ function validateChooseTarget(
   }
   if (filter.owner === 'controller' && card.owner !== player) return { valid: false, reason: 'Target is not yours' };
   if (filter.owner === 'opponent' && card.owner === player) return { valid: false, reason: 'Target must belong to opponent' };
+  if (filter.keyword && !hasKeyword(state, card, filter.keyword)) return { valid: false, reason: 'Target does not have required keyword' };
+  if (filter.notKeyword && hasKeyword(state, card, filter.notKeyword)) return { valid: false, reason: 'Target has excluded keyword' };
   if (filter.canPay && !canPay(state, player, card, { costReduction: filter.canPay.costReduction })) {
     return { valid: false, reason: 'Cannot afford this card' };
   }

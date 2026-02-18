@@ -11,6 +11,7 @@ export interface CardFilter {
   zone?: Zone | Zone[];
   owner?: PlayerSelector;
   keyword?: Keyword;
+  notKeyword?: Keyword;
   excludeSelf?: boolean;
   canPay?: { costReduction?: number };
 }
@@ -46,7 +47,8 @@ export type EffectPrimitive =
   | { type: 'initiate_attack' }
   | { type: 'lose_standing'; player: PlayerSelector; guild: StandingGuild; amount: number }
   | { type: 'migrate'; effects: EffectPrimitive[] }
-  | { type: 'grant_lasting_effect'; target: TargetSelector; effect: LastingEffectType; amount?: number; expiresAt: LastingEffectExpiration };
+  | { type: 'grant_lasting_effect'; target: TargetSelector; effect: LastingEffectType; amount?: number; expiresAt: LastingEffectExpiration }
+  | { type: 'deplete'; target: TargetSelector };
 
 export type AbilityTiming =
   | 'enters'

@@ -7,7 +7,7 @@ import {
   gainMythium, drawCard, gainStanding, loseStanding, gainPower, addCounterToCard,
   removeCounterFromCard, exhaustCard, readyCard, moveCard, addLastingEffect,
 } from '../state/mutate';
-import { getCard, getCardDef, getBoard, getFollowers, canPay, canDevelop, canAttack } from '../state/query';
+import { getCard, getCardDef, getBoard, getFollowers, canPay, canDevelop, canAttack, hasKeyword } from '../state/query';
 import { handleDevelop } from '../actions/develop';
 import { generateEffectId } from '../utils/id';
 import { handlePlayCard } from "../actions/play-card";
@@ -54,6 +54,8 @@ function matchesFilter(state: GameState, card: CardInstance, filter: CardFilter,
     if (!owners.includes(card.owner)) return false;
   }
   if (filter.excludeSelf && card.instanceId === ctx.sourceCardId) return false;
+  if (filter.keyword && !hasKeyword(state, card, filter.keyword)) return false;
+  if (filter.notKeyword && hasKeyword(state, card, filter.notKeyword)) return false;
   if (filter.canPay && !canPay(state, ctx.controller, card, { costReduction: filter.canPay.costReduction })) return false;
 
   return true;
@@ -235,6 +237,15 @@ export function resolvePrimitive(
         events.push(...r.events);
       }
 
+      break;
+    }
+    case 'deplete': {
+      const targets = resolveTargets(s, effect.target, ctx);
+      for (const targetId of targets) {
+        const r = moveCard(s, targetId, 'discard');
+        s = r.state;
+        events.push(...r.events);
+      }
       break;
     }
     case 'develop': {
