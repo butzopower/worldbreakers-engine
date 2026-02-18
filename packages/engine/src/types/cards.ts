@@ -3,6 +3,9 @@ import { AbilityDefinition, Condition } from './effects';
 
 export type CardType = 'worldbreaker' | 'follower' | 'event' | 'location';
 
+export type PassiveEffectDefinition =
+  | { type: 'cost_reduction'; cardTypes: CardType[]; amount: number };
+
 export type Keyword =
   | 'stationary'
   | 'bloodshed'
@@ -34,6 +37,8 @@ export interface CardDefinition {
   /** Standing requirement: { guild: count } */
   standingRequirement?: Partial<Record<StandingGuild, number>>;
   abilities?: AbilityDefinition[];
+  /** Static effects that are active while this card is on the board */
+  passiveEffects?: PassiveEffectDefinition[];
   /** Optional card description shown on hover in the UI */
   description?: string;
 }

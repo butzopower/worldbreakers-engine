@@ -1,7 +1,7 @@
 import { PlayerId } from '../types/core';
 import { GameState } from '../types/state';
 import { GameEvent } from '../types/events';
-import { getCard, getCardDef } from '../state/query';
+import { getCard, getCardDef, getPassiveCostReduction } from '../state/query';
 import { spendMythium, moveCard, addCounterToCard } from '../state/mutate';
 import { runCleanup } from '../engine/cleanup';
 import { resolveAbility } from '../abilities/resolver';
@@ -17,8 +17,9 @@ export function handlePlayCard(
   const events: GameEvent[] = [];
   let s = state;
 
-  // Pay mythium cost
-  const actualCost = Math.max(0, def.cost - (opts?.costReduction ?? 0));
+  // Pay mythium cost (includes passive board reductions, e.g. Generous Dealer)
+  const passiveReduction = getPassiveCostReduction(state, player, def);
+  const actualCost = Math.max(0, def.cost - passiveReduction - (opts?.costReduction ?? 0));
   if (actualCost > 0) {
     const payResult = spendMythium(s, player, actualCost);
     s = payResult.state;

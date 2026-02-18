@@ -152,11 +152,28 @@ export function canPay(
 }
 
 
+export function getPassiveCostReduction(state: GameState, player: PlayerId, def: CardDefinition): number {
+  let reduction = 0;
+  for (const card of getBoard(state, player)) {
+    const boardDef = getCardDef(card);
+    if (boardDef.passiveEffects) {
+      for (const passive of boardDef.passiveEffects) {
+        if (passive.type === 'cost_reduction' && passive.cardTypes.includes(def.type)) {
+          reduction += passive.amount;
+        }
+      }
+    }
+  }
+  return reduction;
+}
+
 export function canPlayCard(state: GameState, player: PlayerId, card: CardInstance): boolean {
   if (card.zone !== 'hand') return false;
   if (card.owner !== player) return false;
 
-  return canPay(state, player, card);
+  const def = getCardDef(card);
+  const passiveReduction = getPassiveCostReduction(state, player, def);
+  return canPay(state, player, card, { costReduction: passiveReduction });
 }
 
 export function canDevelop(state: GameState, player: PlayerId, card: CardInstance): boolean {

@@ -160,6 +160,18 @@ export const followers: CardDefinition[] = [
     ],
   },
   {
+    id: 'generous_dealer',
+    name: 'Generous Dealer',
+    type: 'follower',
+    guild: 'stars',
+    cost: 5,
+    standingRequirement: { stars: 1 },
+    strength: 2,
+    health: 4,
+    description: 'Event and location cards you play cost 1 less.',
+    passiveEffects: [{ type: 'cost_reduction', cardTypes: ['event', 'location'], amount: 1 }],
+  },
+  {
     id: 'yam_operator',
     name: 'Yam Operator',
     type: 'follower',
