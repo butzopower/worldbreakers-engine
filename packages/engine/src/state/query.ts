@@ -219,3 +219,13 @@ export function meetsStandingRequirement(
 export function isHidden(state: GameState, card: CardInstance): boolean {
   return hasKeyword(state, card, 'hidden');
 }
+
+export function hasLethal(state: GameState, card: CardInstance): boolean {
+  if (hasKeyword(state, card, 'lethal')) return true;
+  for (const effect of state.lastingEffects) {
+    if (effect.type === 'lethal' && effect.targetInstanceIds.includes(card.instanceId)) {
+      return true;
+    }
+  }
+  return false;
+}

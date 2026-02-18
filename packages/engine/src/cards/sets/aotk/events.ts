@@ -15,6 +15,23 @@ export const events: CardDefinition[] = [
     }],
   },
   {
+    id: 'serpent_strike',
+    name: 'Serpent Strike',
+    type: 'event',
+    guild: 'void',
+    cost: 1,
+    standingRequirement: { void: 1 },
+    description: 'Your followers gain lethal until end of combat. Attack.',
+    abilities: [{
+      timing: 'enters',
+      effects: [
+        { type: 'grant_lethal' },
+        { type: 'initiate_attack' },
+      ],
+      description: 'Your followers gain lethal until end of combat. Attack.',
+    }],
+  },
+  {
     id: 'gratuitous_gift',
     name: 'Gratuitous Gift',
     type: 'event',

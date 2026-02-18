@@ -1,8 +1,9 @@
 import { GameState } from '../types/state';
 import { GameEvent } from '../types/events';
-import { getCard, getCardDef, getEffectiveStrength, hasKeyword, isDefeated } from '../state/query';
-import { addCounterToCard, gainPower } from '../state/mutate';
+import { getCard, getCardDef, getEffectiveStrength, hasKeyword, hasLethal, isDefeated } from '../state/query';
+import { addCounterToCard, gainPower, MutationResult } from '../state/mutate';
 import { applyBloodshed, applyOverwhelm } from '../abilities/keywords';
+import { getCounter } from '../types/counters';
 
 /**
  * Resolve fight damage between a single attacker and a single blocker.
@@ -27,12 +28,20 @@ export function resolveSingleFight(
 
   const attackerStr = getEffectiveStrength(s, attackerCard);
   const blockerStr = getEffectiveStrength(s, blockerCard);
+  const attackerHasLethal = hasLethal(s, attackerCard);
+  const blockerHasLethal = hasLethal(s, blockerCard);
 
   // Blocker deals damage to attacker
   if (blockerStr > 0) {
     const woundResult = addCounterToCard(s, attackerId, 'wound', blockerStr);
     s = woundResult.state;
     events.push(...woundResult.events);
+
+    if (blockerHasLethal) {
+      const result = applyLethal(s, attackerId);
+      s = result.state
+      events.push(...result.events);
+    }
   }
 
   // Attacker deals damage to blocker
@@ -40,6 +49,12 @@ export function resolveSingleFight(
     const woundResult = addCounterToCard(s, blockerId, 'wound', attackerStr);
     s = woundResult.state;
     events.push(...woundResult.events);
+
+    if (attackerHasLethal) {
+      const result = applyLethal(s, blockerId);
+      s = result.state
+      events.push(...result.events);
+    }
   }
 
   // Apply bloodshed keyword (extra damage)
@@ -65,4 +80,17 @@ export function resolveSingleFight(
   s = { ...s, combat: { ...s.combat!, damageDealt: true } };
 
   return { state: s, events };
+}
+
+function applyLethal(s: GameState, followerId: string): MutationResult {
+  const followerNow = getCard(s, followerId);
+  if (followerNow && !isDefeated(followerNow)) {
+    const def = getCardDef(followerNow);
+    const currentWounds = getCounter(followerNow.counters, 'wound');
+    const needed = Math.max(0, (def.health ?? 0) - currentWounds);
+    if (needed > 0) {
+      return addCounterToCard(s, followerId, 'wound', needed);
+    }
+  }
+  return { state: s, events: [] };
 }

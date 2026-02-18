@@ -16,7 +16,7 @@ export interface CardInstance {
 export interface LastingEffect {
   id: string;
   /** Which counter type or buff applies */
-  type: 'strength_buff' | 'health_buff';
+  type: 'strength_buff' | 'health_buff' | 'lethal';
   amount: number;
   /** Cards affected */
   targetInstanceIds: string[];

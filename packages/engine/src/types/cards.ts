@@ -10,7 +10,8 @@ export type Keyword =
   | 'stationary'
   | 'bloodshed'
   | 'hidden'
-  | 'overwhelm';
+  | 'overwhelm'
+  | 'lethal';
 
 export interface LocationStage {
   stage: number;

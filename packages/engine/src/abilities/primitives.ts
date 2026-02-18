@@ -291,6 +291,22 @@ export function resolvePrimitive(
       }
       break;
     }
+    case 'grant_lethal': {
+      const targets = getFollowers(s, ctx.controller).map(f => f.instanceId);
+      if (targets.length > 0) {
+        const lastingEffect: LastingEffect = {
+          id: generateEffectId(),
+          type: 'lethal',
+          amount: 0,
+          targetInstanceIds: targets,
+          expiresAt: 'end_of_combat',
+        };
+        const r = addLastingEffect(s, lastingEffect);
+        s = r.state;
+        events.push(...r.events);
+      }
+      break;
+    }
     case 'migrate': {
       const controller = ctx.controller;
       const hasEarth = s.players[controller].standing.earth >= 1;

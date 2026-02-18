@@ -104,6 +104,23 @@ export const followers: CardDefinition[] = [
     description: 'Breach: Defending player discards a card.',
   },
   {
+    id: 'baleful_viper',
+    name: 'Baleful Viper',
+    type: 'follower',
+    guild: 'void',
+    cost: 4,
+    standingRequirement: { void: 1 },
+    strength: 1,
+    health: 3,
+    keywords: ['lethal'],
+    abilities: [{
+      timing: 'breach',
+      effects: [{ type: 'gain_standing', player: 'self', guild: 'void', amount: 1 }],
+      description: 'Gain 1 Void standing.',
+    }],
+    description: 'Lethal. Breach: Gain 1 Void standing.',
+  },
+  {
     id: 'dogtamer',
     name: 'Dogtamer',
     type: 'follower',

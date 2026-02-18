@@ -44,7 +44,8 @@ export type EffectPrimitive =
   | { type: 'develop'; target: TargetSelector }
   | { type: 'initiate_attack' }
   | { type: 'lose_standing'; player: PlayerSelector; guild: StandingGuild; amount: number }
-  | { type: 'migrate'; effects: EffectPrimitive[] };
+  | { type: 'migrate'; effects: EffectPrimitive[] }
+  | { type: 'grant_lethal' };
 
 export type AbilityTiming =
   | 'enters'
