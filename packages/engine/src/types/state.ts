@@ -13,15 +13,18 @@ export interface CardInstance {
   usedAbilities: number[];
 }
 
+export type LastingEffectType = 'strength_buff' | 'health_buff' | 'lethal';
+export type LastingEffectExpiration = 'end_of_combat' | 'end_of_turn' | 'end_of_round';
+
 export interface LastingEffect {
   id: string;
   /** Which counter type or buff applies */
-  type: 'strength_buff' | 'health_buff' | 'lethal';
+  type: LastingEffectType;
   amount: number;
   /** Cards affected */
   targetInstanceIds: string[];
   /** When does this expire? */
-  expiresAt: 'end_of_combat' | 'end_of_turn' | 'end_of_round';
+  expiresAt: LastingEffectExpiration;
 }
 
 export interface CombatState {

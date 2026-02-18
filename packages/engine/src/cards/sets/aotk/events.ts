@@ -25,7 +25,12 @@ export const events: CardDefinition[] = [
     abilities: [{
       timing: 'enters',
       effects: [
-        { type: 'grant_lethal' },
+        {
+          type: 'grant_lasting_effect',
+          target: { kind: 'all', filter: { type: 'follower', zone: ['board'], owner: 'controller' } },
+          effect: 'lethal',
+          expiresAt: 'end_of_combat',
+        },
         { type: 'initiate_attack' },
       ],
       description: 'Your followers gain lethal until end of combat. Attack.',

@@ -291,15 +291,15 @@ export function resolvePrimitive(
       }
       break;
     }
-    case 'grant_lethal': {
-      const targets = getFollowers(s, ctx.controller).map(f => f.instanceId);
+    case 'grant_lasting_effect': {
+      const targets = resolveTargets(s, effect.target, ctx);
       if (targets.length > 0) {
         const lastingEffect: LastingEffect = {
           id: generateEffectId(),
-          type: 'lethal',
-          amount: 0,
+          type: effect.effect,
+          amount: effect.amount ?? 0,
           targetInstanceIds: targets,
-          expiresAt: 'end_of_combat',
+          expiresAt: effect.expiresAt,
         };
         const r = addLastingEffect(s, lastingEffect);
         s = r.state;
