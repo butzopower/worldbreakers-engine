@@ -20,6 +20,28 @@ export const followers: CardDefinition[] = [
     ],
   },
   {
+    id: 'amu_river_armorer',
+    name: 'Amu River Armorer',
+    type: 'follower',
+    guild: 'earth',
+    cost: 3,
+    standingRequirement: { earth: 1 },
+    strength: 2,
+    health: 2,
+    description: 'Enters: Migrate → Gain 3 Mythium. Put a +1/+1 counter on a follower.',
+    abilities: [{
+      timing: 'enters',
+      effects: [{
+        type: 'migrate',
+        effects: [
+          { type: 'gain_mythium', player: 'self', amount: 3 },
+          { type: 'add_counter', target: { kind: 'choose', filter: { type: 'follower', zone: ['board'] }, count: 1 }, counter: 'plus_one_plus_one', amount: 1 },
+        ],
+      }],
+      description: 'Migrate → Gain 3 Mythium. Put a +1/+1 counter on a follower.',
+    }],
+  },
+  {
     id: 'astute_tactician',
     name: 'Astute Tactician',
     type: 'follower',

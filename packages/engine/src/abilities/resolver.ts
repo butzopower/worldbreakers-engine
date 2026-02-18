@@ -99,7 +99,9 @@ export function resolveAbility(
 }
 
 /**
- * Resolve a list of effects with a given context (targets already chosen).
+ * Resolve a list of effects with a given context. If a 'choose' target is
+ * encountered and no targets have been chosen yet, pauses and creates a
+ * pendingChoice, storing any remaining effects for later.
  */
 export function resolveEffects(
   state: GameState,
@@ -109,10 +111,38 @@ export function resolveEffects(
   let s = state;
   const events: GameEvent[] = [];
 
-  for (const effect of effects) {
+  for (let i = 0; i < effects.length; i++) {
+    const effect = effects[i];
+
+    if (!ctx.chosenTargets && needsTargetChoice(effect)) {
+      const targetSelector = getTargetSelector(effect)!;
+      if (targetSelector.kind === 'choose') {
+        const validTargets = findValidTargets(s, targetSelector, ctx);
+        if (validTargets.length === 0) continue;
+
+        const remainingEffects = effects.slice(i + 1);
+        s = {
+          ...s,
+          pendingChoice: {
+            type: 'choose_target',
+            playerId: ctx.controller,
+            sourceCardId: ctx.sourceCardId,
+            abilityIndex: 0,
+            effects: [effect],
+            filter: targetSelector.filter,
+          },
+        };
+        if (remainingEffects.length > 0) {
+          s = { ...s, remainingEffects: { effects: remainingEffects, controller: ctx.controller, sourceCardId: ctx.sourceCardId } };
+        }
+        return { state: s, events };
+      }
+    }
+
     const result = resolvePrimitive(s, effect, ctx);
     s = result.state;
     events.push(...result.events);
+    if (s.pendingChoice) return { state: s, events };
   }
 
   return { state: s, events };
