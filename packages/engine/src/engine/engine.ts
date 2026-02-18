@@ -460,6 +460,7 @@ function getLegalChoiceActions(state: GameState): ActionInput[] {
         if (filter.owner === 'opponent' && c.owner === player) return false;
         if (filter.keyword && !hasKeyword(state, c, filter.keyword)) return false;
         if (filter.notKeyword && hasKeyword(state, c, filter.notKeyword)) return false;
+        if (filter.maxCost !== undefined && def.cost > filter.maxCost) return false;
         if (filter.canPay && !canPay(state, player, c, { costReduction: filter.canPay.costReduction })) return false;
         return true;
       });

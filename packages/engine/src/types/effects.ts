@@ -14,6 +14,8 @@ export interface CardFilter {
   notKeyword?: Keyword;
   excludeSelf?: boolean;
   canPay?: { costReduction?: number };
+  /** Filter by printed (base) cost */
+  maxCost?: number;
 }
 
 export type TargetSelector =

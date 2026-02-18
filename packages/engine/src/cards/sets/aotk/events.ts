@@ -64,6 +64,20 @@ export const events: CardDefinition[] = [
     }],
   },
   {
+    id: 'bolt_trap',
+    name: 'Bolt Trap',
+    type: 'event',
+    guild: 'moon',
+    cost: 2,
+    standingRequirement: { moon: 1 },
+    description: 'Defeat a follower with printed cost 3 or less.',
+    abilities: [{
+      timing: 'enters',
+      effects: [{ type: 'deplete', target: { kind: 'choose', filter: { type: 'follower', zone: ['board'], maxCost: 3 }, count: 1 } }],
+      description: 'Defeat a follower with printed cost 3 or less.',
+    }],
+  },
+  {
     id: 'frantic_getaway',
     name: 'Frantic Getaway',
     type: 'event',
