@@ -3,8 +3,7 @@ export type CounterType =
   | 'stage'
   | 'stun'
   | 'power'
-  | 'strength_buff'
-  | 'health_buff';
+  | 'plus_one_plus_one';
 
 export type CounterMap = Partial<Record<CounterType, number>>;
 

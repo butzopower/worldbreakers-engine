@@ -53,7 +53,7 @@ export function getBaseHealth(card: CardInstance): number {
 export function getEffectiveStrength(state: GameState, card: CardInstance): number {
   let str = getBaseStrength(card);
   // Add strength buff counters
-  str += getCounter(card.counters, 'strength_buff');
+  str += getCounter(card.counters, 'plus_one_plus_one');
   // Add lasting effects
   for (const effect of state.lastingEffects) {
     if (effect.type === 'strength_buff' && effect.targetInstanceIds.includes(card.instanceId)) {
@@ -66,7 +66,7 @@ export function getEffectiveStrength(state: GameState, card: CardInstance): numb
 export function getEffectiveHealth(card: CardInstance): number {
   const base = getBaseHealth(card);
   const wounds = getCounter(card.counters, 'wound');
-  const buff = getCounter(card.counters, 'health_buff');
+  const buff = getCounter(card.counters, 'plus_one_plus_one');
   return Math.max(0, base + buff - wounds);
 }
 

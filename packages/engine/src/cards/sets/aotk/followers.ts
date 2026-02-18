@@ -2,36 +2,6 @@ import { CardDefinition } from '../../../types/cards';
 
 export const followers: CardDefinition[] = [
   {
-    id: 'earth_apprentice',
-    name: 'Earth Apprentice',
-    type: 'follower',
-    guild: 'neutral',
-    cost: 3,
-    strength: 2,
-    health: 2,
-    description: 'Enters: Gain 1 Earth Standing. Enters: If you control at least 2 other followers, draw 1 card.',
-    abilities: [
-      {
-        timing: 'enters',
-        effects: [{ type: 'gain_standing', player: 'self', guild: 'earth', amount: 1 }],
-        description: 'Gain 1 Earth Standing.',
-      },
-      {
-        timing: 'enters',
-        effects: [{
-          type: 'conditional',
-          condition: {
-            type: 'min_card_count',
-            filter: { type: 'follower', zone: ['board'], owner: 'controller', excludeSelf: true },
-            count: 2,
-          },
-          effects: [{ type: 'draw_cards', player: 'self', count: 1 }],
-        }],
-        description: 'If you control at least 2 other followers, draw 1 card.',
-      },
-    ],
-  },
-  {
     id: 'airag_maker',
     name: 'Airag Maker',
     type: 'follower',
@@ -130,6 +100,66 @@ export const followers: CardDefinition[] = [
     }],
   },
   {
+    id: 'earth_apprentice',
+    name: 'Earth Apprentice',
+    type: 'follower',
+    guild: 'neutral',
+    cost: 3,
+    strength: 2,
+    health: 2,
+    description: 'Enters: Gain 1 Earth Standing. Enters: If you control at least 2 other followers, draw 1 card.',
+    abilities: [
+      {
+        timing: 'enters',
+        effects: [{ type: 'gain_standing', player: 'self', guild: 'earth', amount: 1 }],
+        description: 'Gain 1 Earth Standing.',
+      },
+      {
+        timing: 'enters',
+        effects: [{
+          type: 'conditional',
+          condition: {
+            type: 'min_card_count',
+            filter: { type: 'follower', zone: ['board'], owner: 'controller', excludeSelf: true },
+            count: 2,
+          },
+          effects: [{ type: 'draw_cards', player: 'self', count: 1 }],
+        }],
+        description: 'If you control at least 2 other followers, draw 1 card.',
+      },
+    ],
+  },
+  {
+    id: 'generous_dealer',
+    name: 'Generous Dealer',
+    type: 'follower',
+    guild: 'stars',
+    cost: 5,
+    standingRequirement: { stars: 1 },
+    strength: 2,
+    health: 4,
+    description: 'Event and location cards you play cost 1 less.',
+    passiveEffects: [{ type: 'cost_reduction', cardTypes: ['event', 'location'], amount: 1 }],
+  },
+  {
+    id: 'khutuluns_kheshig',
+    name: "Khutulun's Kheshig",
+    type: 'follower',
+    guild: 'earth',
+    cost: 2,
+    standingRequirement: { earth: 1 },
+    strength: 1,
+    health: 1,
+    keywords: ['overwhelm'],
+    abilities: [{
+      timing: 'attacks',
+      effects: [
+        { type: 'add_counter', target: { kind: 'self' }, counter: 'plus_one_plus_one', amount: 1 },
+      ],
+      description: 'Put a +1/+1 counter on Khutulun\'s Kheshig.',
+    }],
+  },
+  {
     id: 'stars_apprentice',
     name: 'Stars Apprentice',
     type: 'follower',
@@ -158,18 +188,6 @@ export const followers: CardDefinition[] = [
         description: 'If you control a location, draw 1 card.',
       },
     ],
-  },
-  {
-    id: 'generous_dealer',
-    name: 'Generous Dealer',
-    type: 'follower',
-    guild: 'stars',
-    cost: 5,
-    standingRequirement: { stars: 1 },
-    strength: 2,
-    health: 4,
-    description: 'Event and location cards you play cost 1 less.',
-    passiveEffects: [{ type: 'cost_reduction', cardTypes: ['event', 'location'], amount: 1 }],
   },
   {
     id: 'yam_operator',
