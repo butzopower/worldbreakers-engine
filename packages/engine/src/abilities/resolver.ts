@@ -7,7 +7,6 @@ import { getCustomResolver } from './system';
 
 /**
  * Resolve an ability - either data-driven primitives or custom resolve function.
- * If the ability requires target selection, sets up a pending choice.
  */
 export function resolveAbility(
   state: GameState,
@@ -23,25 +22,39 @@ export function resolveAbility(
     triggeringCardId,
   };
 
-  // Custom resolve takes precedence
   if (ability.customResolve) {
     const customFn = getCustomResolver(ability.customResolve);
     if (customFn) {
       return customFn(state, ctx);
     }
-    // If no custom resolver found, fall through to effects
   }
 
   if (!ability.effects || ability.effects.length === 0) {
     return { state, events: [] };
   }
 
-  // Resolve effects sequentially, stopping at the first that needs a choice
+  return resolveEffects(state, ability.effects, ctx, abilityIndex);
+}
+
+/**
+ * Resolve a list of effects with a given context. Handles choose_one (mode
+ * choices) and choose target selectors by pausing and creating a pendingChoice,
+ * storing any remaining effects for later.
+ *
+ * When ctx.chosenTargets is set, the caller has already resolved a target
+ * choice and we just execute the effect directly.
+ */
+export function resolveEffects(
+  state: GameState,
+  effects: EffectPrimitive[],
+  ctx: ResolveContext,
+  abilityIndex = 0,
+): { state: GameState; events: GameEvent[] } {
   let s = state;
   const events: GameEvent[] = [];
 
-  for (let i = 0; i < ability.effects.length; i++) {
-    const effect = ability.effects[i];
+  for (let i = 0; i < effects.length; i++) {
+    const effect = effects[i];
 
     if (needsModeChoice(effect)) {
       return {
@@ -49,70 +62,14 @@ export function resolveAbility(
           ...s,
           pendingChoice: {
             type: 'choose_mode',
-            playerId: controller,
-            sourceCardId,
+            playerId: ctx.controller,
+            sourceCardId: ctx.sourceCardId,
             modes: effect.modes,
           },
         },
         events,
       };
     }
-
-    if (needsTargetChoice(effect)) {
-      const targetSelector = getTargetSelector(effect)!;
-      if (targetSelector.kind === 'choose') {
-        const validTargets = findValidTargets(s, targetSelector, ctx);
-        if (validTargets.length === 0) {
-          // Skip this effect but continue with remaining effects
-          continue;
-        }
-
-        const remainingEffects = ability.effects.slice(i + 1);
-        const newState: GameState = {
-          ...s,
-          pendingChoice: {
-            type: 'choose_target',
-            playerId: controller,
-            sourceCardId,
-            abilityIndex,
-            effects: [effect],
-            filter: targetSelector.filter,
-            triggeringCardId,
-          },
-        };
-        if (remainingEffects.length > 0) {
-          newState.remainingEffects = { effects: remainingEffects, controller, sourceCardId, triggeringCardId };
-        }
-        return { state: newState, events };
-      }
-    }
-
-    const result = resolvePrimitive(s, effect, ctx);
-    s = result.state;
-    events.push(...result.events);
-    if (s.pendingChoice) {
-      return { state: s, events };
-    }
-  }
-
-  return { state: s, events };
-}
-
-/**
- * Resolve a list of effects with a given context. If a 'choose' target is
- * encountered and no targets have been chosen yet, pauses and creates a
- * pendingChoice, storing any remaining effects for later.
- */
-export function resolveEffects(
-  state: GameState,
-  effects: EffectPrimitive[],
-  ctx: ResolveContext,
-): { state: GameState; events: GameEvent[] } {
-  let s = state;
-  const events: GameEvent[] = [];
-
-  for (let i = 0; i < effects.length; i++) {
-    const effect = effects[i];
 
     if (!ctx.chosenTargets && needsTargetChoice(effect)) {
       const targetSelector = getTargetSelector(effect)!;
@@ -127,13 +84,14 @@ export function resolveEffects(
             type: 'choose_target',
             playerId: ctx.controller,
             sourceCardId: ctx.sourceCardId,
-            abilityIndex: 0,
+            abilityIndex,
             effects: [effect],
             filter: targetSelector.filter,
+            triggeringCardId: ctx.triggeringCardId,
           },
         };
         if (remainingEffects.length > 0) {
-          s = { ...s, remainingEffects: { effects: remainingEffects, controller: ctx.controller, sourceCardId: ctx.sourceCardId } };
+          s = { ...s, remainingEffects: { effects: remainingEffects, controller: ctx.controller, sourceCardId: ctx.sourceCardId, triggeringCardId: ctx.triggeringCardId } };
         }
         return { state: s, events };
       }
