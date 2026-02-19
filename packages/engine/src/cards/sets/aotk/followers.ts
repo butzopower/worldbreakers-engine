@@ -223,6 +223,29 @@ export const followers: CardDefinition[] = [
     }],
   },
   {
+    id: 'poised_duelist',
+    name: 'Poised Duelist',
+    type: 'follower',
+    guild: 'earth',
+    cost: 2,
+    standingRequirement: { earth: 2 },
+    strength: 2,
+    health: 2,
+    abilities: [{
+      timing: 'enters',
+      effects: [{
+        type: 'conditional',
+        condition: {
+          type: 'min_card_count',
+          filter: { type: 'follower', zone: ['board'], owner: 'controller', excludeSelf: true },
+          count: 2,
+        },
+        effects: [{ type: 'add_counter', target: { kind: 'self' }, counter: 'plus_one_plus_one', amount: 1 }],
+      }],
+      description: 'Enters: If you control at least 2 other followers, put a +1/+1 counter on Poised Duelist.',
+    }],
+  },
+  {
     id: 'stars_apprentice',
     name: 'Stars Apprentice',
     type: 'follower',
