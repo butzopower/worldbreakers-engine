@@ -38,7 +38,7 @@ export function resolveSingleFight(
     events.push(...woundResult.events);
 
     if (blockerHasLethal) {
-      const result = applyLethal(s, attackerId);
+      const result = defeat(s, attackerId);
       s = result.state
       events.push(...result.events);
     }
@@ -51,7 +51,7 @@ export function resolveSingleFight(
     events.push(...woundResult.events);
 
     if (attackerHasLethal) {
-      const result = applyLethal(s, blockerId);
+      const result = defeat(s, blockerId);
       s = result.state
       events.push(...result.events);
     }
@@ -82,7 +82,7 @@ export function resolveSingleFight(
   return { state: s, events };
 }
 
-function applyLethal(s: GameState, followerId: string): MutationResult {
+export function defeat(s: GameState, followerId: string): MutationResult {
   const followerNow = getCard(s, followerId);
   if (followerNow && !isDefeated(followerNow)) {
     const def = getCardDef(followerNow);

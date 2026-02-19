@@ -6,6 +6,7 @@ import { validateAction } from './validator';
 import { advanceTurn } from './phases';
 import { runCleanup } from './cleanup';
 
+import { resolveTriggeredAbilities } from '../abilities/triggers';
 import { handleGainMythium } from '../actions/gain-mythium';
 import { handleDrawCard } from '../actions/draw-card';
 import { handleBuyStanding } from '../actions/buy-standing';
@@ -53,7 +54,14 @@ export function processAction(state: GameState, input: ActionInput): ProcessResu
   }
 
   let s = result.state;
-  const events = result.events;
+  let events = result.events;
+
+  // Resolve triggered abilities for defeat/deplete events (when not waiting for input)
+  if (!s.pendingChoice && !s.combat) {
+    const triggerResult = resolveEventTriggers(s, events);
+    s = triggerResult.state;
+    events = triggerResult.events;
+  }
 
   // If a new pending choice was created, return waiting
   if (s.pendingChoice) {
@@ -359,6 +367,48 @@ function handlePendingChoice(
   }
 
   return { state: s, events };
+}
+
+/**
+ * Fire triggered abilities for card_defeated and location_depleted events,
+ * then run cleanup once more to handle any new defeats from those triggers.
+ */
+function resolveEventTriggers(
+  state: GameState,
+  events: GameEvent[],
+): { state: GameState; events: GameEvent[] } {
+  let s = state;
+  let allEvents = events;
+
+  const defeatedEvents = events.filter(e => e.type === 'card_defeated');
+  const depletedEvents = events.filter(e => e.type === 'location_depleted');
+
+  if (defeatedEvents.length === 0 && depletedEvents.length === 0) {
+    return { state: s, events: allEvents };
+  }
+
+  for (const e of defeatedEvents) {
+    for (const p of ['player1', 'player2'] as PlayerId[]) {
+      const r = resolveTriggeredAbilities(s, 'follower_defeated', p, { triggeringCardId: e.cardInstanceId });
+      s = r.state;
+      allEvents = [...allEvents, ...r.events];
+    }
+  }
+
+  for (const e of depletedEvents) {
+    for (const p of ['player1', 'player2'] as PlayerId[]) {
+      const r = resolveTriggeredAbilities(s, 'location_depleted', p, { triggeringCardId: e.locationInstanceId });
+      s = r.state;
+      allEvents = [...allEvents, ...r.events];
+    }
+  }
+
+  // Re-run cleanup in case triggers caused new defeats/depletes
+  const cleanupResult = runCleanup(s);
+  s = cleanupResult.state;
+  allEvents = [...allEvents, ...cleanupResult.events];
+
+  return { state: s, events: allEvents };
 }
 
 /**

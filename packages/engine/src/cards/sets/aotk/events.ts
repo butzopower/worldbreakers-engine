@@ -73,7 +73,7 @@ export const events: CardDefinition[] = [
     description: 'Defeat a follower with printed cost 3 or less.',
     abilities: [{
       timing: 'enters',
-      effects: [{ type: 'deplete', target: { kind: 'choose', filter: { type: 'follower', zone: ['board'], maxCost: 3 }, count: 1 } }],
+      effects: [{ type: 'defeat', target: { kind: 'choose', filter: { type: 'follower', zone: ['board'], maxCost: 3 }, count: 1 } }],
       description: 'Defeat a follower with printed cost 3 or less.',
     }],
   },

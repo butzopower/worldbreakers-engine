@@ -105,6 +105,30 @@ const testCards: CardDefinition[] = [
 
   // Events
   {
+    id: 'execution_order',
+    name: 'Execution Order',
+    type: 'event',
+    guild: 'neutral',
+    cost: 0,
+    abilities: [{
+      timing: 'enters',
+      effects: [{ type: 'defeat', target: { kind: 'choose', filter: { type: 'follower', zone: ['board'] }, count: 1 } }],
+      description: 'Defeat target follower.',
+    }],
+  },
+  {
+    id: 'demolish',
+    name: 'Demolish',
+    type: 'event',
+    guild: 'neutral',
+    cost: 0,
+    abilities: [{
+      timing: 'enters',
+      effects: [{ type: 'deplete', target: { kind: 'choose', filter: { type: 'location', zone: ['board'] }, count: 1 } }],
+      description: 'Deplete target location.',
+    }],
+  },
+  {
     id: 'mother_lode',
     name: 'Mother Lode',
     type: 'event',
@@ -158,6 +182,35 @@ const testCards: CardDefinition[] = [
         ],
       }],
       description: 'Choose one: Gain 2 mythium, or draw 2 cards.',
+    }],
+  },
+
+  {
+    id: 'death_watcher',
+    name: 'Death Watcher',
+    type: 'follower',
+    guild: 'neutral',
+    cost: 2,
+    strength: 1,
+    health: 2,
+    abilities: [{
+      timing: 'follower_defeated',
+      effects: [{ type: 'gain_mythium', player: 'controller', amount: 1 }],
+      description: 'Follower Defeated: Gain 1 mythium.',
+    }],
+  },
+  {
+    id: 'ruin_watcher',
+    name: 'Ruin Watcher',
+    type: 'follower',
+    guild: 'neutral',
+    cost: 2,
+    strength: 1,
+    health: 2,
+    abilities: [{
+      timing: 'location_depleted',
+      effects: [{ type: 'draw_cards', player: 'controller', count: 1 }],
+      description: 'Location Depleted: Draw 1 card.',
     }],
   },
 

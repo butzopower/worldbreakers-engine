@@ -8,9 +8,11 @@ import {
   removeCounterFromCard, exhaustCard, readyCard, moveCard, addLastingEffect,
 } from '../state/mutate';
 import { getCard, getCardDef, getBoard, getFollowers, canPay, canDevelop, canAttack, hasKeyword } from '../state/query';
+import { CounterType, getCounter } from '../types/counters';
 import { handleDevelop } from '../actions/develop';
 import { generateEffectId } from '../utils/id';
 import { handlePlayCard } from "../actions/play-card";
+import { defeat } from "../combat/damage";
 
 export interface ResolveContext {
   controller: PlayerId;
@@ -243,7 +245,24 @@ export function resolvePrimitive(
     case 'deplete': {
       const targets = resolveTargets(s, effect.target, ctx);
       for (const targetId of targets) {
-        const r = moveCard(s, targetId, 'discard');
+        const card = getCard(s, targetId);
+        if (card) {
+          // Remove all counters — cleanup will detect isLocationDepleted and move to discard
+          for (const [counterType, amount] of Object.entries(card.counters) as [CounterType, number][]) {
+            if (amount > 0) {
+              const r = removeCounterFromCard(s, targetId, counterType, amount);
+              s = r.state;
+              events.push(...r.events);
+            }
+          }
+        }
+      }
+      break;
+    }
+    case 'defeat': {
+      const targets = resolveTargets(s, effect.target, ctx);
+      for (const targetId of targets) {
+        const r = defeat(s, targetId);
         s = r.state;
         events.push(...r.events);
       }
