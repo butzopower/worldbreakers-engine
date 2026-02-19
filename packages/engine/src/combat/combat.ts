@@ -57,16 +57,18 @@ export function initiateAttack(
     }
   }
 
-  // Defender now needs to choose blockers
+  // Defender now needs to choose blockers (unless a trigger created a pending choice)
   const defender = opponentOf(player);
-  s = {
-    ...s,
-    pendingChoice: {
-      type: 'choose_blockers',
-      playerId: defender,
-      attackerIds,
-    },
-  };
+  if (!s.pendingChoice) {
+    s = {
+      ...s,
+      pendingChoice: {
+        type: 'choose_blockers',
+        playerId: defender,
+        attackerIds,
+      },
+    };
+  }
 
   return { state: s, events };
 }

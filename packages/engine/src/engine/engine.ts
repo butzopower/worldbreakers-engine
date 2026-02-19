@@ -352,6 +352,13 @@ function handlePendingChoice(
     }
   }
 
+  // If a pending choice resolved during declare_blockers, transition to blocking.
+  if (!s.pendingChoice && s.combat?.step === 'declare_blockers') {
+    const defender = opponentOf(s.combat.attackingPlayer);
+    s = { ...s, pendingChoice: { type: 'choose_blockers', playerId: defender, attackerIds: s.combat.attackerIds } };
+    return { state: s, events };
+  }
+
   // If a pending choice was resolved during breach, resume the breach flow
   // (power gain + location damage choice).
   if (!s.pendingChoice && s.combat?.step === 'breach') {
