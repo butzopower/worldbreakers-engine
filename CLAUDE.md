@@ -71,3 +71,4 @@ Use these in tests. Add new test cards to that file when testing new mechanics. 
 
 - Tests for these cards live in `packages/engine/tests/cards/sets/`:
 - Prefer to write tests for real cards using other real cards, but you can use test cards if there are no valid real cards to use
+- Only write tests that test the specific keywords and abilities for the card

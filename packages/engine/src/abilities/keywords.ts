@@ -20,6 +20,9 @@ export function applyBloodshed(
 ): { state: GameState; events: GameEvent[] } {
   if (!hasKeyword(state, attackerCard, 'bloodshed')) return { state, events: [] };
 
+  // Bloodshed only applies if attacking alone
+  if ((state.combat?.attackerIds ?? []).length !== 1) return { state, events: [] };
+
   const def = getCardDef(attackerCard);
   const amount = def.bloodshedAmount ?? 0;
   if (amount <= 0) return { state, events: [] };

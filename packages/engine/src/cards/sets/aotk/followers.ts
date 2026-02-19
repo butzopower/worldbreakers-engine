@@ -68,7 +68,8 @@ export const followers: CardDefinition[] = [
     standingRequirement: { void: 2 },
     strength: 2,
     health: 4,
-    keywords: ['bloodshed']
+    keywords: ['bloodshed'],
+    bloodshedAmount: 1,
   },
   {
     id: 'alert_warden',
