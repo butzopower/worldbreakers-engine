@@ -95,6 +95,32 @@ export const events: CardDefinition[] = [
     }],
   },
   {
+    id: 'blood_moon',
+    name: 'Blood Moon',
+    type: 'event',
+    guild: 'moon',
+    cost: 7,
+    standingRequirement: { moon: 3 },
+    description: 'Choose one: Defeat all followers. Deplete all locations.',
+    abilities: [{
+      timing: 'enters',
+      effects: [{
+        type: 'choose_one',
+        modes: [
+          {
+            label: 'Defeat all followers',
+            effects: [{ type: 'destroy', target: { kind: 'all', filter: { type: 'follower', zone: ['board'] } } }],
+          },
+          {
+            label: 'Deplete all locations',
+            effects: [{ type: 'destroy', target: { kind: 'all', filter: { type: 'location', zone: ['board'] } } }],
+          },
+        ],
+      }],
+      description: 'Choose one: Defeat all followers. Deplete all locations.',
+    }],
+  },
+  {
     id: 'amazing_arithmetic',
     name: 'Amazing Arithmetic',
     type: 'event',
