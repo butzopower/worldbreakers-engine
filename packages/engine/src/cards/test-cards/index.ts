@@ -112,7 +112,7 @@ const testCards: CardDefinition[] = [
     cost: 0,
     abilities: [{
       timing: 'enters',
-      effects: [{ type: 'defeat', target: { kind: 'choose', filter: { type: 'follower', zone: ['board'] }, count: 1 } }],
+      effects: [{ type: 'destroy', target: { kind: 'choose', filter: { type: 'follower', zone: ['board'] }, count: 1 } }],
       description: 'Defeat target follower.',
     }],
   },
@@ -124,7 +124,7 @@ const testCards: CardDefinition[] = [
     cost: 0,
     abilities: [{
       timing: 'enters',
-      effects: [{ type: 'deplete', target: { kind: 'choose', filter: { type: 'location', zone: ['board'] }, count: 1 } }],
+      effects: [{ type: 'destroy', target: { kind: 'choose', filter: { type: 'location', zone: ['board'] }, count: 1 } }],
       description: 'Deplete target location.',
     }],
   },

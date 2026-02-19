@@ -1,8 +1,8 @@
-import {PlayerId, StandingGuild, Zone, opponentOf} from '../types/core';
-import {GameState, CardInstance} from '../types/state';
-import {CardDefinition, Keyword} from '../types/cards';
-import {getCounter} from '../types/counters';
-import {getCardDefinition} from '../cards/registry';
+import { PlayerId, StandingGuild, Zone } from '../types/core';
+import { CardInstance, GameState } from '../types/state';
+import { CardDefinition, Keyword } from '../types/cards';
+import { getCounter } from '../types/counters';
+import { getCardDefinition } from '../cards/registry';
 
 export function getCard(state: GameState, instanceId: string): CardInstance | undefined {
   return state.cards.find(c => c.instanceId === instanceId);
@@ -71,10 +71,7 @@ export function getEffectiveHealth(card: CardInstance): number {
 }
 
 export function isDefeated(card: CardInstance): boolean {
-  const def = getCardDef(card);
-  if (def.type !== 'follower') return false;
-  const wounds = getCounter(card.counters, 'wound');
-  return wounds >= (def.health ?? 0);
+  return card.markAsDestroyed || getEffectiveHealth(card) <= 0;
 }
 
 export function hasKeyword(state: GameState, card: CardInstance, keyword: Keyword): boolean {
@@ -111,9 +108,7 @@ export function canBlock(state: GameState, card: CardInstance): boolean {
 }
 
 export function isLocationDepleted(card: CardInstance): boolean {
-  const def = getCardDef(card);
-  if (def.type !== 'location') return false;
-  return getCounter(card.counters, 'stage') <= 0;
+  return card.markAsDestroyed || getCounter(card.counters, 'stage') <= 0;
 }
 
 export function getLocationStage(card: CardInstance): number {

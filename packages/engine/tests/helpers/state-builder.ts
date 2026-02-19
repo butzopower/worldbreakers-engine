@@ -87,6 +87,7 @@ export class StateBuilder {
       exhausted: opts?.exhausted ?? false,
       counters: opts?.counters ?? {},
       usedAbilities: [],
+      markAsDestroyed: false,
     };
     this.state.cards.push(card);
     if (zone === 'hand') {

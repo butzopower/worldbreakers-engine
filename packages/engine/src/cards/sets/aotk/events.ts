@@ -11,7 +11,7 @@ export const events: CardDefinition[] = [
     description: 'Deplete a non-hidden location. (It is placed in its owner\'s discard pile.)',
     abilities: [{
       timing: 'enters',
-      effects: [{ type: 'deplete', target: { kind: 'choose', filter: { type: 'location', zone: ['board'], notKeyword: 'hidden' }, count: 1 } }],
+      effects: [{ type: 'destroy', target: { kind: 'choose', filter: { type: 'location', zone: ['board'], notKeyword: 'hidden' }, count: 1 } }],
       description: 'Deplete a non-hidden location.',
     }],
   },
@@ -73,7 +73,7 @@ export const events: CardDefinition[] = [
     description: 'Defeat a follower with printed cost 3 or less.',
     abilities: [{
       timing: 'enters',
-      effects: [{ type: 'defeat', target: { kind: 'choose', filter: { type: 'follower', zone: ['board'], maxCost: 3 }, count: 1 } }],
+      effects: [{ type: 'destroy', target: { kind: 'choose', filter: { type: 'follower', zone: ['board'], maxCost: 3 }, count: 1 } }],
       description: 'Defeat a follower with printed cost 3 or less.',
     }],
   },

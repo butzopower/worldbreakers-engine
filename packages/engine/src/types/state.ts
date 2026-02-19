@@ -11,6 +11,7 @@ export interface CardInstance {
   counters: CounterMap;
   /** Tracks which "Action:" abilities have been used this turn */
   usedAbilities: number[];
+  markAsDestroyed: boolean;
 }
 
 export type LastingEffectType = 'strength_buff' | 'health_buff' | 'lethal';

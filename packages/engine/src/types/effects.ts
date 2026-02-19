@@ -50,8 +50,7 @@ export type EffectPrimitive =
   | { type: 'lose_standing'; player: PlayerSelector; guild: StandingGuild; amount: number }
   | { type: 'migrate'; effects: EffectPrimitive[] }
   | { type: 'grant_lasting_effect'; target: TargetSelector; effect: LastingEffectType; amount?: number; expiresAt: LastingEffectExpiration }
-  | { type: 'deplete'; target: TargetSelector }
-  | { type: 'defeat'; target: TargetSelector };
+  | { type: 'destroy'; target: TargetSelector };
 
 export type AbilityTiming =
   | 'enters'

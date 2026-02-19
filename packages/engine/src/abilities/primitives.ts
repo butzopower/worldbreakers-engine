@@ -5,7 +5,7 @@ import { EffectPrimitive, PlayerSelector, TargetSelector, CardFilter } from '../
 import { CardInstance } from '../types/state';
 import {
   gainMythium, drawCard, gainStanding, loseStanding, gainPower, addCounterToCard,
-  removeCounterFromCard, exhaustCard, readyCard, moveCard, addLastingEffect,
+  removeCounterFromCard, exhaustCard, readyCard, moveCard, addLastingEffect, destroy,
 } from '../state/mutate';
 import { getCard, getCardDef, getBoard, getFollowers, canPay, canDevelop, canAttack, hasKeyword } from '../state/query';
 import { CounterType, getCounter } from '../types/counters';
@@ -242,27 +242,10 @@ export function resolvePrimitive(
 
       break;
     }
-    case 'deplete': {
+    case 'destroy': {
       const targets = resolveTargets(s, effect.target, ctx);
       for (const targetId of targets) {
-        const card = getCard(s, targetId);
-        if (card) {
-          // Remove all counters — cleanup will detect isLocationDepleted and move to discard
-          for (const [counterType, amount] of Object.entries(card.counters) as [CounterType, number][]) {
-            if (amount > 0) {
-              const r = removeCounterFromCard(s, targetId, counterType, amount);
-              s = r.state;
-              events.push(...r.events);
-            }
-          }
-        }
-      }
-      break;
-    }
-    case 'defeat': {
-      const targets = resolveTargets(s, effect.target, ctx);
-      for (const targetId of targets) {
-        const r = defeat(s, targetId);
+        const r = destroy(s, targetId);
         s = r.state;
         events.push(...r.events);
       }

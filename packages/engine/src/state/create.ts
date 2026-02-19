@@ -44,6 +44,7 @@ function createCardInstance(
     exhausted: false,
     counters: {},
     usedAbilities: [],
+    markAsDestroyed: false,
   };
 }
 

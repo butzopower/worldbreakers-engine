@@ -151,4 +151,27 @@ describe('Bolt Trap', () => {
     expectCardInZone(targetResult.state, 'ms1', 'discard');
     expectCardInZone(targetResult.state, 'eg1', 'board');
   });
+
+  it('can defeat a follower with +1/+1 counters on it', () => {
+    // void_channeler costs 3
+    const state = buildState()
+      .withActivePlayer('player1')
+      .withMythium('player1', 5)
+      .withStanding('player1', 'moon', 1)
+      .addCard('bolt_trap', 'player1', 'hand', { instanceId: 'bt1' })
+      .addCard('void_channeler', 'player2', 'board', { instanceId: 'vc1', counters: { plus_one_plus_one: 5 } })
+      .build();
+
+    const playResult = processAction(state, {
+      player: 'player1',
+      action: { type: 'play_card', cardInstanceId: 'bt1' },
+    });
+
+    const targetResult = processAction(playResult.state, {
+      player: 'player1',
+      action: { type: 'choose_target', targetInstanceId: 'vc1' },
+    });
+
+    expectCardInZone(targetResult.state, 'vc1', 'discard');
+  });
 });

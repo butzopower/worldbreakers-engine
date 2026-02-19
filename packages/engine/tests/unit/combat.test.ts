@@ -139,6 +139,32 @@ describe('combat - blocking', () => {
     expectCardCounter(r2.state, 'atk1', 'wound', 1);
   });
 
+  it('accounts for +1/+1 counters', () => {
+    const state = buildState()
+      .withActivePlayer('player1')
+      .addCard('star_warden', 'player1', 'board', { instanceId: 'atk1' }) // 2/2
+      .addCard('militia_scout', 'player2', 'board', { instanceId: 'blk1', counters: { plus_one_plus_one: 2 } }) // 3/3
+      .addCard('void_oracle', 'player1', 'worldbreaker', { instanceId: 'wb1' })
+      .addCard('void_oracle', 'player2', 'worldbreaker', { instanceId: 'wb2' })
+      .build();
+
+    const r1 = processAction(state, {
+      player: 'player1',
+      action: { type: 'attack', attackerIds: ['atk1'] },
+    });
+
+    const r2 = processAction(r1.state, {
+      player: 'player2',
+      action: { type: 'declare_blocker', blockerId: 'blk1', attackerId: 'atk1' },
+    });
+
+    // Militia scout survives with 2 wounds (2 wounds >= 1 health)
+    expectCardInZone(r2.state, 'blk1', 'board');
+    expectCardCounter(r2.state, 'blk1', 'wound', 2);
+    // Star warden is defeated with 1 wound
+    expectCardInZone(r2.state, 'atk1', 'discard');
+  });
+
   it('blocker is exhausted after blocking', () => {
     const state = buildState()
       .withActivePlayer('player1')

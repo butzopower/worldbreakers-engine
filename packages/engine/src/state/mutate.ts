@@ -290,6 +290,27 @@ export function removeLastingEffect(state: GameState, effectId: string): Mutatio
   };
 }
 
+export function destroy(
+  state: GameState,
+  instanceId: string,
+): MutationResult {
+  const card = state.cards.find(c => c.instanceId === instanceId);
+  if (!card) return { state, events: [] };
+
+  const newState = bump({
+    ...state,
+    cards: state.cards.map(c =>
+      c.instanceId === instanceId ? { ...c, markAsDestroyed: true } : c
+    ),
+  });
+
+  return {
+    state: newState,
+    events: [],
+  };
+}
+
+
 export function setActivePlayer(state: GameState, player: PlayerId): GameState {
   return bump({ ...state, activePlayer: player });
 }
