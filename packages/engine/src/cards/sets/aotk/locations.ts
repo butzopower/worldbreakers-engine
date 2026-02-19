@@ -90,6 +90,45 @@ export const locations: CardDefinition[] = [
     description: 'Hidden (Your opponent cannot damage this location.) I: Gain 4 mythium. II: Draw 2 cards. III: Draw 1 card and gain 2 mythium.',
   },
   {
+    id: 'the_amu_river_encampment',
+    name: 'The Amu River Encampment',
+    type: 'location',
+    guild: 'earth',
+    cost: 2,
+    standingRequirement: { earth: 3 },
+    stages: 2,
+    abilities: [{
+      timing: 'enters',
+      effects: [{ type: 'initiate_attack' }],
+      description: 'Enters: You may attack.',
+    }],
+    locationStages: [
+      {
+        stage: 1,
+        ability: {
+          timing: 'enters',
+          effects: [
+            { type: 'gain_power', player: 'self', amount: 1 },
+            { type: 'add_counter', target: { kind: 'choose', filter: { type: 'follower', zone: ['board'], owner: 'controller' }, count: 1 }, counter: 'plus_one_plus_one', amount: 1 },
+          ],
+          description: 'Gain 1 power. You may put a +1/+1 counter on a follower. You may attack.',
+        },
+      },
+      {
+        stage: 2,
+        ability: {
+          timing: 'enters',
+          effects: [
+            { type: 'grant_lasting_effect', target: { kind: 'all', filter: { type: 'follower', zone: ['board'], owner: 'controller' } }, effect: 'overwhelm', amount: 0, expiresAt: 'end_of_combat' },
+            { type: 'initiate_attack' },
+          ],
+          description: 'Attack. For this attack, all of your followers gain overwhelm.',
+        },
+      },
+    ],
+    description: 'I: Gain 1 power. You may put a +1/+1 counter on a follower. II: Attack. For this attack, all of your followers gain overwhelm.',
+  },
+  {
     id: 'the_den_of_sabers',
     name: 'The Den of Sabers',
     type: 'location',

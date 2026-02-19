@@ -56,6 +56,18 @@ export function handlePlayCard(
       s = counterResult.state;
       events.push(...counterResult.events);
     }
+
+    // Resolve enters abilities for locations
+    if (def.abilities) {
+      for (let i = 0; i < def.abilities.length; i++) {
+        const ability = def.abilities[i];
+        if (ability.timing === 'enters') {
+          const abilityResult = resolveAbility(s, player, cardInstanceId, ability, i);
+          s = abilityResult.state;
+          events.push(...abilityResult.events);
+        }
+      }
+    }
   } else {
     // Followers enter board
     const moveResult = moveCard(s, cardInstanceId, 'board');

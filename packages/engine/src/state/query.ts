@@ -87,6 +87,9 @@ export function hasKeyword(state: GameState, card: CardInstance, keyword: Keywor
       }
     }
   }
+  for (const effect of state.lastingEffects) {
+    if (effect.type === keyword && effect.targetInstanceIds.includes(card.instanceId)) return true;
+  }
   return false;
 }
 
