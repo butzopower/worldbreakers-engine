@@ -3,6 +3,7 @@ import { GameState, PlayerState, CardInstance } from '../types/state';
 import { generateInstanceId, resetIdCounter } from '../utils/id';
 import { seededShuffle } from '../utils/random';
 import { getCardDefinition } from "../cards/registry";
+import { shuffleDeck } from "./mutate";
 
 export interface DeckConfig {
   worldbreakerId: string;
@@ -59,22 +60,18 @@ export function createGameState(config: GameConfig): GameState {
   cards.push(createCardInstance(config.player1Deck.worldbreakerId, 'player1', 'worldbreaker'));
   cards.push(createCardInstance(config.player2Deck.worldbreakerId, 'player2', 'worldbreaker'));
 
-  // Create and shuffle player 1's deck
+  // Create player 1's deck
   const p1Cards = config.player1Deck.cardIds.map(id => createCardInstance(id, 'player1', 'deck'));
-  const [p1Shuffled, rng1] = seededShuffle(p1Cards, rngState);
-  rngState = rng1;
-  cards.push(...p1Shuffled);
+  cards.push(...p1Cards);
 
-  // Create and shuffle player 2's deck
+  // Create player 2's deck
   const p2Cards = config.player2Deck.cardIds.map(id => createCardInstance(id, 'player2', 'deck'));
-  const [p2Shuffled, rng2] = seededShuffle(p2Cards, rngState);
-  rngState = rng2;
-  cards.push(...p2Shuffled);
+  cards.push(...p2Cards);
 
   const firstPlayer = config.firstPlayer ?? 'player1';
 
   // Draw opening hands (5 cards each)
-  const state: GameState = {
+  let state: GameState = {
     version: 0,
     phase: 'action',
     round: 1,
@@ -92,6 +89,12 @@ export function createGameState(config: GameConfig): GameState {
     rngState,
     winner: null,
   };
+
+  const p1Shuffle = shuffleDeck(state, 'player1');
+  state = p1Shuffle.state
+
+  const p2Shuffle = shuffleDeck(state, 'player2');
+  state = p2Shuffle.state
 
   // Draw 5 cards for each player
   return drawOpeningHands(state);

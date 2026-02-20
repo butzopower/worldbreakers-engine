@@ -3,6 +3,7 @@ import { CounterType } from './counters';
 
 export type GameEvent =
   | { type: 'game_started'; firstPlayer: PlayerId }
+  | { type: 'deck_shuffled'; player: PlayerId }
   | { type: 'phase_changed'; phase: Phase; round: number }
   | { type: 'turn_changed'; activePlayer: PlayerId }
   | { type: 'mythium_gained'; player: PlayerId; amount: number }

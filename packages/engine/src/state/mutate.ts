@@ -1,8 +1,9 @@
-import { PlayerId, StandingGuild, Zone } from '../types/core';
+import { opponentOf, PlayerId, StandingGuild, Zone } from '../types/core';
 import { GameState, CardInstance, LastingEffect } from '../types/state';
 import { CounterType, addCounter as addCounterToMap, getCounter } from '../types/counters';
 import { GameEvent } from '../types/events';
-import { nextRandom } from '../utils/random';
+import { nextRandom, seededShuffle } from '../utils/random';
+import { getDeck } from "./query";
 
 export interface MutationResult {
   state: GameState;
@@ -11,6 +12,27 @@ export interface MutationResult {
 
 function bump(state: GameState): GameState {
   return { ...state, version: state.version + 1 };
+}
+
+export function shuffleDeck(
+  state: GameState,
+  player: PlayerId,
+): MutationResult {
+  const playerDeck = state.cards.filter(c => c.owner === player && c.zone === 'deck');
+  const notDeck = state.cards.filter(c => c.owner === opponentOf(player) || (c.owner === player && c.zone !== 'deck'));
+
+  const [shuffledDeck, nextRNG] = seededShuffle(playerDeck, state.rngState);
+
+  const newState = bump({
+    ...state,
+    cards: [...notDeck, ...shuffledDeck],
+    rngState: nextRNG,
+  })
+
+  return {
+    state: newState,
+    events: [{ type: 'deck_shuffled', player }],
+  }
 }
 
 export function moveCard(
