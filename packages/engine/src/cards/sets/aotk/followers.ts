@@ -205,6 +205,21 @@ export const followers: CardDefinition[] = [
     passiveEffects: [{ type: 'cost_reduction', cardTypes: ['event', 'location'], amount: 1 }],
   },
   {
+    id: 'kalari_adept',
+    name: 'Kalari Adept',
+    type: 'follower',
+    guild: 'earth',
+    cost: 1,
+    standingRequirement: { earth: 1 },
+    strength: 1,
+    health: 1,
+    abilities: [{
+      timing: 'attacks',
+      effects: [{ type: 'gain_mythium', player: 'self', amount: 1 }],
+      description: 'Attacks: Gain 1 mythium.',
+    }],
+  },
+  {
     id: 'khutuluns_kheshig',
     name: "Khutulun's Kheshig",
     type: 'follower',
