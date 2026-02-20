@@ -163,6 +163,24 @@ export const followers: CardDefinition[] = [
     }],
   },
   {
+    id: 'eagle_huntress',
+    name: 'Eagle Huntress',
+    type: 'follower',
+    guild: 'earth',
+    cost: 2,
+    standingRequirement: { earth: 1 },
+    strength: 2,
+    health: 2,
+    abilities: [{
+      timing: 'enters',
+      effects: [{
+        type: 'migrate',
+        effects: [{ type: 'draw_cards', player: 'self', count: 2 }],
+      }],
+      description: 'Enters: Migrate → Draw 2 cards.',
+    }],
+  },
+  {
     id: 'earth_apprentice',
     name: 'Earth Apprentice',
     type: 'follower',
