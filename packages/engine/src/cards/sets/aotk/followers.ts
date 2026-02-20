@@ -223,6 +223,28 @@ export const followers: CardDefinition[] = [
     }],
   },
   {
+    id: 'mongol_quartermaster',
+    name: 'Mongol Quartermaster',
+    type: 'follower',
+    guild: 'earth',
+    cost: 5,
+    standingRequirement: { earth: 1 },
+    strength: 5,
+    health: 4,
+    abilities: [{
+      timing: 'enters',
+      effects: [{
+        type: 'migrate',
+        effects: [{
+          type: 'play_card',
+          target: { kind: 'choose', filter: { type: 'follower', zone: ['hand'], owner: 'controller', canPay: { costReduction: 2 } }, count: 1 },
+          costReduction: 2,
+        }],
+      }],
+      description: 'Enters: Migrate → Play another follower card, paying 2 mythium less.',
+    }],
+  },
+  {
     id: 'poised_duelist',
     name: 'Poised Duelist',
     type: 'follower',
