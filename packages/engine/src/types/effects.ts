@@ -16,6 +16,8 @@ export interface CardFilter {
   canPay?: { costReduction?: number };
   /** Filter by printed (base) cost */
   maxCost?: number;
+  /** Filter to only wounded followers (wound counter > 0) */
+  wounded?: boolean;
 }
 
 export type TargetSelector =

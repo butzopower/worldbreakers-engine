@@ -140,4 +140,18 @@ export const events: CardDefinition[] = [
       description: 'Gain 2 Mythium. You may attack.',
     }],
   },
+  {
+    id: 'wild_boar_charge',
+    name: 'Wild Boar Charge',
+    type: 'event',
+    guild: 'earth',
+    cost: 2,
+    standingRequirement: { earth: 1 },
+    description: 'Defeat a wounded follower.',
+    abilities: [{
+      timing: 'enters',
+      effects: [{ type: 'destroy', target: { kind: 'choose', filter: { type: 'follower', zone: ['board'], wounded: true }, count: 1 } }],
+      description: 'Defeat a wounded follower.',
+    }],
+  },
 ];

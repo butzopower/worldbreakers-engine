@@ -60,6 +60,11 @@ function matchesFilter(state: GameState, card: CardInstance, filter: CardFilter,
   if (filter.notKeyword && hasKeyword(state, card, filter.notKeyword)) return false;
   if (filter.maxCost !== undefined && def.cost > filter.maxCost) return false;
   if (filter.canPay && !canPay(state, ctx.controller, card, { costReduction: filter.canPay.costReduction })) return false;
+  if (filter.wounded !== undefined) {
+    const wounds = getCounter(card.counters, 'wound');
+    if (filter.wounded && wounds <= 0) return false;
+    if (!filter.wounded && wounds > 0) return false;
+  }
 
   return true;
 }
