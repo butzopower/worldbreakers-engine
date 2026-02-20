@@ -276,6 +276,18 @@ export const followers: CardDefinition[] = [
     ],
   },
   {
+    id: 'tengris_cavalry',
+    name: 'Tengri\'s Cavalry',
+    type: 'follower',
+    guild: 'earth',
+    standingRequirement: { earth: 3 },
+    cost: 3,
+    strength: 6,
+    health: 2,
+    keywords: ['overwhelm'],
+    description: 'Overwhelm (When this defeats a blocker, gain 1 power.)',
+  },
+  {
     id: 'yam_operator',
     name: 'Yam Operator',
     type: 'follower',
