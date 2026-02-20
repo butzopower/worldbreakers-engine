@@ -141,6 +141,23 @@ export const events: CardDefinition[] = [
     }],
   },
   {
+    id: 'the_ten_thousand_ride',
+    name: 'The Ten Thousand Ride',
+    type: 'event',
+    guild: 'earth',
+    cost: 0,
+    standingRequirement: { earth: 3 },
+    description: 'Play a follower card (paying all costs). Attack.',
+    abilities: [{
+      timing: 'enters',
+      effects: [
+        { type: 'play_card', target: { kind: 'choose', filter: { type: 'follower', zone: ['hand'], owner: 'controller', canPay: {} }, count: 1 } },
+        { type: 'initiate_attack' },
+      ],
+      description: 'Play a follower card (paying all costs). Attack.',
+    }],
+  },
+  {
     id: 'wild_boar_charge',
     name: 'Wild Boar Charge',
     type: 'event',

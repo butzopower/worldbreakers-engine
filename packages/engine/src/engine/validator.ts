@@ -5,6 +5,7 @@ import {
   getCard, getCardDef, canPlayCard, canAttack, canBlock, canDevelop, canUseAbility, canPay,
   getFollowers, getHand, getLocations, hasKeyword,
 } from '../state/query';
+import { getCounter } from '../types/counters';
 
 export interface ValidationResult {
   valid: boolean;
@@ -225,6 +226,11 @@ function validateChooseTarget(
   if (filter.maxCost !== undefined && def.cost > filter.maxCost) return { valid: false, reason: 'Target cost exceeds maximum' };
   if (filter.canPay && !canPay(state, player, card, { costReduction: filter.canPay.costReduction })) {
     return { valid: false, reason: 'Cannot afford this card' };
+  }
+  if (filter.wounded !== undefined) {
+    const wounds = getCounter(card.counters, 'wound');
+    if (filter.wounded && wounds <= 0) return { valid: false, reason: 'Target is not wounded' };
+    if (!filter.wounded && wounds > 0) return { valid: false, reason: 'Target must not be wounded' };
   }
 
   return { valid: true };
