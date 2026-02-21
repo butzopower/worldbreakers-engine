@@ -1,11 +1,14 @@
 import { useRef, useEffect } from 'react';
-import type { GameEvent } from '../types';
+import type { ClientCardDefinition, GameEvent } from '../types';
+import { useCardDefinitions } from "../context/CardDefinitions";
 
 interface Props {
   events: GameEvent[];
 }
 
-function formatEvent(event: GameEvent): string {
+function formatEvent(event: GameEvent, cardDefinitions: Record<string, ClientCardDefinition>): string {
+  function getCardName(cid: string) { return cardDefinitions[cid].name }
+
   switch (event.type) {
     case 'game_started': return 'Game started!';
     case 'phase_changed': return `Phase: ${event.phase}`;
@@ -15,7 +18,7 @@ function formatEvent(event: GameEvent): string {
     case 'power_gained': return `${event.player} +${event.amount} power`;
     case 'standing_gained': return `${event.player} +${event.amount} ${event.guild} standing`;
     case 'card_drawn': return `${event.player} drew a card`;
-    case 'card_played': return `${event.player} played ${event.definitionId ?? 'card'}`;
+    case 'card_played': return `${event.player} played ${getCardName(event.definitionId as string) ?? 'card'}`;
     case 'card_moved': return `Card moved ${event.from} → ${event.to}`;
     case 'card_exhausted': return `Card tapped`;
     case 'card_readied': return `Card readied`;
@@ -32,12 +35,15 @@ function formatEvent(event: GameEvent): string {
     case 'rally_phase': return 'Rally phase';
     case 'round_ended': return `Round ended`;
     case 'game_over': return `Game over! Winner: ${event.winner}`;
+    case 'reveal': return `${event.player} reveals ${(event.cardDefinitionIds as string[]).map(getCardName).join(', ')}`
+    case 'deck_shuffled': return `${event.player} shuffled their deck`;
     default: return event.type;
   }
 }
 
 export default function GameLog({ events }: Props) {
   const bottomRef = useRef<HTMLDivElement>(null);
+  const cardDefinitions = useCardDefinitions();
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -54,7 +60,7 @@ export default function GameLog({ events }: Props) {
       <div style={{ fontWeight: 'bold', marginBottom: '6px', color: '#888' }}>Game Log</div>
       {recent.map((event, i) => (
         <div key={i} style={{ color: '#aaa', marginBottom: '2px', borderBottom: '1px solid #1a1a2e', paddingBottom: '2px' }}>
-          {formatEvent(event)}
+          {formatEvent(event, cardDefinitions)}
         </div>
       ))}
       <div ref={bottomRef} />
