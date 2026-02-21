@@ -14,6 +14,7 @@ export interface CardFilter {
   notKeyword?: Keyword;
   excludeSelf?: boolean;
   canPay?: { costReduction?: number };
+  cardInstanceIds?: string[];
   /** Filter by printed (base) cost */
   maxCost?: number;
   /** Filter to only wounded followers (wound counter > 0) */

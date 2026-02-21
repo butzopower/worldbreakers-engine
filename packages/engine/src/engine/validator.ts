@@ -224,6 +224,7 @@ function validateChooseTarget(
   if (filter.keyword && !hasKeyword(state, card, filter.keyword)) return { valid: false, reason: 'Target does not have required keyword' };
   if (filter.notKeyword && hasKeyword(state, card, filter.notKeyword)) return { valid: false, reason: 'Target has excluded keyword' };
   if (filter.maxCost !== undefined && def.cost > filter.maxCost) return { valid: false, reason: 'Target cost exceeds maximum' };
+  if (filter.cardInstanceIds && !filter.cardInstanceIds.includes(card.instanceId)) return { valid: false, reason: 'Target does not match card instance' };
   if (filter.canPay && !canPay(state, player, card, { costReduction: filter.canPay.costReduction })) {
     return { valid: false, reason: 'Cannot afford this card' };
   }

@@ -218,6 +218,10 @@ export function isHidden(state: GameState, card: CardInstance): boolean {
   return hasKeyword(state, card, 'hidden');
 }
 
+export function isFollower(card: CardInstance): boolean {
+  return getCardDef(card).type === 'follower'
+}
+
 export function hasLethal(state: GameState, card: CardInstance): boolean {
   if (hasKeyword(state, card, 'lethal')) return true;
   for (const effect of state.lastingEffects) {

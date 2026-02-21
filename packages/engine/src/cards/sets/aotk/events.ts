@@ -1,6 +1,26 @@
 import { CardDefinition } from '../../../types/cards';
+import { CustomResolverFn } from "../../../abilities/system";
+import { CardInstance, GameState } from "../../../types/state";
+import { ResolveContext } from "../../../abilities/primitives";
+import { GameEvent } from "../../../types/events";
+import { getCardDef, getDeck, isFollower } from "../../../state/query";
+import { drawCard, moveCard, shuffleDeck } from "../../../state/mutate";
+import { STANDING_GUILDS } from "../../../types/core";
 
 export const events: CardDefinition[] = [
+  {
+    id: 'call_to_arms',
+    name: 'Call to Arms',
+    type: 'event',
+    guild: 'earth',
+    cost: 0,
+    standingRequirement: { earth: 1 },
+    abilities: [{
+      timing: 'enters',
+      customResolve: 'call_to_arms',
+      description: 'Reveal cards from the top of your deck until you reveal two follower cards. Draw them both and shuffle your deck. You may play one of those cards (paying all costs).',
+    }]
+  },
   {
     id: 'lay_siege',
     name: 'Lay Siege',
@@ -172,3 +192,72 @@ export const events: CardDefinition[] = [
     }],
   },
 ];
+
+export const eventResolvers: {key: string, resolver: CustomResolverFn}[] = [
+  {
+    key: 'call_to_arms',
+    resolver: (
+      state: GameState,
+      ctx: ResolveContext,
+    ): { state: GameState; events: GameEvent[] } => {
+      const player = ctx.controller;
+      const deck = getDeck(state, player);
+      const cardsToReveal: CardInstance[] = [];
+
+      if (deck.length === 0) {
+        return { state, events: [] };
+      }
+
+      for (const card of deck) {
+        cardsToReveal.push(card);
+        if (cardsToReveal.filter(isFollower).length >= 2) break;
+      }
+
+      let newState = state;
+      const events: GameEvent[] = [
+        {
+          type: 'reveal',
+          player,
+          cardDefinitionIds: cardsToReveal.map(c => c.definitionId)
+        }
+      ];
+
+      const revealedFollowers = cardsToReveal.filter(isFollower);
+
+      for (const follower of revealedFollowers) {
+        const r = moveCard(newState, follower.instanceId, 'hand');
+        newState = r.state;
+        events.push(...r.events)
+      }
+
+      const shuffleResult = shuffleDeck(newState, player);
+      newState = shuffleResult.state;
+      events.push(...shuffleResult.events)
+
+      if (revealedFollowers.length > 0) {
+        const cardInstanceIds = revealedFollowers.map(f => f.instanceId);
+        newState = {
+          ...newState,
+          pendingChoice: {
+            type: 'choose_mode',
+            playerId: player,
+            sourceCardId: ctx.sourceCardId,
+            modes: [
+              { label: 'Play one of the drawn followers',
+                effects: [
+                  {
+                    type: 'play_card',
+                    target: { kind: 'choose', filter: { cardInstanceIds, canPay: {} }, count: 1 }
+                  }
+                ]
+              },
+              { label: 'Pass', effects: [] }
+            ],
+          }
+        }
+      }
+
+      return { state: newState, events}
+    }
+  }
+]

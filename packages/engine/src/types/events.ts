@@ -31,4 +31,5 @@ export type GameEvent =
   | { type: 'rally_step'; step: string; player: PlayerId }
   | { type: 'game_over'; winner: PlayerId | 'draw' }
   | { type: 'lasting_effect_created'; effectId: string; description: string }
-  | { type: 'lasting_effect_expired'; effectId: string };
+  | { type: 'lasting_effect_expired'; effectId: string }
+  | { type: 'reveal'; player: PlayerId; cardDefinitionIds: string[] };

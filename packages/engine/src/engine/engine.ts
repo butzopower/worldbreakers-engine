@@ -519,6 +519,7 @@ function getLegalChoiceActions(state: GameState): ActionInput[] {
         if (filter.keyword && !hasKeyword(state, c, filter.keyword)) return false;
         if (filter.notKeyword && hasKeyword(state, c, filter.notKeyword)) return false;
         if (filter.maxCost !== undefined && def.cost > filter.maxCost) return false;
+        if (filter.cardInstanceIds && !filter.cardInstanceIds.includes(c.instanceId)) return false;
         if (filter.canPay && !canPay(state, player, c, { costReduction: filter.canPay.costReduction })) return false;
         if (filter.wounded !== undefined) {
           const wounds = getCounter(c.counters, 'wound');
