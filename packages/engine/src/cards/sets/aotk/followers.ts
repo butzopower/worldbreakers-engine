@@ -145,6 +145,38 @@ export const followers: CardDefinition[] = [
     description: 'Overwhelm (When this defeats a blocker, gain 1 power.)',
   },
   {
+    id: 'confident_suitor',
+    name: 'Confident Suitor',
+    type: 'follower',
+    guild: 'earth',
+    cost: 4,
+    standingRequirement: { earth: 2 },
+    strength: 6,
+    health: 6,
+    keywords: ['overwhelm'],
+    description: 'Forced Response: After Confident Suitor overwhelms or you gain power from breaching with it, if it is still in play → Gain 6 Mythium. Defeat it.',
+    abilities: [
+      {
+        timing: 'overwhelms',
+        forced: true,
+        effects: [
+          { type: 'gain_mythium', player: 'controller', amount: 6 },
+          { type: 'destroy', target: { kind: 'source_card' } },
+        ],
+        description: 'Gain 6 Mythium. Defeat Confident Suitor.',
+      },
+      {
+        timing: 'breach',
+        forced: true,
+        effects: [
+          { type: 'gain_mythium', player: 'controller', amount: 6 },
+          { type: 'destroy', target: { kind: 'source_card' } },
+        ],
+        description: 'Gain 6 Mythium. Defeat Confident Suitor.',
+      },
+    ],
+  },
+  {
     id: 'dogtamer',
     name: 'Dogtamer',
     type: 'follower',

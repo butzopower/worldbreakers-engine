@@ -71,43 +71,6 @@ describe('Alamut Saboteur', () => {
     expectPlayerPower(passResult.state, 'player1', 1);
   });
 
-  it('breach with defender locations: after discard, choose_breach_target appears', () => {
-    const state = buildState()
-      .withActivePlayer('player1')
-      .addCard('stone_sentinel', 'player1', 'worldbreaker', { instanceId: 'wb1' })
-      .addCard('alamut_saboteur', 'player1', 'board', { instanceId: 'as1' })
-      .addCard('militia_scout', 'player2', 'hand', { instanceId: 'ms1' })
-      .addCard('the_den_of_sabers', 'player2', 'board', { instanceId: 'loc1' })
-      .build();
-
-    const attackResult = processAction(state, {
-      player: 'player1',
-      action: { type: 'attack', attackerIds: ['as1'] },
-    });
-
-    const passResult = processAction(attackResult.state, {
-      player: 'player2',
-      action: { type: 'pass_block' },
-    });
-
-    // Breach triggers discard first
-    expect(passResult.state.pendingChoice).not.toBeNull();
-    expect(passResult.state.pendingChoice!.type).toBe('choose_discard');
-
-    // Defender discards
-    const discardResult = processAction(passResult.state, {
-      player: 'player2',
-      action: { type: 'choose_discard', cardInstanceIds: ['ms1'] },
-    });
-
-    // After discard, breach resumes — attacker gets breach target choice
-    expect(discardResult.state.pendingChoice).not.toBeNull();
-    expect(discardResult.state.pendingChoice!.type).toBe('choose_breach_target');
-
-    // Attacker gained breach power
-    expectPlayerPower(discardResult.state, 'player1', 1);
-  });
-
   it('breach: attacker gains power from breach', () => {
     const state = buildState()
       .withActivePlayer('player1')

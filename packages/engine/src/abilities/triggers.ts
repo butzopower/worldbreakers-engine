@@ -4,6 +4,7 @@ import { GameEvent } from '../types/events';
 import { AbilityTiming } from '../types/effects';
 import { getCardDef, getBoard, getWorldbreaker } from '../state/query';
 import { resolveAbility } from './resolver';
+import { runCleanup } from "../engine/cleanup";
 
 interface TriggerContext {
   triggeringCardId?: string;
@@ -56,6 +57,11 @@ export function resolveTriggeredAbilities(
       }
     }
   }
+
+  const cleanupResult = runCleanup(s);
+  s = cleanupResult.state;
+  events.push(...cleanupResult.events);
+
 
   return { state: s, events };
 }

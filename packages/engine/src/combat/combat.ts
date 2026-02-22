@@ -4,6 +4,7 @@ import { GameEvent } from '../types/events';
 import { exhaustCard, gainPower } from '../state/mutate';
 import { getCard, getCardDef, getLocations, isHidden, getEffectiveStrength, getFollowers, canBlock, hasKeyword } from '../state/query';
 import { resolveTriggeredAbilities } from '../abilities/triggers';
+import { resolveAbility } from '../abilities/resolver';
 import { resolveSingleFight } from './damage';
 import { runCleanup, expireLastingEffects } from '../engine/cleanup';
 
@@ -118,16 +119,22 @@ export function declareBlocker(
     pendingChoice: null,
   };
 
-  // Fire 'overwhelms' trigger if the blocker was defeated by an attacker with overwhelm
+  // Fire 'overwhelms' trigger if the blocker was defeated by an attacker with overwhelm.
+  // Only fires for the specific attacker that overwhelmed (not all board cards).
   const blockerAfterCleanup = getCard(s, blockerId);
   const attackerAfterCleanup = getCard(s, attackerId);
   const blockerDefeated = !blockerAfterCleanup || blockerAfterCleanup.zone !== 'board';
   if (blockerDefeated && attackerAfterCleanup) {
     const attackerDef = getCardDef(attackerAfterCleanup);
-    if (hasKeyword(s, attackerAfterCleanup, 'overwhelm') && attackerDef.abilities?.some(a => a.timing === 'overwhelms')) {
-      const overwhelmResult = resolveTriggeredAbilities(s, 'overwhelms', s.combat!.attackingPlayer, { triggeringCardId: attackerId });
-      s = overwhelmResult.state;
-      events.push(...overwhelmResult.events);
+    if (hasKeyword(s, attackerAfterCleanup, 'overwhelm') && attackerDef.abilities) {
+      for (let i = 0; i < attackerDef.abilities.length; i++) {
+        if (attackerDef.abilities[i].timing === 'overwhelms') {
+          events.push({ type: 'ability_triggered', cardInstanceId: attackerId, abilityIndex: i, timing: 'overwhelms' });
+          const overwhelmResult = resolveAbility(s, s.combat!.attackingPlayer, attackerId, attackerDef.abilities[i], i);
+          s = overwhelmResult.state;
+          events.push(...overwhelmResult.events);
+        }
+      }
     }
   }
 
