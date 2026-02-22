@@ -66,7 +66,8 @@ export type AbilityTiming =
   | 'interrupt'
   | 'response'
   | 'follower_defeated'
-  | 'location_depleted';
+  | 'location_depleted'
+  | 'overwhelms';
 
 export interface AbilityDefinition {
   timing: AbilityTiming;

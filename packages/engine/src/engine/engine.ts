@@ -14,7 +14,7 @@ import { handlePlayCard } from '../actions/play-card';
 import { handleAttack } from '../actions/attack';
 import { handleDevelop } from '../actions/develop';
 import { handleUseAbility } from '../actions/use-ability';
-import { declareBlocker, passBlock, endCombat, resumeBreach, initiateAttack } from '../combat/combat';
+import { declareBlocker, passBlock, endCombat, resumeBreach, resumePostBlock, initiateAttack } from '../combat/combat';
 import { handleBreachDamage, handleSkipBreachDamage } from '../combat/breach';
 import { resolveEffects } from '../abilities/resolver';
 import { ResolveContext, findValidTargets, resolvePrimitive } from '../abilities/primitives';
@@ -353,11 +353,19 @@ function handlePendingChoice(
     }
   }
 
-  // If a pending choice resolved during declare_blockers, transition to blocking.
+  // If a pending choice resolved during declare_blockers, resume the appropriate flow.
   if (!s.pendingChoice && s.combat?.step === 'declare_blockers') {
-    const defender = opponentOf(s.combat.attackingPlayer);
-    s = { ...s, pendingChoice: { type: 'choose_blockers', playerId: defender, attackerIds: s.combat.attackerIds } };
-    return { state: s, events };
+    if (s.combat.damageDealt) {
+      // Post-block trigger resolved (e.g. overwhelms) — resume post-block flow.
+      const result = resumePostBlock(s, [], s.combat.attackerIds);
+      s = result.state;
+      events.push(...result.events);
+    } else {
+      // Pre-block trigger resolved (e.g. Khutulun) — restore blocker selection.
+      const defender = opponentOf(s.combat.attackingPlayer);
+      s = { ...s, pendingChoice: { type: 'choose_blockers', playerId: defender, attackerIds: s.combat.attackerIds } };
+      return { state: s, events };
+    }
   }
 
   // If a pending choice was resolved during breach, resume the breach flow

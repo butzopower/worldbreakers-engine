@@ -214,6 +214,28 @@ const testCards: CardDefinition[] = [
     }],
   },
 
+  {
+    id: 'overwhelming_warrior',
+    name: 'Overwhelming Warrior',
+    type: 'follower',
+    guild: 'neutral',
+    cost: 3,
+    strength: 3,
+    health: 3,
+    keywords: ['overwhelm'],
+    abilities: [{
+      timing: 'overwhelms',
+      effects: [{
+        type: 'choose_one',
+        modes: [
+          { label: 'Gain 2 Mythium', effects: [{ type: 'gain_mythium', player: 'controller', amount: 2 }] },
+          { label: 'Draw 2 cards', effects: [{ type: 'draw_cards', player: 'controller', count: 2 }] },
+        ],
+      }],
+      description: 'Overwhelms: Gain 2 Mythium or Draw 2 cards.',
+    }],
+  },
+
   // Locations
   {
     id: 'watchtower',

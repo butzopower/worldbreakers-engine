@@ -2,7 +2,7 @@ import { PlayerId, opponentOf } from '../types/core';
 import { GameState, CombatState } from '../types/state';
 import { GameEvent } from '../types/events';
 import { exhaustCard, gainPower } from '../state/mutate';
-import { getCard, getCardDef, getLocations, isHidden, getEffectiveStrength, getFollowers, canBlock } from '../state/query';
+import { getCard, getCardDef, getLocations, isHidden, getEffectiveStrength, getFollowers, canBlock, hasKeyword } from '../state/query';
 import { resolveTriggeredAbilities } from '../abilities/triggers';
 import { resolveSingleFight } from './damage';
 import { runCleanup, expireLastingEffects } from '../engine/cleanup';
@@ -116,23 +116,56 @@ export function declareBlocker(
     pendingChoice: null,
   };
 
-  // Check if defender can block again
-  const defenderFollowers = getFollowers(s, defender).filter(f => canBlock(s, f));
-  if (defenderFollowers.length > 0 && remainingAttackerIds.length > 0) {
-    // More blocking possible
-    s = {
-      ...s,
-      pendingChoice: {
-        type: 'choose_blockers',
-        playerId: defender,
-        attackerIds: remainingAttackerIds,
-      },
-    };
+  // Fire 'overwhelms' trigger if the blocker was defeated by an attacker with overwhelm
+  const blockerAfterCleanup = getCard(s, blockerId);
+  const attackerAfterCleanup = getCard(s, attackerId);
+  const blockerDefeated = !blockerAfterCleanup || blockerAfterCleanup.zone !== 'board';
+  if (blockerDefeated && attackerAfterCleanup) {
+    const attackerDef = getCardDef(attackerAfterCleanup);
+    if (hasKeyword(s, attackerAfterCleanup, 'overwhelm') && attackerDef.abilities?.some(a => a.timing === 'overwhelms')) {
+      const overwhelmResult = resolveTriggeredAbilities(s, 'overwhelms', s.combat!.attackingPlayer, { triggeringCardId: attackerId });
+      s = overwhelmResult.state;
+      events.push(...overwhelmResult.events);
+    }
+  }
+
+  // If a trigger created a pending choice, return early.
+  // Engine's handlePendingChoice will call resumePostBlock after the choice resolves.
+  if (s.pendingChoice) {
     return { state: s, events };
   }
 
-  // No more blocking possible — proceed to breach with remaining attackers
-  return proceedToBreach(s, events, remainingAttackerIds);
+  return resumePostBlock(s, events, remainingAttackerIds);
+}
+
+/**
+ * Resume the blocking flow after a pending choice (e.g. an overwhelms trigger) has resolved.
+ * Sets up choose_blockers if attackers remain and blockers are available, otherwise proceeds to breach.
+ */
+export function resumePostBlock(
+  state: GameState,
+  events: GameEvent[],
+  remainingAttackerIds: string[],
+): { state: GameState; events: GameEvent[] } {
+  if (!state.combat) return { state, events };
+
+  if (remainingAttackerIds.length > 0) {
+    const defender = opponentOf(state.combat.attackingPlayer);
+    const availableBlockers = getFollowers(state, defender).filter(f => canBlock(state, f));
+    if (availableBlockers.length > 0) {
+      const s = {
+        ...state,
+        pendingChoice: {
+          type: 'choose_blockers' as const,
+          playerId: defender,
+          attackerIds: remainingAttackerIds,
+        },
+      };
+      return { state: s, events };
+    }
+  }
+
+  return proceedToBreach(state, events, remainingAttackerIds);
 }
 
 /**

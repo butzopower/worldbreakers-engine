@@ -3,6 +3,7 @@ import { registerTestCards } from '../../src/cards/test-cards';
 import { clearRegistry } from '../../src/cards/registry.js';
 import { processAction } from '../../src/engine/engine.js';
 import { buildState } from '../helpers/state-builder.js';
+import { expectHandSize, expectPlayerMythium } from '../helpers/assertions.js';
 
 beforeEach(() => {
   clearRegistry();
@@ -180,5 +181,122 @@ describe('location_depleted trigger (ruin_watcher)', () => {
     // No depletion → no trigger → deck card not drawn
     const deckCard = result.state.cards.find(c => c.instanceId === 'deck1');
     expect(deckCard?.zone).toBe('deck');
+  });
+});
+
+describe('overwhelms trigger (overwhelming_warrior)', () => {
+  it('prompts choose_mode after defeating a blocker', () => {
+    const state = buildState()
+      .withActivePlayer('player1')
+      .addCard('overwhelming_warrior', 'player1', 'board', { instanceId: 'ow1' })
+      .addCard('militia_scout', 'player2', 'board', { instanceId: 'ms1' })
+      .build();
+
+    const attackResult = processAction(state, {
+      player: 'player1',
+      action: { type: 'attack', attackerIds: ['ow1'] },
+    });
+
+    const blockResult = processAction(attackResult.state, {
+      player: 'player2',
+      action: { type: 'declare_blocker', blockerId: 'ms1', attackerId: 'ow1' },
+    });
+
+    expect(blockResult.waitingFor?.type).toBe('choose_mode');
+  });
+
+  it('choosing "Gain 2 Mythium" grants 2 mythium to the attacking player', () => {
+    const state = buildState()
+      .withActivePlayer('player1')
+      .withMythium('player1', 0)
+      .addCard('overwhelming_warrior', 'player1', 'board', { instanceId: 'ow1' })
+      .addCard('militia_scout', 'player2', 'board', { instanceId: 'ms1' })
+      .build();
+
+    const attackResult = processAction(state, {
+      player: 'player1',
+      action: { type: 'attack', attackerIds: ['ow1'] },
+    });
+
+    const blockResult = processAction(attackResult.state, {
+      player: 'player2',
+      action: { type: 'declare_blocker', blockerId: 'ms1', attackerId: 'ow1' },
+    });
+
+    const result = processAction(blockResult.state, {
+      player: 'player1',
+      action: { type: 'choose_mode', modeIndex: 0 },
+    });
+
+    expectPlayerMythium(result.state, 'player1', 2);
+  });
+
+  it('choosing "Draw 2 cards" draws 2 cards for the attacking player', () => {
+    const state = buildState()
+      .withActivePlayer('player1')
+      .addCard('overwhelming_warrior', 'player1', 'board', { instanceId: 'ow1' })
+      .addCard('militia_scout', 'player2', 'board', { instanceId: 'ms1' })
+      .addCard('militia_scout', 'player1', 'deck', { instanceId: 'deck1' })
+      .addCard('militia_scout', 'player1', 'deck', { instanceId: 'deck2' })
+      .build();
+
+    const attackResult = processAction(state, {
+      player: 'player1',
+      action: { type: 'attack', attackerIds: ['ow1'] },
+    });
+
+    const blockResult = processAction(attackResult.state, {
+      player: 'player2',
+      action: { type: 'declare_blocker', blockerId: 'ms1', attackerId: 'ow1' },
+    });
+
+    const result = processAction(blockResult.state, {
+      player: 'player1',
+      action: { type: 'choose_mode', modeIndex: 1 },
+    });
+
+    expectHandSize(result.state, 'player1', 2);
+  });
+
+  it('does not trigger when the blocker survives combat', () => {
+    // overwhelming_warrior (3 str) vs earthshaker_giant (4 health) — blocker not defeated
+    const state = buildState()
+      .withActivePlayer('player1')
+      .addCard('overwhelming_warrior', 'player1', 'board', { instanceId: 'ow1' })
+      .addCard('earthshaker_giant', 'player2', 'board', { instanceId: 'eg1' })
+      .build();
+
+    const attackResult = processAction(state, {
+      player: 'player1',
+      action: { type: 'attack', attackerIds: ['ow1'] },
+    });
+
+    const blockResult = processAction(attackResult.state, {
+      player: 'player2',
+      action: { type: 'declare_blocker', blockerId: 'eg1', attackerId: 'ow1' },
+    });
+
+    // No overwhelm trigger — should not be waiting for choose_mode
+    expect(blockResult.waitingFor?.type).not.toBe('choose_mode');
+  });
+
+  it('does not trigger for a non-overwhelm card that defeats a blocker', () => {
+    const state = buildState()
+      .withActivePlayer('player1')
+      .addCard('militia_scout', 'player1', 'board', { instanceId: 'ms_atk' })
+      .addCard('militia_scout', 'player2', 'board', { instanceId: 'ms_blk' })
+      .build();
+
+    const attackResult = processAction(state, {
+      player: 'player1',
+      action: { type: 'attack', attackerIds: ['ms_atk'] },
+    });
+
+    const blockResult = processAction(attackResult.state, {
+      player: 'player2',
+      action: { type: 'declare_blocker', blockerId: 'ms_blk', attackerId: 'ms_atk' },
+    });
+
+    expect(blockResult.waitingFor?.type).not.toBe('choose_mode');
   });
 });
