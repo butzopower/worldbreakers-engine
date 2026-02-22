@@ -32,8 +32,6 @@ export interface CombatState {
   step: CombatStep;
   attackingPlayer: PlayerId;
   attackerIds: string[];
-  /** Damage already dealt during fight */
-  damageDealt: boolean;
 }
 
 export type PendingChoiceChooseTarget = { type: 'choose_target'; playerId: PlayerId; sourceCardId: string; abilityIndex: number; effects: EffectPrimitive[]; filter: CardFilter; triggeringCardId?: string }

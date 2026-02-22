@@ -25,12 +25,11 @@ export function initiateAttack(
     events.push(...result.events);
   }
 
-  // Create combat state
+  // Create combat state in resolve_attack_abilities step
   const combat: CombatState = {
-    step: 'declare_blockers',
+    step: 'resolve_attack_abilities',
     attackingPlayer: player,
     attackerIds,
-    damageDealt: false,
   };
 
   s = { ...s, combat };
@@ -57,11 +56,12 @@ export function initiateAttack(
     }
   }
 
-  // Defender now needs to choose blockers (unless a trigger created a pending choice)
+  // Transition to declare_blockers (unless a trigger created a pending choice)
   const defender = opponentOf(player);
   if (!s.pendingChoice) {
     s = {
       ...s,
+      combat: { ...s.combat!, step: 'declare_blockers' },
       pendingChoice: {
         type: 'choose_blockers',
         playerId: defender,
@@ -69,6 +69,8 @@ export function initiateAttack(
       },
     };
   }
+  // If a trigger created a pending choice, stay in resolve_attack_abilities.
+  // handlePendingChoice will transition to declare_blockers after resolution.
 
   return { state: s, events };
 }
@@ -112,7 +114,7 @@ export function declareBlocker(
   const remainingAttackerIds = s.combat.attackerIds.filter(id => id !== attackerId);
   s = {
     ...s,
-    combat: { ...s.combat, attackerIds: remainingAttackerIds, damageDealt: true },
+    combat: { ...s.combat, attackerIds: remainingAttackerIds },
     pendingChoice: null,
   };
 

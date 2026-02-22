@@ -33,7 +33,6 @@ export interface CombatState {
   step: string;
   attackingPlayer: PlayerId;
   attackerIds: string[];
-  damageDealt: boolean;
 }
 
 export type PendingChoice =

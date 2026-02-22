@@ -77,8 +77,6 @@ export function resolveSingleFight(
     }
   }
 
-  s = { ...s, combat: { ...s.combat!, damageDealt: true } };
-
   return { state: s, events };
 }
 

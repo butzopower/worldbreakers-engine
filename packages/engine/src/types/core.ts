@@ -16,9 +16,8 @@ export type Zone =
   | 'worldbreaker';
 
 export type CombatStep =
-  | 'declare_attackers'
+  | 'resolve_attack_abilities'
   | 'declare_blockers'
-  | 'fight'
   | 'breach';
 
 export type RallyStep =

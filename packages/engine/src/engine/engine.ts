@@ -69,22 +69,6 @@ export function processAction(state: GameState, input: ActionInput): ProcessResu
     return { state: s, events, waitingFor: s.pendingChoice };
   }
 
-  // If combat is still active and needs input, check
-  if (s.combat) {
-    if (s.combat.step === 'declare_blockers') {
-      const defender = opponentOf(s.combat.attackingPlayer);
-      return {
-        state: s,
-        events,
-        waitingFor: {
-          type: 'choose_blockers',
-          playerId: defender,
-          attackerIds: s.combat.attackerIds,
-        },
-      };
-    }
-  }
-
   return { state: s, events };
 }
 
@@ -353,19 +337,22 @@ function handlePendingChoice(
     }
   }
 
-  // If a pending choice resolved during declare_blockers, resume the appropriate flow.
+  // Attack-phase trigger resolved → transition to declare_blockers.
+  if (!s.pendingChoice && s.combat?.step === 'resolve_attack_abilities') {
+    const defender = opponentOf(s.combat.attackingPlayer);
+    s = {
+      ...s,
+      combat: { ...s.combat, step: 'declare_blockers' },
+      pendingChoice: { type: 'choose_blockers', playerId: defender, attackerIds: s.combat.attackerIds },
+    };
+    return { state: s, events };
+  }
+
+  // Post-block trigger (e.g. overwhelms) resolved → resume post-block flow.
   if (!s.pendingChoice && s.combat?.step === 'declare_blockers') {
-    if (s.combat.damageDealt) {
-      // Post-block trigger resolved (e.g. overwhelms) — resume post-block flow.
-      const result = resumePostBlock(s, [], s.combat.attackerIds);
-      s = result.state;
-      events.push(...result.events);
-    } else {
-      // Pre-block trigger resolved (e.g. Khutulun) — restore blocker selection.
-      const defender = opponentOf(s.combat.attackingPlayer);
-      s = { ...s, pendingChoice: { type: 'choose_blockers', playerId: defender, attackerIds: s.combat.attackerIds } };
-      return { state: s, events };
-    }
+    const result = resumePostBlock(s, [], s.combat.attackerIds);
+    s = result.state;
+    events.push(...result.events);
   }
 
   // If a pending choice was resolved during breach, resume the breach flow
@@ -598,6 +585,10 @@ function getLegalCombatActions(state: GameState): ActionInput[] {
   const defender = opponentOf(state.combat.attackingPlayer);
 
   switch (state.combat.step) {
+    case 'resolve_attack_abilities': {
+      // Engine-driven step; no direct player actions.
+      break;
+    }
     case 'declare_blockers': {
       actions.push({ player: defender, action: { type: 'pass_block' } });
       const blockers = getFollowers(state, defender).filter(f => canBlock(state, f));
