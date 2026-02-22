@@ -71,6 +71,38 @@ export const events: CardDefinition[] = [
     }],
   },
   {
+    id: 'ger_migration',
+    name: 'Ger Migration',
+    type: 'event',
+    guild: 'earth',
+    cost: 1,
+    standingRequirement: { earth: 1 },
+    description: 'Choose one: Draw 2 cards and gain 1 standing with any guild. • Spend 1 Earth standing. If you do, gain 5 Mythium.',
+    abilities: [{
+      timing: 'enters',
+      effects: [{
+        type: 'choose_one',
+        modes: [
+          {
+            label: 'Draw 2 cards and gain 1 standing with any guild',
+            effects: [
+              { type: 'draw_cards', player: 'self', count: 2 },
+              { type: 'gain_standing', player: 'self', guild: 'choose', amount: 1 },
+            ],
+          },
+          {
+            label: 'Spend 1 Earth standing. Gain 5 Mythium.',
+            effects: [
+              { type: 'lose_standing', player: 'self', guild: 'earth', amount: 1 },
+              { type: 'gain_mythium', player: 'self', amount: 5 },
+            ],
+          },
+        ],
+      }],
+      description: 'Choose one: Draw 2 cards and gain 1 standing with any guild. • Spend 1 Earth standing. If you do, gain 5 Mythium.',
+    }],
+  },
+  {
     id: 'gratuitous_gift',
     name: 'Gratuitous Gift',
     type: 'event',
