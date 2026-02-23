@@ -213,6 +213,18 @@ export const followers: CardDefinition[] = [
     }],
   },
   {
+    id: 'forbidding_guru',
+    name: 'Forbidding Guru',
+    type: 'follower',
+    guild: 'earth',
+    cost: 3,
+    standingRequirement: { earth: 2 },
+    strength: 3,
+    health: 3,
+    blockRestrictions: [{ type: 'min_blocker_strength', value: 3 }],
+    description: 'Cannot be blocked by followers with strength 3 or greater.',
+  },
+  {
     id: 'earth_apprentice',
     name: 'Earth Apprentice',
     type: 'follower',
