@@ -9,7 +9,7 @@ export type BlockRestriction =
 
 export type PassiveEffectDefinition =
   | { type: 'cost_reduction'; cardTypes: CardType[]; amount: number }
-  | { type: 'intimidate' };
+  | { type: 'draw_aggro' };
 
 export type Keyword =
   | 'stationary'

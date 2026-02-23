@@ -265,7 +265,7 @@ const testCards: CardDefinition[] = [
     cost: 4,
     strength: 4,
     health: 4,
-    passiveEffects: [{ type: 'intimidate' }],
+    passiveEffects: [{ type: 'draw_aggro' }],
   },
 
   // Locations

@@ -620,11 +620,11 @@ describe('combat - block restrictions', () => {
     });
   });
 
-  describe('intimidate passive', () => {
-    it('weaker co-attackers cannot be blocked while intimidator is in combat', () => {
+  describe('draw_aggro passive', () => {
+    it('weaker co-attackers cannot be blocked while draw_aggro is in combat', () => {
       const state = buildState()
         .withActivePlayer('player1')
-        .addCard('intimidate_attacker', 'player1', 'board', { instanceId: 'intim1' }) // 4/4 intimidate
+        .addCard('intimidate_attacker', 'player1', 'board', { instanceId: 'aggro1' }) // 4/4 draw_aggro
         .addCard('militia_scout', 'player1', 'board', { instanceId: 'atk1' }) // 1/1 (weaker)
         .addCard('shield_bearer', 'player2', 'board', { instanceId: 'blk1' }) // 1/3
         .addCard('shield_bearer', 'player2', 'board', { instanceId: 'blk2' }) // 1/3
@@ -632,20 +632,20 @@ describe('combat - block restrictions', () => {
 
       const r1 = processAction(state, {
         player: 'player1',
-        action: { type: 'attack', attackerIds: ['intim1', 'atk1'] },
+        action: { type: 'attack', attackerIds: ['aggro1', 'atk1'] },
       });
 
-      // Blocking phase — should only allow blocking the intimidator (str 4 >= 4)
+      // Blocking phase — should only allow blocking the aggro drawer (str 4 >= 4)
       // militia_scout (str 1 < 4) can't be blocked
       const actions = getLegalActions(r1.state);
       const blockerActions = actions.filter(a => a.action.type === 'declare_blocker');
 
-      // Should only have blocker actions for intim1 (the intimidator itself), not atk1
+      // Should only have blocker actions for aggro1 (the aggro_drawer itself), not atk1
       const blockAtk1 = blockerActions.filter(a =>
         a.action.type === 'declare_blocker' && a.action.attackerId === 'atk1'
       );
       const blockIntim = blockerActions.filter(a =>
-        a.action.type === 'declare_blocker' && a.action.attackerId === 'intim1'
+        a.action.type === 'declare_blocker' && a.action.attackerId === 'aggro1'
       );
 
       expect(blockAtk1.length).toBe(0);
@@ -655,18 +655,18 @@ describe('combat - block restrictions', () => {
     it('equal or greater strength co-attackers can be blocked', () => {
       const state = buildState()
         .withActivePlayer('player1')
-        .addCard('intimidate_attacker', 'player1', 'board', { instanceId: 'intim1' }) // 4/4 intimidate
+        .addCard('intimidate_attacker', 'player1', 'board', { instanceId: 'aggro1' }) // 4/4 draw_aggro
         .addCard('earthshaker_giant', 'player1', 'board', { instanceId: 'atk1' }) // 3/4 — but add +1/+1 to make str 4
         .addCard('shield_bearer', 'player2', 'board', { instanceId: 'blk1' }) // 1/3
         .build();
 
-      // Give giant a +1/+1 counter so its effective strength is 4 (equal to intimidator)
+      // Give giant a +1/+1 counter so its effective strength is 4 (equal to aggro)
       const giantCard = state.cards.find(c => c.instanceId === 'atk1')!;
       giantCard.counters = { plus_one_plus_one: 1 };
 
       const r1 = processAction(state, {
         player: 'player1',
-        action: { type: 'attack', attackerIds: ['intim1', 'atk1'] },
+        action: { type: 'attack', attackerIds: ['aggro1', 'atk1'] },
       });
 
       const actions = getLegalActions(r1.state);
@@ -674,32 +674,32 @@ describe('combat - block restrictions', () => {
         a.action.type === 'declare_blocker' && a.action.attackerId === 'atk1'
       );
 
-      // Giant has str 4 (>= intimidator's 4) — CAN be blocked
+      // Giant has str 4 (>= aggro's 4) — CAN be blocked
       expect(blockAtk1.length).toBeGreaterThan(0);
     });
 
-    it('blocking the intimidator removes its aura, making weaker attackers blockable', () => {
+    it('blocking the aggro follower removes its aura, making weaker attackers blockable', () => {
       const state = buildState()
         .withActivePlayer('player1')
-        .addCard('intimidate_attacker', 'player1', 'board', { instanceId: 'intim1' }) // 4/4 intimidate
+        .addCard('intimidate_attacker', 'player1', 'board', { instanceId: 'aggro1' }) // 4/4 draw_aggro
         .addCard('militia_scout', 'player1', 'board', { instanceId: 'atk1' }) // 1/1 (weaker)
-        .addCard('earthshaker_giant', 'player2', 'board', { instanceId: 'blk1' }) // 3/4 (can block the intimidator)
+        .addCard('earthshaker_giant', 'player2', 'board', { instanceId: 'blk1' }) // 3/4 (can block the aggro)
         .addCard('shield_bearer', 'player2', 'board', { instanceId: 'blk2' }) // 1/3
         .build();
 
       const r1 = processAction(state, {
         player: 'player1',
-        action: { type: 'attack', attackerIds: ['intim1', 'atk1'] },
+        action: { type: 'attack', attackerIds: ['aggro1', 'atk1'] },
       });
 
-      // Block the intimidator — removes it from combat
+      // Block the aggro — removes it from combat
       const r2 = processAction(r1.state, {
         player: 'player2',
-        action: { type: 'declare_blocker', blockerId: 'blk1', attackerId: 'intim1' },
+        action: { type: 'declare_blocker', blockerId: 'blk1', attackerId: 'aggro1' },
       });
 
-      // intim1 was blocked and removed from attackerIds
-      // Now atk1 should be blockable since intimidate aura is gone
+      // aggro1 was blocked and removed from attackerIds
+      // Now atk1 should be blockable since draw_aggro aura is gone
       expect(r2.state.pendingChoice).not.toBeNull();
       expect(r2.state.pendingChoice!.type).toBe('choose_blockers');
 

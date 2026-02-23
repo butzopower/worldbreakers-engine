@@ -137,7 +137,7 @@ export function canBlockAttacker(state: GameState, blocker: CardInstance, attack
       const other = getCard(state, otherId);
       if (!other || other.zone !== 'board') continue;
       const otherDef = getCardDef(other);
-      if (otherDef.passiveEffects?.some(p => p.type === 'intimidate')) {
+      if (otherDef.passiveEffects?.some(p => p.type === 'draw_aggro')) {
         if (attackerStr < getEffectiveStrength(state, other)) return false;
       }
     }
