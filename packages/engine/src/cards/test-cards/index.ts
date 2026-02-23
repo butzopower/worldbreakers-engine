@@ -236,6 +236,38 @@ const testCards: CardDefinition[] = [
     }],
   },
 
+  // Block restriction test cards
+  {
+    id: 'wound_dodge_attacker',
+    name: 'Wound Dodge Attacker',
+    type: 'follower',
+    guild: 'neutral',
+    cost: 2,
+    strength: 2,
+    health: 2,
+    blockRestrictions: [{ type: 'wounded_blocker' }],
+  },
+  {
+    id: 'strength_dodge_attacker',
+    name: 'Strength Dodge Attacker',
+    type: 'follower',
+    guild: 'neutral',
+    cost: 2,
+    strength: 2,
+    health: 2,
+    blockRestrictions: [{ type: 'min_blocker_strength', value: 3 }],
+  },
+  {
+    id: 'intimidate_attacker',
+    name: 'Intimidate Attacker',
+    type: 'follower',
+    guild: 'neutral',
+    cost: 4,
+    strength: 4,
+    health: 4,
+    passiveEffects: [{ type: 'intimidate' }],
+  },
+
   // Locations
   {
     id: 'watchtower',

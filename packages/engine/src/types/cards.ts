@@ -3,8 +3,13 @@ import { AbilityDefinition, Condition } from './effects';
 
 export type CardType = 'worldbreaker' | 'follower' | 'event' | 'location';
 
+export type BlockRestriction =
+  | { type: 'wounded_blocker' }
+  | { type: 'min_blocker_strength'; value: number };
+
 export type PassiveEffectDefinition =
-  | { type: 'cost_reduction'; cardTypes: CardType[]; amount: number };
+  | { type: 'cost_reduction'; cardTypes: CardType[]; amount: number }
+  | { type: 'intimidate' };
 
 export type Keyword =
   | 'stationary'
@@ -40,6 +45,8 @@ export interface CardDefinition {
   abilities?: AbilityDefinition[];
   /** Static effects that are active while this card is on the board */
   passiveEffects?: PassiveEffectDefinition[];
+  /** Restrictions on which followers can block this attacker */
+  blockRestrictions?: BlockRestriction[];
   /** Optional card description shown on hover in the UI */
   description?: string;
 }

@@ -110,6 +110,42 @@ export function canBlock(state: GameState, card: CardInstance): boolean {
   return true;
 }
 
+export function canBlockAttacker(state: GameState, blocker: CardInstance, attackerId: string): boolean {
+  if (!canBlock(state, blocker)) return false;
+  const attacker = getCard(state, attackerId);
+  if (!attacker) return false;
+
+  // Unblockable lasting effect
+  for (const effect of state.lastingEffects) {
+    if (effect.type === 'unblockable' && effect.targetInstanceIds.includes(attackerId)) return false;
+  }
+
+  // Static block restrictions on attacker
+  const attackerDef = getCardDef(attacker);
+  if (attackerDef.blockRestrictions) {
+    for (const r of attackerDef.blockRestrictions) {
+      if (r.type === 'wounded_blocker' && getCounter(blocker.counters, 'wound') > 0) return false;
+      if (r.type === 'min_blocker_strength' && getEffectiveStrength(state, blocker) >= r.value) return false;
+    }
+  }
+
+  // Intimidate from co-attackers
+  if (state.combat) {
+    const attackerStr = getEffectiveStrength(state, attacker);
+    for (const otherId of state.combat.attackerIds) {
+      if (otherId === attackerId) continue;
+      const other = getCard(state, otherId);
+      if (!other || other.zone !== 'board') continue;
+      const otherDef = getCardDef(other);
+      if (otherDef.passiveEffects?.some(p => p.type === 'intimidate')) {
+        if (attackerStr < getEffectiveStrength(state, other)) return false;
+      }
+    }
+  }
+
+  return true;
+}
+
 export function isLocationDepleted(card: CardInstance): boolean {
   return card.markAsDestroyed || getCounter(card.counters, 'stage') <= 0;
 }

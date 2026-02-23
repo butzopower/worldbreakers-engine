@@ -2,7 +2,7 @@ import { GameState, PendingChoiceChooseTarget } from '../types/state';
 import { ActionInput, PlayerAction } from '../types/actions';
 import { PlayerId, opponentOf } from '../types/core';
 import {
-  getCard, getCardDef, canPlayCard, canAttack, canBlock, canDevelop, canUseAbility, canPay,
+  getCard, getCardDef, canPlayCard, canAttack, canBlock, canBlockAttacker, canDevelop, canUseAbility, canPay,
   getFollowers, getHand, getLocations, hasKeyword,
 } from '../state/query';
 import { getCounter } from '../types/counters';
@@ -176,6 +176,9 @@ function validateBlockerAssignment(state: GameState, player: PlayerId, blockerId
 
   if (!state.combat?.attackerIds.includes(attackerId)) {
     return { valid: false, reason: `${attackerId} is not an attacker` };
+  }
+  if (!canBlockAttacker(state, blocker, attackerId)) {
+    return { valid: false, reason: `${blockerId} cannot block ${attackerId}` };
   }
   return { valid: true };
 }

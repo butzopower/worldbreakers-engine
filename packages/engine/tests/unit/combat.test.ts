@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { registerTestCards } from '../../src/cards/test-cards/index.js';
 import { clearRegistry } from '../../src/cards/registry.js';
-import { processAction } from '../../src/engine/engine.js';
+import { processAction, getLegalActions } from '../../src/engine/engine.js';
 import { buildState } from '../helpers/state-builder.js';
 import { expectCardInZone, expectPlayerPower, expectCardCounter, expectEvent } from '../helpers/assertions.js';
 import { getCard } from '../../src/state/query.js';
@@ -470,5 +470,303 @@ describe('combat - breach location damage', () => {
     // Turn should advance to player2 after skipping breach damage
     expect(r3.state.combat).toBeNull();
     expect(r3.state.activePlayer).toBe('player2');
+  });
+});
+
+describe('combat - block restrictions', () => {
+  describe('wounded_blocker restriction', () => {
+    it('wounded followers cannot block a wound_dodge_attacker', () => {
+      const state = buildState()
+        .withActivePlayer('player1')
+        .addCard('wound_dodge_attacker', 'player1', 'board', { instanceId: 'atk1' }) // 2/2, can't be blocked by wounded
+        .addCard('shield_bearer', 'player2', 'board', { instanceId: 'blk1', counters: { wound: 1 } }) // wounded
+        .build();
+
+      const r1 = processAction(state, {
+        player: 'player1',
+        action: { type: 'attack', attackerIds: ['atk1'] },
+      });
+
+      // choose_blockers prompt shown, but wounded blocker can't block this attacker
+      expect(r1.state.pendingChoice).not.toBeNull();
+      expect(r1.state.pendingChoice!.type).toBe('choose_blockers');
+
+      const actions = getLegalActions(r1.state);
+      const blockerActions = actions.filter(a => a.action.type === 'declare_blocker');
+      expect(blockerActions.length).toBe(0);
+
+      // Defender must pass — breach occurs
+      const r2 = processAction(r1.state, {
+        player: 'player2',
+        action: { type: 'pass_block' },
+      });
+      expect(r2.state.combat).toBeNull();
+      expectPlayerPower(r2.state, 'player1', 1);
+    });
+
+    it('unwounded followers can block a wound_dodge_attacker', () => {
+      const state = buildState()
+        .withActivePlayer('player1')
+        .addCard('wound_dodge_attacker', 'player1', 'board', { instanceId: 'atk1' }) // 2/2
+        .addCard('shield_bearer', 'player2', 'board', { instanceId: 'blk1' }) // 1/3 unwounded
+        .build();
+
+      const r1 = processAction(state, {
+        player: 'player1',
+        action: { type: 'attack', attackerIds: ['atk1'] },
+      });
+
+      // Unwounded blocker should be able to block
+      expect(r1.state.pendingChoice).not.toBeNull();
+      expect(r1.state.pendingChoice!.type).toBe('choose_blockers');
+
+      const r2 = processAction(r1.state, {
+        player: 'player2',
+        action: { type: 'declare_blocker', blockerId: 'blk1', attackerId: 'atk1' },
+      });
+
+      // Fight should resolve normally
+      expectCardCounter(r2.state, 'blk1', 'wound', 2);
+      expectCardCounter(r2.state, 'atk1', 'wound', 1);
+    });
+  });
+
+  describe('min_blocker_strength restriction', () => {
+    it('followers with strength >= value cannot block', () => {
+      const state = buildState()
+        .withActivePlayer('player1')
+        .addCard('strength_dodge_attacker', 'player1', 'board', { instanceId: 'atk1' }) // 2/2, can't be blocked by str >= 3
+        .addCard('earthshaker_giant', 'player2', 'board', { instanceId: 'blk1' }) // 3/4
+        .build();
+
+      const r1 = processAction(state, {
+        player: 'player1',
+        action: { type: 'attack', attackerIds: ['atk1'] },
+      });
+
+      // choose_blockers prompt shown, but giant (str 3 >= 3) can't block
+      expect(r1.state.pendingChoice).not.toBeNull();
+      expect(r1.state.pendingChoice!.type).toBe('choose_blockers');
+
+      const actions = getLegalActions(r1.state);
+      const blockerActions = actions.filter(a => a.action.type === 'declare_blocker');
+      expect(blockerActions.length).toBe(0);
+
+      const r2 = processAction(r1.state, {
+        player: 'player2',
+        action: { type: 'pass_block' },
+      });
+      expect(r2.state.combat).toBeNull();
+      expectPlayerPower(r2.state, 'player1', 1);
+    });
+
+    it('followers with strength < value can block', () => {
+      const state = buildState()
+        .withActivePlayer('player1')
+        .addCard('strength_dodge_attacker', 'player1', 'board', { instanceId: 'atk1' }) // 2/2
+        .addCard('militia_scout', 'player2', 'board', { instanceId: 'blk1' }) // 1/1 str < 3
+        .build();
+
+      const r1 = processAction(state, {
+        player: 'player1',
+        action: { type: 'attack', attackerIds: ['atk1'] },
+      });
+
+      // Scout has strength 1 (< 3) — can block
+      expect(r1.state.pendingChoice).not.toBeNull();
+      expect(r1.state.pendingChoice!.type).toBe('choose_blockers');
+    });
+  });
+
+  describe('unblockable lasting effect', () => {
+    it('prevents all blocking', () => {
+      const state = buildState()
+        .withActivePlayer('player1')
+        .addCard('militia_scout', 'player1', 'board', { instanceId: 'atk1' })
+        .addCard('shield_bearer', 'player2', 'board', { instanceId: 'blk1' }) // 1/3
+        .build();
+
+      // Manually add unblockable lasting effect
+      const stateWithUnblockable = {
+        ...state,
+        lastingEffects: [{
+          id: 'ub1',
+          type: 'unblockable' as const,
+          amount: 0,
+          targetInstanceIds: ['atk1'],
+          expiresAt: 'end_of_combat' as const,
+        }],
+      };
+
+      const r1 = processAction(stateWithUnblockable, {
+        player: 'player1',
+        action: { type: 'attack', attackerIds: ['atk1'] },
+      });
+
+      // choose_blockers prompt shown, but no valid blocker actions
+      expect(r1.state.pendingChoice).not.toBeNull();
+      expect(r1.state.pendingChoice!.type).toBe('choose_blockers');
+
+      const actions = getLegalActions(r1.state);
+      const blockerActions = actions.filter(a => a.action.type === 'declare_blocker');
+      expect(blockerActions.length).toBe(0);
+
+      const r2 = processAction(r1.state, {
+        player: 'player2',
+        action: { type: 'pass_block' },
+      });
+      expect(r2.state.combat).toBeNull();
+      expectPlayerPower(r2.state, 'player1', 1);
+    });
+  });
+
+  describe('intimidate passive', () => {
+    it('weaker co-attackers cannot be blocked while intimidator is in combat', () => {
+      const state = buildState()
+        .withActivePlayer('player1')
+        .addCard('intimidate_attacker', 'player1', 'board', { instanceId: 'intim1' }) // 4/4 intimidate
+        .addCard('militia_scout', 'player1', 'board', { instanceId: 'atk1' }) // 1/1 (weaker)
+        .addCard('shield_bearer', 'player2', 'board', { instanceId: 'blk1' }) // 1/3
+        .addCard('shield_bearer', 'player2', 'board', { instanceId: 'blk2' }) // 1/3
+        .build();
+
+      const r1 = processAction(state, {
+        player: 'player1',
+        action: { type: 'attack', attackerIds: ['intim1', 'atk1'] },
+      });
+
+      // Blocking phase — should only allow blocking the intimidator (str 4 >= 4)
+      // militia_scout (str 1 < 4) can't be blocked
+      const actions = getLegalActions(r1.state);
+      const blockerActions = actions.filter(a => a.action.type === 'declare_blocker');
+
+      // Should only have blocker actions for intim1 (the intimidator itself), not atk1
+      const blockAtk1 = blockerActions.filter(a =>
+        a.action.type === 'declare_blocker' && a.action.attackerId === 'atk1'
+      );
+      const blockIntim = blockerActions.filter(a =>
+        a.action.type === 'declare_blocker' && a.action.attackerId === 'intim1'
+      );
+
+      expect(blockAtk1.length).toBe(0);
+      expect(blockIntim.length).toBeGreaterThan(0);
+    });
+
+    it('equal or greater strength co-attackers can be blocked', () => {
+      const state = buildState()
+        .withActivePlayer('player1')
+        .addCard('intimidate_attacker', 'player1', 'board', { instanceId: 'intim1' }) // 4/4 intimidate
+        .addCard('earthshaker_giant', 'player1', 'board', { instanceId: 'atk1' }) // 3/4 — but add +1/+1 to make str 4
+        .addCard('shield_bearer', 'player2', 'board', { instanceId: 'blk1' }) // 1/3
+        .build();
+
+      // Give giant a +1/+1 counter so its effective strength is 4 (equal to intimidator)
+      const giantCard = state.cards.find(c => c.instanceId === 'atk1')!;
+      giantCard.counters = { plus_one_plus_one: 1 };
+
+      const r1 = processAction(state, {
+        player: 'player1',
+        action: { type: 'attack', attackerIds: ['intim1', 'atk1'] },
+      });
+
+      const actions = getLegalActions(r1.state);
+      const blockAtk1 = actions.filter(a =>
+        a.action.type === 'declare_blocker' && a.action.attackerId === 'atk1'
+      );
+
+      // Giant has str 4 (>= intimidator's 4) — CAN be blocked
+      expect(blockAtk1.length).toBeGreaterThan(0);
+    });
+
+    it('blocking the intimidator removes its aura, making weaker attackers blockable', () => {
+      const state = buildState()
+        .withActivePlayer('player1')
+        .addCard('intimidate_attacker', 'player1', 'board', { instanceId: 'intim1' }) // 4/4 intimidate
+        .addCard('militia_scout', 'player1', 'board', { instanceId: 'atk1' }) // 1/1 (weaker)
+        .addCard('earthshaker_giant', 'player2', 'board', { instanceId: 'blk1' }) // 3/4 (can block the intimidator)
+        .addCard('shield_bearer', 'player2', 'board', { instanceId: 'blk2' }) // 1/3
+        .build();
+
+      const r1 = processAction(state, {
+        player: 'player1',
+        action: { type: 'attack', attackerIds: ['intim1', 'atk1'] },
+      });
+
+      // Block the intimidator — removes it from combat
+      const r2 = processAction(r1.state, {
+        player: 'player2',
+        action: { type: 'declare_blocker', blockerId: 'blk1', attackerId: 'intim1' },
+      });
+
+      // intim1 was blocked and removed from attackerIds
+      // Now atk1 should be blockable since intimidate aura is gone
+      expect(r2.state.pendingChoice).not.toBeNull();
+      expect(r2.state.pendingChoice!.type).toBe('choose_blockers');
+
+      const actions = getLegalActions(r2.state);
+      const blockAtk1 = actions.filter(a =>
+        a.action.type === 'declare_blocker' && a.action.attackerId === 'atk1'
+      );
+      expect(blockAtk1.length).toBeGreaterThan(0);
+    });
+  });
+
+  it('pass_block is always available regardless of restrictions', () => {
+    const state = buildState()
+      .withActivePlayer('player1')
+      .addCard('wound_dodge_attacker', 'player1', 'board', { instanceId: 'atk1' })
+      .addCard('shield_bearer', 'player2', 'board', { instanceId: 'blk1', counters: { wound: 1 } }) // wounded — can't block
+      .addCard('shield_bearer', 'player2', 'board', { instanceId: 'blk2', counters: { wound: 1 } }) // wounded — can't block
+      .build();
+
+    const r1 = processAction(state, {
+      player: 'player1',
+      action: { type: 'attack', attackerIds: ['atk1'] },
+    });
+
+    // choose_blockers prompt is still shown — pass_block is always available
+    expect(r1.state.pendingChoice).not.toBeNull();
+    expect(r1.state.pendingChoice!.type).toBe('choose_blockers');
+
+    const actions = getLegalActions(r1.state);
+    expect(actions.length).toBe(1);
+    expect(actions[0].action.type).toBe('pass_block');
+
+    // Pass block — breach occurs
+    const r2 = processAction(r1.state, {
+      player: 'player2',
+      action: { type: 'pass_block' },
+    });
+
+    expect(r2.state.combat).toBeNull();
+    expectPlayerPower(r2.state, 'player1', 1);
+  });
+
+  it('getLegalActions returns only pass_block when all pairs are restricted', () => {
+    // Set up state mid-combat with choose_blockers pending but no valid pairs
+    const state = buildState()
+      .withActivePlayer('player1')
+      .addCard('wound_dodge_attacker', 'player1', 'board', { instanceId: 'atk1', exhausted: true })
+      .addCard('militia_scout', 'player2', 'board', { instanceId: 'blk1', counters: { wound: 1 } }) // wounded
+      .build();
+
+    // Manually set up combat state as if we're in choose_blockers
+    const combatState = {
+      ...state,
+      combat: {
+        step: 'declare_blockers' as const,
+        attackingPlayer: 'player1' as const,
+        attackerIds: ['atk1'],
+      },
+      pendingChoice: {
+        type: 'choose_blockers' as const,
+        playerId: 'player2' as const,
+        attackerIds: ['atk1'],
+      },
+    };
+
+    const actions = getLegalActions(combatState);
+    expect(actions.length).toBe(1);
+    expect(actions[0].action.type).toBe('pass_block');
   });
 });

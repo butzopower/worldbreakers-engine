@@ -24,7 +24,7 @@ export {
   getCard, getCardDef, getCardsInZone, getBoard, getHand, getDeck,
   getWorldbreaker, getFollowers, getLocations,
   getBaseStrength, getBaseHealth, getEffectiveStrength, getEffectiveHealth,
-  isDefeated, hasKeyword, canAttack, canBlock,
+  isDefeated, hasKeyword, canAttack, canBlock, canBlockAttacker,
   isLocationDepleted, getLocationStage,
   canPlayCard, canDevelop, canUseAbility,
 } from './state/query';

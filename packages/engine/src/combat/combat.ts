@@ -2,7 +2,7 @@ import { PlayerId, opponentOf } from '../types/core';
 import { GameState, CombatState } from '../types/state';
 import { GameEvent } from '../types/events';
 import { exhaustCard, gainPower } from '../state/mutate';
-import { getCard, getCardDef, getLocations, isHidden, getEffectiveStrength, getFollowers, canBlock, hasKeyword } from '../state/query';
+import { getCard, getCardDef, getLocations, isHidden, getEffectiveStrength, getFollowers, canBlock, canBlockAttacker, hasKeyword } from '../state/query';
 import { resolveTriggeredAbilities } from '../abilities/triggers';
 import { resolveAbility } from '../abilities/resolver';
 import { resolveSingleFight } from './damage';
@@ -161,7 +161,11 @@ export function resumePostBlock(
   if (remainingAttackerIds.length > 0) {
     const defender = opponentOf(state.combat.attackingPlayer);
     const availableBlockers = getFollowers(state, defender).filter(f => canBlock(state, f));
-    if (availableBlockers.length > 0) {
+    // Check if any blocker can actually block any remaining attacker
+    const hasValidPair = availableBlockers.some(blocker =>
+      remainingAttackerIds.some(atkId => canBlockAttacker(state, blocker, atkId))
+    );
+    if (hasValidPair) {
       const s = {
         ...state,
         pendingChoice: {

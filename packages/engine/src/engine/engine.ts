@@ -22,7 +22,7 @@ import { moveCard, gainPower } from '../state/mutate';
 import { getCard, getHand, getCardDef, canPay, hasKeyword } from '../state/query';
 import { getCounter } from '../types/counters';
 import {
-  canPlayCard, canAttack, canBlock, canDevelop, canUseAbility,
+  canPlayCard, canAttack, canBlock, canBlockAttacker, canDevelop, canUseAbility,
   getFollowers, getLocations, getBoard,
 } from '../state/query';
 
@@ -541,10 +541,12 @@ function getLegalChoiceActions(state: GameState): ActionInput[] {
       if (state.combat) {
         for (const def of defenders) {
           for (const attackerId of state.combat.attackerIds) {
-            actions.push({
-              player,
-              action: { type: 'declare_blocker', blockerId: def.instanceId, attackerId },
-            });
+            if (canBlockAttacker(state, def, attackerId)) {
+              actions.push({
+                player,
+                action: { type: 'declare_blocker', blockerId: def.instanceId, attackerId },
+              });
+            }
           }
         }
       }
@@ -594,10 +596,12 @@ function getLegalCombatActions(state: GameState): ActionInput[] {
       const blockers = getFollowers(state, defender).filter(f => canBlock(state, f));
       for (const b of blockers) {
         for (const attackerId of state.combat.attackerIds) {
-          actions.push({
-            player: defender,
-            action: { type: 'declare_blocker', blockerId: b.instanceId, attackerId },
-          });
+          if (canBlockAttacker(state, b, attackerId)) {
+            actions.push({
+              player: defender,
+              action: { type: 'declare_blocker', blockerId: b.instanceId, attackerId },
+            });
+          }
         }
       }
       break;
