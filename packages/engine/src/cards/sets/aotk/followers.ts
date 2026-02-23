@@ -408,6 +408,23 @@ export const followers: CardDefinition[] = [
     ],
   },
   {
+    id: 'swift_messenger',
+    name: 'Swift Messenger',
+    type: 'follower',
+    guild: 'neutral',
+    cost: 3,
+    strength: 1,
+    health: 3,
+    description: 'Enters: Gain 1 standing with any guild.',
+    abilities: [
+      {
+        timing: 'enters',
+        effects: [{ type: 'gain_standing', player: 'self', guild: 'choose', amount: 1 }],
+        description: 'Gain 1 standing with any guild.',
+      },
+    ],
+  },
+  {
     id: 'tengris_cavalry',
     name: 'Tengri\'s Cavalry',
     type: 'follower',
