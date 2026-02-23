@@ -21,7 +21,6 @@ Engine is imported by server as a workspace dependency. Client does NOT import e
 ## Commands
 
 ```
-npm run test          # engine tests (vitest)
 npm run dev           # start server + client concurrently
 npm run dev:server    # server only (port 3001)
 npm run dev:client    # client only (port 5173)
@@ -52,6 +51,7 @@ Engine tests: `npm run test --workspace=@worldbreakers/engine`
 - Prefer to assert on visible / public board state instead of drilling deep into engine specific fields in the state
 - Try to avoid using functions from the engine other than processAction
 - Run tests before considering any engine change complete.
+- If configured with `rtk` run tests via `rtk vitest run` otherwise use `npm run test`
 
 ### Test card set
 
