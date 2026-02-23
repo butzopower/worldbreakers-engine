@@ -1,5 +1,5 @@
 import { PlayerId, opponentOf, STANDING_GUILDS } from '../types/core';
-import { GameState, LastingEffect } from '../types/state';
+import { GameState, LastingEffect, CombatResponse } from '../types/state';
 import { GameEvent } from '../types/events';
 import { EffectPrimitive, PlayerSelector, TargetSelector, CardFilter } from '../types/effects';
 import { CardInstance } from '../types/state';
@@ -325,6 +325,20 @@ export function resolvePrimitive(
         s = r.state;
         events.push(...r.events);
       }
+      break;
+    }
+    case 'register_combat_response': {
+      const response: CombatResponse = {
+        id: generateEffectId(),
+        trigger: effect.trigger,
+        effects: effect.effects,
+        controller: ctx.controller,
+        sourceCardId: ctx.sourceCardId,
+      };
+      s = {
+        ...s,
+        combatResponses: [...s.combatResponses, response],
+      };
       break;
     }
     case 'migrate': {

@@ -1,12 +1,41 @@
 import { PlayerId, opponentOf } from '../types/core';
-import { GameState, CombatState } from '../types/state';
+import { GameState, CombatState, CombatResponseTrigger } from '../types/state';
 import { GameEvent } from '../types/events';
 import { exhaustCard, gainPower } from '../state/mutate';
 import { getCard, getCardDef, getLocations, isHidden, getEffectiveStrength, getFollowers, canBlock, canBlockAttacker, hasKeyword } from '../state/query';
 import { resolveTriggeredAbilities } from '../abilities/triggers';
-import { resolveAbility } from '../abilities/resolver';
+import { resolveAbility, resolveEffects } from '../abilities/resolver';
 import { resolveSingleFight } from './damage';
 import { runCleanup, expireLastingEffects } from '../engine/cleanup';
+
+/**
+ * Fire any registered combat responses matching the given trigger.
+ * Each response fires once and is removed.
+ */
+function resolveCombatResponses(
+  state: GameState,
+  trigger: CombatResponseTrigger,
+): { state: GameState; events: GameEvent[] } {
+  let s = state;
+  const events: GameEvent[] = [];
+
+  const matching = s.combatResponses.filter(r => r.trigger === trigger);
+  if (matching.length === 0) return { state: s, events };
+
+  // Remove all matching responses first (they fire once)
+  s = { ...s, combatResponses: s.combatResponses.filter(r => r.trigger !== trigger) };
+
+  for (const response of matching) {
+    const result = resolveEffects(s, response.effects, {
+      controller: response.controller,
+      sourceCardId: response.sourceCardId,
+    });
+    s = result.state;
+    events.push(...result.events);
+  }
+
+  return { state: s, events };
+}
 
 /**
  * Initiate combat: exhaust attackers, create combat state, trigger abilities.
@@ -103,6 +132,13 @@ export function declareBlocker(
   s = fightResult.state;
   events.push(...fightResult.events);
   events.push({ type: 'fight_resolved' });
+
+  // If overwhelm granted power during the fight, fire combat responses
+  if (fightResult.events.some(e => e.type === 'power_gained')) {
+    const responseResult = resolveCombatResponses(s, 'on_power_gain');
+    s = responseResult.state;
+    events.push(...responseResult.events);
+  }
 
   // Cleanup after fight (defeated cards go to discard)
   const cleanupResult = runCleanup(s);
@@ -269,6 +305,11 @@ function completeBreachFlow(
     const powerResult = gainPower(s, s.combat!.attackingPlayer, breachPower);
     s = powerResult.state;
     allEvents.push(...powerResult.events);
+
+    // Fire combat responses triggered by power gain
+    const responseResult = resolveCombatResponses(s, 'on_power_gain');
+    s = responseResult.state;
+    allEvents.push(...responseResult.events);
   }
 
   // Check if defender has locations to damage
@@ -304,7 +345,7 @@ export function resumeBreach(state: GameState): { state: GameState; events: Game
  * End combat, clean up combat state, expire combat lasting effects.
  */
 export function endCombat(state: GameState, events: GameEvent[]): { state: GameState; events: GameEvent[] } {
-  let s: GameState = { ...state, combat: null, pendingChoice: null };
+  let s: GameState = { ...state, combat: null, pendingChoice: null, combatResponses: [] };
   const allEvents = [...events];
 
   // Expire end-of-combat lasting effects

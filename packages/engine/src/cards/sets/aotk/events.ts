@@ -49,6 +49,22 @@ export const events: CardDefinition[] = [
     }],
   },
   {
+    id: 'raid_the_mines',
+    name: 'Raid the Mines',
+    type: 'event',
+    guild: 'neutral',
+    cost: 2,
+    description: 'Attack. Response: The first time you gain power during this combat → Gain 5 mythium.',
+    abilities: [{
+      timing: 'enters',
+      effects: [
+        { type: 'register_combat_response', trigger: 'on_power_gain', effects: [{ type: 'gain_mythium', player: 'self', amount: 5 }] },
+        { type: 'initiate_attack' },
+      ],
+      description: 'Attack. Response: The first time you gain power during this combat → Gain 5 mythium.',
+    }],
+  },
+  {
     id: 'serpent_strike',
     name: 'Serpent Strike',
     type: 'event',

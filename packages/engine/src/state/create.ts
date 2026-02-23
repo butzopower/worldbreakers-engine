@@ -86,6 +86,7 @@ export function createGameState(config: GameConfig): GameState {
     combat: null,
     pendingChoice: null,
     lastingEffects: [],
+    combatResponses: [],
     rngState,
     winner: null,
   };

@@ -32,6 +32,7 @@ export class StateBuilder {
       combat: null,
       pendingChoice: null,
       lastingEffects: [],
+      combatResponses: [],
       rngState: 42,
       winner: null,
     };

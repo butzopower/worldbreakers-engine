@@ -2,6 +2,16 @@ import { PlayerId, StandingGuild, Phase, Zone, CombatStep } from './core';
 import { CounterMap } from './counters';
 import { CardFilter, EffectPrimitive } from './effects';
 
+export type CombatResponseTrigger = 'on_power_gain';
+
+export interface CombatResponse {
+  id: string;
+  trigger: CombatResponseTrigger;
+  effects: EffectPrimitive[];
+  controller: PlayerId;
+  sourceCardId: string;
+}
+
 export interface CardInstance {
   instanceId: string;
   definitionId: string;
@@ -71,6 +81,8 @@ export interface GameState {
   rngState: number;
   /** Winner, if game is over */
   winner: PlayerId | 'draw' | null;
+  /** Combat responses registered by cards, fire once during combat */
+  combatResponses: CombatResponse[];
   /** Effects remaining to resolve after the current pending choice completes */
   remainingEffects?: { effects: EffectPrimitive[]; controller: PlayerId; sourceCardId: string; triggeringCardId?: string };
 }

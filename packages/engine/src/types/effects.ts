@@ -1,7 +1,7 @@
 import { Guild, StandingGuild, PlayerId, Zone } from './core';
 import { CounterType } from './counters';
 import { CardType, Keyword } from './cards';
-import { LastingEffectExpiration, LastingEffectType } from "./state";
+import { CombatResponseTrigger, LastingEffectExpiration, LastingEffectType } from "./state";
 
 export type PlayerSelector = 'self' | 'opponent' | 'both' | 'active' | 'controller';
 
@@ -53,7 +53,8 @@ export type EffectPrimitive =
   | { type: 'lose_standing'; player: PlayerSelector; guild: StandingGuild; amount: number }
   | { type: 'migrate'; effects: EffectPrimitive[] }
   | { type: 'grant_lasting_effect'; target: TargetSelector; effect: LastingEffectType; amount?: number; expiresAt: LastingEffectExpiration }
-  | { type: 'destroy'; target: TargetSelector };
+  | { type: 'destroy'; target: TargetSelector }
+  | { type: 'register_combat_response'; trigger: CombatResponseTrigger; effects: EffectPrimitive[] };
 
 export type AbilityTiming =
   | 'enters'
