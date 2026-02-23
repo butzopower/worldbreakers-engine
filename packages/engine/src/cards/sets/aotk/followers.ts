@@ -1,4 +1,9 @@
 import { CardDefinition } from '../../../types/cards';
+import { CustomResolverFn } from '../../../abilities/system';
+import { GameState } from '../../../types/state';
+import { ResolveContext } from '../../../abilities/primitives';
+import { STANDING_GUILDS } from '../../../types/core';
+import { gainMythium } from '../../../state/mutate';
 
 export const followers: CardDefinition[] = [
   {
@@ -310,6 +315,21 @@ export const followers: CardDefinition[] = [
     }],
   },
   {
+    id: 'lowly_bard',
+    name: 'Lowly Bard',
+    type: 'follower',
+    guild: 'neutral',
+    cost: 2,
+    strength: 1,
+    health: 1,
+    abilities: [{
+      timing: 'enters',
+      customResolve: 'lowly_bard_enters',
+      description: 'Gain 1 mythium for each standing you have across all guilds.',
+    }],
+    description: 'Enters: Gain 1 mythium for each standing you have across all guilds.',
+  },
+  {
     id: 'mongol_quartermaster',
     name: 'Mongol Quartermaster',
     type: 'follower',
@@ -450,5 +470,18 @@ export const followers: CardDefinition[] = [
       effects: [{ type: 'play_card', target: { kind: 'choose', filter: { type: 'event', zone: ['hand'], owner: 'controller', canPay: { costReduction: 1 } }, count: 1 }, costReduction: 1 }],
       description: 'Play an event card, paying 1 mythium less.',
     }],
+  },
+];
+
+export const followerResolvers: { key: string; resolver: CustomResolverFn }[] = [
+  {
+    key: 'lowly_bard_enters',
+    resolver: (state: GameState, ctx: ResolveContext) => {
+      const standing = state.players[ctx.controller].standing;
+      const total = STANDING_GUILDS.reduce((sum, guild) => sum + standing[guild], 0);
+      if (total <= 0) return { state, events: [] };
+      const result = gainMythium(state, ctx.controller, total);
+      return { state: result.state, events: result.events };
+    },
   },
 ];

@@ -1,6 +1,6 @@
 import { registerCard } from '../../registry';
 import { eventResolvers, events } from './events';
-import { followers } from './followers';
+import { followerResolvers, followers } from './followers';
 import { locations } from './locations';
 import { worldbreakers } from './worldbreakers';
 import { registerCustomResolver } from "../../../abilities/system";
@@ -10,7 +10,7 @@ export function registerSetCards(): void {
     registerCard(card);
   }
 
-  for (const {key, resolver} of [...eventResolvers]) {
+  for (const {key, resolver} of [...eventResolvers, ...followerResolvers]) {
     registerCustomResolver(key, resolver);
   }
 }
