@@ -282,6 +282,21 @@ export const followers: CardDefinition[] = [
     passiveEffects: [{ type: 'cost_reduction', cardTypes: ['event', 'location'], amount: 1 }],
   },
   {
+    id: 'irate_vandal',
+    name: 'Irate Vandal',
+    type: 'follower',
+    guild: 'neutral',
+    cost: 2,
+    strength: 1,
+    health: 2,
+    description: 'Enters: You may damage a location, even if it is hidden.',
+    abilities: [{
+      timing: 'enters',
+      effects: [{ type: 'remove_counter', target: { kind: 'choose', filter: { type: 'location', zone: ['board'] }, count: 1 }, counter: 'stage', amount: 1 }],
+      description: 'Damage a location, even if it is hidden.',
+    }],
+  },
+  {
     id: 'kalari_adept',
     name: 'Kalari Adept',
     type: 'follower',
