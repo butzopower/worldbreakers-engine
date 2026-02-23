@@ -366,6 +366,18 @@ export const followers: CardDefinition[] = [
     keywords: ['overwhelm'],
   },
   {
+    id: 'sparring_braggart',
+    name: 'Sparring Braggart',
+    type: 'follower',
+    guild: 'earth',
+    cost: 3,
+    standingRequirement: { earth: 2 },
+    strength: 3,
+    health: 3,
+    passiveEffects: [{ type: 'draw_aggro' }],
+    description: 'While Sparring Braggart is attacking, followers with strength less than its strength can\'t be blocked. (Blocking Sparring Braggart will remove it from combat.)',
+  },
+  {
     id: 'stars_apprentice',
     name: 'Stars Apprentice',
     type: 'follower',
