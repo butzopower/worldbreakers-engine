@@ -472,6 +472,25 @@ export const followers: CardDefinition[] = [
     description: 'Overwhelm (When this defeats a blocker, gain 1 power.)',
   },
   {
+    id: 'weary_veteran',
+    name: 'Weary Veteran',
+    type: 'follower',
+    guild: 'neutral',
+    cost: 1,
+    strength: 1,
+    health: 2,
+    description: 'Enters: If you have at least 3 standing with any one guild → Put a +1/+1 counter on Weary Veteran.',
+    abilities: [{
+      timing: 'enters',
+      effects: [{
+        type: 'conditional',
+        condition: { type: 'any_standing_at_least', amount: 3 },
+        effects: [{ type: 'add_counter', target: { kind: 'self' }, counter: 'plus_one_plus_one', amount: 1 }],
+      }],
+      description: 'If you have at least 3 standing with any one guild → Put a +1/+1 counter on Weary Veteran.',
+    }],
+  },
+  {
     id: 'yam_operator',
     name: 'Yam Operator',
     type: 'follower',

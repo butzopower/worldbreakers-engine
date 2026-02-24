@@ -279,6 +279,8 @@ export function resolvePrimitive(
         conditionMet = s.combat !== null && s.combat.attackerIds.length === 1;
       } else if (condition.type === 'standing_less_than') {
         conditionMet = s.players[ctx.controller].standing[condition.guild] < condition.amount;
+      } else if (condition.type === 'any_standing_at_least') {
+        conditionMet = STANDING_GUILDS.some(g => s.players[ctx.controller].standing[g] >= condition.amount);
       }
       if (conditionMet) {
         for (const inner of innerEffects) {

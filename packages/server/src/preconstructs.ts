@@ -27,7 +27,7 @@ export const atokEarth: DeckConfig = {
     'the_amu_river_encampment',
     'gratuitous_gift',
     'raid_the_mines',
-    //'weary_veteran',
+    'weary_veteran',
     'irate_vandal',
     'lowly_bard',
     'earth_apprentice',
