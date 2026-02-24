@@ -20,6 +20,7 @@ export const worldbreakers: CardDefinition[] = [
           },
         ]
       }
-    ]
+    ],
+    description: 'Your Attack: One attacking follower gets +1 strength for this combat.',
   }
 ]

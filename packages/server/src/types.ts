@@ -42,7 +42,7 @@ export interface ClientToServerEvents {
 export interface HiddenCard {
   hidden: true;
   owner: PlayerId;
-  zone: 'hand';
+  zone: 'hand' | 'deck';
 }
 
 export type FilteredCard = {

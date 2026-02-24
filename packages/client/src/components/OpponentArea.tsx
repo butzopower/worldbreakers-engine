@@ -60,6 +60,7 @@ export default function OpponentArea({ state, opponent, interactionMode, onCardC
                   card={card}
                   highlighted={isTargetable || isAttacker}
                   onClick={() => onCardClick(card)}
+                  lastingEffects={state.lastingEffects}
                 />
               );
             })}

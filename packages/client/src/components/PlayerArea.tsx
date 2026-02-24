@@ -77,6 +77,7 @@ export default function PlayerArea({ state, playerId, interactionMode, onCardCli
                     selected={isSelectedAttacker || isAssignedBlocker}
                     highlighted={isTargetable}
                     onClick={() => onCardClick(card)}
+                    lastingEffects={state.lastingEffects}
                   />
                   {canUse && interactionMode.type === 'none' && (
                     <button

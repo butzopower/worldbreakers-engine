@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, type ReactNode } from 'react';
-import type { ClientCardDefinition, VisibleCard } from '../types';
+import { ClientCardDefinition, LasingEffect, VisibleCard } from '../types';
 
 const GUILD_COLORS: Record<string, string> = {
   earth: '#8B6914',
@@ -31,12 +31,13 @@ const VIEWPORT_PADDING = 8;
 interface Props {
   cardDef: ClientCardDefinition;
   card?: VisibleCard;
+  lastingEffects?: LasingEffect[];
   children: ReactNode;
 }
 
-export default function CardTooltip({ cardDef, card, children }: Props) {
+export default function CardTooltip({cardDef, card, lastingEffects, children}: Props) {
   const [visible, setVisible] = useState(false);
-  const [position, setPosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+  const [position, setPosition] = useState<{ x: number; y: number }>({x: 0, y: 0});
   const [above, setAbove] = useState(true);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -49,7 +50,7 @@ export default function CardTooltip({ cardDef, card, children }: Props) {
     const x = Math.max(halfWidth + VIEWPORT_PADDING, Math.min(centeredX, window.innerWidth - halfWidth - VIEWPORT_PADDING));
     const showAbove = rect.top > 300;
     const y = showAbove ? rect.top : rect.bottom;
-    setPosition({ x, y });
+    setPosition({x, y});
     setAbove(showAbove);
     setVisible(true);
   }, []);
@@ -68,14 +69,24 @@ export default function CardTooltip({ cardDef, card, children }: Props) {
 
   const guildColor = GUILD_COLORS[cardDef.guild] ?? '#555';
   const wounds = card ? (card.counters['wound'] ?? 0) : 0;
-  const strengthBuff = card ? (card.counters['strength_buff'] ?? 0) : 0;
+
+  const baseStrength = cardDef?.strength ?? 0;
+  const baseHealth = cardDef?.health ?? 0;
+
+  const plusOnePlusOne = card ? (card.counters['plus_one_plus_one'] ?? 0) : 0;
+  const buffedStrength = card ? (lastingEffects ?? [])
+    .filter(({type}) => type === 'strength_buff')
+    .filter(({targetInstanceIds}) => targetInstanceIds.includes(card.instanceId))
+    .reduce((x, {amount}) => {
+      return x + amount
+    }, 0) : 0;
 
   return (
     <div
       ref={wrapperRef}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      style={{ display: 'inline-block' }}
+      style={{display: 'inline-block'}}
     >
       {children}
       {visible && (
@@ -107,7 +118,7 @@ export default function CardTooltip({ cardDef, card, children }: Props) {
               alignItems: 'center',
               marginBottom: '6px',
             }}>
-              <span style={{ fontWeight: 'bold', fontSize: '14px', color: guildColor }}>
+              <span style={{fontWeight: 'bold', fontSize: '14px', color: guildColor}}>
                 {cardDef.name}
               </span>
               {cardDef.cost > 0 && (
@@ -139,31 +150,56 @@ export default function CardTooltip({ cardDef, card, children }: Props) {
             {cardDef.type === 'follower' && (
               <div style={{
                 display: 'flex',
+                justifyContent: 'space-between',
                 gap: '12px',
                 fontSize: '12px',
                 marginBottom: '6px',
               }}>
-                <span>
-                  <span style={{ color: '#888' }}>STR </span>
-                  <span style={{ color: '#e0e0e0', fontWeight: 'bold' }}>
-                    {(cardDef.strength ?? 0) + strengthBuff}
-                  </span>
-                </span>
-                <span>
-                  <span style={{ color: '#888' }}>HP </span>
-                  <span style={{
-                    color: wounds > 0 ? '#e94560' : '#e0e0e0',
-                    fontWeight: 'bold',
-                  }}>
-                    {(cardDef.health ?? 0) - wounds}/{cardDef.health ?? 0}
-                  </span>
-                </span>
+                <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2px 6px'}}>
+                  <div style={{color: '#888', fontWeight: 'bold'}}>STR</div>
+                  <div style={{color: '#e0e0e0', fontWeight: 'bold'}}>{baseStrength + plusOnePlusOne + buffedStrength}</div>
+                  <div style={{color: '#888'}}>Base</div>
+                  <div style={{color: '#e0e0e0', fontWeight: 'bold'}}>{baseStrength}</div>
+                  {(plusOnePlusOne > 0) && (
+                    <>
+                      <div style={{color: '#888'}}>+1/+1</div>
+                      <div style={{color: '#e0e0e0', fontWeight: 'bold'}}>{plusOnePlusOne}</div>
+                    </>
+                  )}
+                  {(buffedStrength > 0) && (
+                    <>
+                      <div style={{color: '#888'}}>Buff</div>
+                      <div style={{color: '#e0e0e0', fontWeight: 'bold'}}>{buffedStrength}</div>
+                    </>
+                  )}
+                </div>
+
+                <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2px 6px'}}>
+                  <div style={{color: '#888'}}>HP</div>
+                  <div style={{color: wounds > 0 ? '#e94560' : '#e0e0e0', fontWeight: 'bold'}}>
+                    {baseHealth + plusOnePlusOne - wounds} / {baseHealth + plusOnePlusOne}
+                  </div>
+                  <div style={{color: '#888'}}>Base</div>
+                  <div style={{color: '#e0e0e0', fontWeight: 'bold'}}>{baseHealth} / {baseHealth}</div>
+                  {(plusOnePlusOne > 0) && (
+                    <>
+                      <div style={{color: '#888'}}>+1/+1</div>
+                      <div style={{color: '#e0e0e0', fontWeight: 'bold'}}>{plusOnePlusOne} / {plusOnePlusOne}</div>
+                    </>
+                  )}
+                  {(wounds > 0) && (
+                    <>
+                      <div style={{color: '#888'}}>Wound</div>
+                      <div style={{color: '#e94560', fontWeight: 'bold'}}>{wounds} / 0</div>
+                    </>
+                  )}
+                </div>
               </div>
             )}
 
             {/* Stages for locations */}
             {cardDef.type === 'location' && cardDef.locationStages && cardDef.locationStages.length > 0 && (
-              <div style={{ marginBottom: '6px' }}>
+              <div style={{marginBottom: '6px'}}>
                 {cardDef.locationStages.map(ls => {
                   const stageCountersRemaining = card ? (card.counters['stage'] ?? 0) : 0;
                   const spentStages = (cardDef.locationStages?.length ?? 0) - stageCountersRemaining;
@@ -176,7 +212,7 @@ export default function CardTooltip({ cardDef, card, children }: Props) {
                       textDecoration: available ? 'none' : 'line-through',
                       marginBottom: '2px',
                     }}>
-                      <span style={{ color: available ? '#888' : '#555', marginRight: '4px' }}>
+                      <span style={{color: available ? '#888' : '#555', marginRight: '4px'}}>
                         {available ? '●' : '○'}
                       </span>
                       {ls.description ?? `Stage ${ls.stage}`}
@@ -233,8 +269,8 @@ export default function CardTooltip({ cardDef, card, children }: Props) {
               }}>
                 <span>Requires</span>
                 {Object.entries(cardDef.standingRequirement).map(([guild, count]) => (
-                  <span key={guild} style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
-                    {Array.from({ length: count }, (_, i) => (
+                  <span key={guild} style={{display: 'flex', alignItems: 'center', gap: '2px'}}>
+                    {Array.from({length: count}, (_, i) => (
                       <span
                         key={i}
                         style={{
@@ -246,7 +282,7 @@ export default function CardTooltip({ cardDef, card, children }: Props) {
                         }}
                       />
                     ))}
-                    <span style={{ color: GUILD_COLORS[guild] ?? '#555' }}>
+                    <span style={{color: GUILD_COLORS[guild] ?? '#555'}}>
                       {GUILD_NAMES[guild] ?? guild}
                     </span>
                   </span>

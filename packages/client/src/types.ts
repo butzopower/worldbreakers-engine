@@ -43,6 +43,12 @@ export type PendingChoice =
   | { type: 'choose_breach_target'; playerId: PlayerId; validLocationIds: string[] }
   | { type: 'choose_mode'; playerId: PlayerId; sourceCardId: string; modes: { label: string; effects: unknown[] }[] };
 
+export type LasingEffect = {
+  type: string;
+  amount: number;
+  targetInstanceIds: string[];
+}
+
 export interface FilteredGameState {
   version: number;
   phase: string;
@@ -54,7 +60,7 @@ export interface FilteredGameState {
   cards: FilteredCard[];
   combat: CombatState | null;
   pendingChoice: PendingChoice | null;
-  lastingEffects: unknown[];
+  lastingEffects: LasingEffect[];
   winner: PlayerId | 'draw' | null;
 }
 

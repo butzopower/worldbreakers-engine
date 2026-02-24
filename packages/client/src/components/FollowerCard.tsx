@@ -1,8 +1,63 @@
-import type { VisibleCard } from '../types';
+import { VisibleCard, ClientCardDefinition, LasingEffect } from '../types';
 import { useCardDefinitions } from '../context/CardDefinitions';
 import CardTooltip from './CardTooltip';
 
 const FALLBACK_CARD = { id: '', name: 'Unknown', type: 'follower', guild: 'neutral', cost: 0 } as const;
+
+interface Badge {
+  label: string;
+  color: string;
+  bg: string;
+}
+
+function getActiveBadges(card: VisibleCard, cardDef: ClientCardDefinition): Badge[] {
+  const badges: Badge[] = [];
+
+  if ((card.counters['plus_one_plus_one'] ?? 0) > 0) {
+    const count = card.counters['plus_one_plus_one'];
+    badges.push({ label: count > 1 ? `+1/+1 x${count}` : '+1/+1', color: '#4ade80', bg: '#14532d' });
+  }
+
+  if ((card.counters['stun'] ?? 0) > 0) {
+    badges.push({ label: 'STUN', color: '#ff8800', bg: '#4a2800' });
+  }
+
+  if (card.exhausted) {
+    badges.push({ label: 'TAP', color: '#e94560', bg: '#4a1020' });
+  }
+
+  if (cardDef.keywords?.includes('stationary')) {
+    badges.push({ label: 'STATIONARY', color: '#999', bg: '#2a2a2a' });
+  }
+
+  return badges;
+}
+
+function StatusBadges({ card, cardDef, compact }: { card: VisibleCard; cardDef: ClientCardDefinition; compact?: boolean }) {
+  const badges = getActiveBadges(card, cardDef);
+  if (badges.length === 0) return null;
+
+  return (
+    <div style={{ display: 'flex', gap: '3px', flexWrap: 'wrap', marginTop: '3px' }}>
+      {badges.map(badge => (
+        <span
+          key={badge.label}
+          style={{
+            fontSize: compact ? '8px' : '9px',
+            color: badge.color,
+            background: badge.bg,
+            borderRadius: '3px',
+            padding: '0px 4px',
+            lineHeight: '1.5',
+            fontWeight: 'bold',
+          }}
+        >
+          {badge.label}
+        </span>
+      ))}
+    </div>
+  );
+}
 
 const GUILD_COLORS: Record<string, string> = {
   earth: '#8B6914',
@@ -19,23 +74,30 @@ interface Props {
   dimmed?: boolean;
   onClick?: () => void;
   compact?: boolean;
+  lastingEffects?: LasingEffect[];
 }
 
-export default function FollowerCard({ card, highlighted, selected, dimmed, onClick, compact }: Props) {
+export default function FollowerCard({ card, highlighted, selected, dimmed, onClick, compact, lastingEffects }: Props) {
   const cardDefinitions = useCardDefinitions();
   const cardDef = cardDefinitions[card.definitionId] ?? FALLBACK_CARD;
   const wounds = (card.counters['wound'] ?? 0);
-  const stunned = (card.counters['stun'] ?? 0) > 0;
+  const plusOnePlusOne = (card.counters['plus_one_plus_one'] ?? 0);
   const guildColor = GUILD_COLORS[cardDef.guild] ?? '#555';
 
-  const effectiveHp = (cardDef.health ?? 0) - wounds;
+  const maxHp = (cardDef.health ?? 0) + plusOnePlusOne;
+  const effectiveHp = maxHp - wounds;
+
+  const buffedStrength = (lastingEffects ?? [])
+    .filter(({type}) => type === 'strength_buff')
+    .filter(({targetInstanceIds}) => targetInstanceIds.includes(card.instanceId))
+    .reduce((x, { amount }) => { return x + amount }, 0);
 
   let border = `2px solid ${guildColor}`;
   if (selected) border = '2px solid #00ff88';
   if (highlighted) border = '2px solid #ffff00';
 
   return (
-    <CardTooltip cardDef={cardDef} card={card}>
+    <CardTooltip cardDef={cardDef} card={card} lastingEffects={lastingEffects}>
       <div
         onClick={onClick}
         style={{
@@ -59,9 +121,12 @@ export default function FollowerCard({ card, highlighted, selected, dimmed, onCl
 
         {cardDef.type === 'follower' && (
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: compact ? '10px' : '11px' }}>
-            <span>STR {(cardDef.strength ?? 0) + (card.counters['strength_buff'] ?? 0)}</span>
+            <span>
+              <span>STR {(cardDef.strength ?? 0) + (card.counters['strength_buff'] ?? 0) + plusOnePlusOne}</span>
+              { buffedStrength > 0 && <span>&nbsp;(<span style={{color: '#0A0'}}>+{buffedStrength}</span>)</span> }
+            </span>
             <span style={{ color: wounds > 0 ? '#e94560' : undefined }}>
-              HP {effectiveHp}/{cardDef.health ?? 0}
+              HP {effectiveHp}/{maxHp}
             </span>
           </div>
         )}
@@ -76,26 +141,12 @@ export default function FollowerCard({ card, highlighted, selected, dimmed, onCl
           <div style={{ fontSize: '10px', color: '#aaa', marginTop: '2px' }}>{cardDef.description}</div>
         )}
 
-        {cardDef.keywords && cardDef.keywords.length > 0 && (
-          <div style={{ fontSize: '9px', color: '#aaa', marginTop: '2px' }}>
-            {cardDef.keywords.join(', ')}
-          </div>
+        {cardDef.type === 'follower' && (
+          <StatusBadges card={card} cardDef={cardDef} compact={compact} />
         )}
 
         {cardDef.description && cardDef.type === 'follower' && (
           <div style={{ fontSize: '9px', color: '#aaa', marginTop: '2px' }}>{cardDef.description}</div>
-        )}
-
-        {card.exhausted && (
-          <div style={{ fontSize: '9px', color: '#e94560', position: 'absolute', top: '2px', right: '4px' }}>
-            TAP
-          </div>
-        )}
-
-        {stunned && (
-          <div style={{ fontSize: '9px', color: '#ff8800', position: 'absolute', bottom: cardDef.standingRequirement ? '14px' : '2px', right: '4px' }}>
-            STUN
-          </div>
         )}
 
         {cardDef.standingRequirement && (

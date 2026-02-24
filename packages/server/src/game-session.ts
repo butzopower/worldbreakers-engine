@@ -68,8 +68,8 @@ export class GameSession {
     const opponent: PlayerId = forPlayer === 'player1' ? 'player2' : 'player1';
 
     const filteredCards: FilteredCard[] = this.state.cards.map(card => {
-      if (card.zone === 'hand' && card.owner === opponent) {
-        return { hidden: true, owner: card.owner, zone: 'hand' as const } satisfies HiddenCard;
+      if (card.zone === 'deck' || (card.zone === 'hand' && card.owner === opponent)) {
+        return { hidden: true, owner: card.owner, zone: card.zone } satisfies HiddenCard;
       }
       return {
         instanceId: card.instanceId,
