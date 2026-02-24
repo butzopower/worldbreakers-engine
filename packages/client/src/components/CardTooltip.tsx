@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { ClientCardDefinition, LasingEffect, VisibleCard } from '../types';
 
 const GUILD_COLORS: Record<string, string> = {
@@ -89,7 +90,7 @@ export default function CardTooltip({cardDef, card, lastingEffects, children}: P
       style={{display: 'inline-block'}}
     >
       {children}
-      {visible && (
+      {visible && createPortal(
         <div
           style={{
             position: 'fixed',
@@ -100,6 +101,7 @@ export default function CardTooltip({cardDef, card, lastingEffects, children}: P
             transform: 'translateX(-50%)',
             zIndex: 1000,
             pointerEvents: 'none',
+            fontFamily: 'monospace'
           }}
         >
           <div style={{
@@ -304,7 +306,8 @@ export default function CardTooltip({cardDef, card, lastingEffects, children}: P
               </div>
             )}
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
     </div>
   );
