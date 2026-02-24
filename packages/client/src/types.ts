@@ -36,6 +36,7 @@ export interface CombatState {
 }
 
 export type PendingChoice =
+  | { type: 'choose_attackers'; playerId: PlayerId }
   | { type: 'choose_blockers'; playerId: PlayerId; attackerIds: string[] }
   | { type: 'choose_target'; playerId: PlayerId; sourceCardId: string; abilityIndex: number; effects: unknown[]; triggeringCardId?: string }
   | { type: 'choose_discard'; playerId: PlayerId; count: number; sourceCardId: string; phase?: string; nextPhase?: string }

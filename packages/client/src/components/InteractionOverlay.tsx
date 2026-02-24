@@ -40,7 +40,11 @@ export default function InteractionOverlay({ mode, state, playerId, onSubmitActi
           <button
             onClick={() => {
               if (mode.selected.length > 0) {
-                onSubmitAction({ type: 'attack', attackerIds: mode.selected });
+                if (state.pendingChoice?.type === 'choose_attackers') {
+                  onSubmitAction({ type: 'choose_attackers', attackerIds: mode.selected });
+                } else {
+                  onSubmitAction({ type: 'attack', attackerIds: mode.selected });
+                }
               }
             }}
             disabled={mode.selected.length === 0}

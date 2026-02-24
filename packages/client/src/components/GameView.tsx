@@ -42,6 +42,10 @@ export default function GameView({ playerId, state, legalActions, events, onRetu
         interaction.startBlockerSelection(choice.attackerIds);
         break;
       }
+      case 'choose_attackers': {
+        interaction.startAttackSelection();
+        break;
+      }
       case 'choose_target': {
         const targets = legalActions
           .filter((a): a is PlayerAction & { targetInstanceId: string } =>

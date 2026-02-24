@@ -1,0 +1,37 @@
+import { DeckConfig } from "@worldbreakers/engine";
+
+export const atokEarth: DeckConfig = {
+  worldbreakerId: 'khutulun_the_true_daughter',
+  cardIds: [
+    'khutuluns_kheshig',
+    'confident_suitor',
+    'the_ten_thousand_ride',
+    'call_to_arms',
+    'ger_migration',
+    'wild_boar_charge',
+    'lay_siege',
+    'dogtamer',
+    'gallant_soldier',
+    'kalari_adept',
+    'airag_maker',
+    'eagle_huntress',
+    'skillful_bruiser',
+    'amu_river_armorer',
+    'champion_of_the_tumen',
+    'mongol_quartermaster',
+    'poised_duelist',
+    'forbidding_guru',
+    'sparring_braggart',
+    'astute_tactician',
+    'tengris_cavalry',
+    'the_amu_river_encampment',
+    'gratuitous_gift',
+    'raid_the_mines',
+    //'weary_veteran',
+    'irate_vandal',
+    'lowly_bard',
+    'earth_apprentice',
+    'swift_messenger',
+    'the_humble_underpass'
+  ],
+}

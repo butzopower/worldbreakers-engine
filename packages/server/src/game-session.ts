@@ -4,35 +4,9 @@ import {
   type GameEvent, type PendingChoice, type DeckConfig,
 } from '@worldbreakers/engine';
 import type { FilteredGameState, FilteredCard, HiddenCard } from './types';
+import { atokEarth } from "./preconstructs";
 
-const DEFAULT_DECK: DeckConfig = {
-  worldbreakerId: 'stone_sentinel',
-  cardIds: [
-    'mythium_fund',
-    'mythium_fund',
-    'mythium_fund',
-    'call_to_arms',
-    'call_to_arms',
-    'alamut_castle',
-    'alamut_castle',
-    'alamut_castle',
-    'earth_apprentice',
-    'airag_maker',
-    'militia_scout',
-    'the_pit_of_despair',
-    'shield_bearer',
-    'the_indigo_grotto',
-    'night_raider',
-    'void_channeler',
-    'the_den_of_sabers',
-    'star_warden',
-    'earthshaker_giant',
-    'void_rift',
-    'watchtower',
-    'the_submerged_brilliance',
-    'void_nexus',
-  ],
-};
+const DEFAULT_DECK = atokEarth;
 
 // Ensure test cards are registered
 let cardsRegistered = false;
