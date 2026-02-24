@@ -25,6 +25,7 @@ export class GameSession {
     player1: null,
     player2: null,
   };
+  lastActivityAt: number = Date.now();
 
   constructor(
     gameId: string,
@@ -113,6 +114,7 @@ export class GameSession {
     const input: ActionInput = { player, action };
     const result = processAction(this.state, input);
     this.state = result.state;
+    this.lastActivityAt = Date.now();
     return result;
   }
 

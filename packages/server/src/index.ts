@@ -27,7 +27,16 @@ const io = new Server<ClientToServerEvents, ServerToClientEvents>(httpServer, {
   },
 });
 
-const manager = new GameManager();
+const manager = new GameManager({
+  onGameRemoved: (_gameId, session) => {
+    for (const p of ['player1', 'player2'] as PlayerId[]) {
+      const sid = session.getSocketId(p);
+      if (sid) {
+        io.to(sid).emit('error', { message: 'Game removed due to inactivity' });
+      }
+    }
+  },
+});
 
 function buildClientCardDefs(): Record<string, ClientCardDefinition> {
   const defs: Record<string, ClientCardDefinition> = {};
