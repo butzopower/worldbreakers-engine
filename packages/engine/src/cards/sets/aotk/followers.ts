@@ -345,6 +345,35 @@ export const followers: CardDefinition[] = [
     description: 'Enters: Gain 1 mythium for each standing you have across all guilds.',
   },
   {
+    id: 'moon_apprentice',
+    name: 'Moon Apprentice',
+    type: 'follower',
+    guild: 'neutral',
+    cost: 3,
+    strength: 2,
+    health: 2,
+    description: 'Enters: Gain 1 Moon Standing. Enters: If you have at least 3 standing with any one guild → Draw 1 card.',
+    abilities: [
+      {
+        timing: 'enters',
+        effects: [{ type: 'gain_standing', player: 'self', guild: 'moon', amount: 1 }],
+        description: 'Gain 1 Moon Standing.',
+      },
+      {
+        timing: 'enters',
+        effects: [{
+          type: 'conditional',
+          condition: {
+            type: 'any_standing_at_least',
+            amount: 3,
+          },
+          effects: [{ type: 'draw_cards', player: 'self', count: 1 }],
+        }],
+        description: 'If you have at least 3 standing with any one guild → Draw 1 card.',
+      },
+    ],
+  },
+  {
     id: 'mongol_quartermaster',
     name: 'Mongol Quartermaster',
     type: 'follower',
