@@ -3,16 +3,95 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 12px;
-  padding: 8px 12px;
+  gap: 16px;
+  padding: 8px 16px;
   background: var(--color-bg-mid);
   border-radius: 6px;
   font-size: 12px;
+  min-height: 72px;
 }
 
-.turnIndicator {
+.roundLabel {
   color: var(--color-muted);
+  min-width: 56px;
+  white-space: nowrap;
 }
 
-.turnIndicator--myTurn {
+.statusLabel {
+  color: var(--color-muted);
+  min-width: 120px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.my--turn.statusLabel {
   color: var(--color-active-player);
+}
+
+.coinRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  /* Height accommodates both zig and zag positions */
+  height: 56px;
+}
+
+.coin {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  border: 2px solid transparent;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+  flex-shrink: 0;
+}
+
+/* near = local player's turn → drop toward bottom */
+.coin--near {
+  transform: translateY(12px);
+}
+
+/* far = opponent's turn → rise toward top */
+.coin--far {
+  transform: translateY(-12px);
+}
+
+.coin--player1 {
+  background: color-mix(in srgb, var(--color-accent-red) 20%, transparent);
+  border-color: var(--color-accent-red);
+  color: var(--color-accent-red);
+}
+
+.coin--player2 {
+  background: color-mix(in srgb, var(--color-mythium) 20%, transparent);
+  border-color: var(--color-mythium);
+  color: var(--color-mythium);
+}
+
+/* Future coins are fully visible — explicit to document intent vs completed coins */
+.coin--future {
+  opacity: 1;
+}
+
+.coin--completed {
+  opacity: 0.3;
+}
+
+/* Active coins are fully visible — glow is handled by compound selectors below */
+.coin--active {
+  opacity: 1;
+}
+
+/* Active: player1 glow */
+.coin--player1.coin--active {
+  box-shadow: 0 0 8px 2px var(--color-accent-red);
+}
+
+/* Active: player2 glow */
+.coin--player2.coin--active {
+  box-shadow: 0 0 8px 2px var(--color-mythium);
 }
