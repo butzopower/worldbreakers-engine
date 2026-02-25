@@ -4,6 +4,7 @@ import LobbyView from './components/LobbyView';
 import GameView from './components/GameView';
 import { CardDefinitionsProvider } from './context/CardDefinitions';
 import type { PlayerId, FilteredGameState, PlayerAction, GameEvent, ClientCardDefinition } from './types';
+import styles from './App.module.css';
 
 type AppState =
   | { screen: 'lobby' }
@@ -59,7 +60,6 @@ export default function App() {
   }, []);
 
   function getPlayerId(state: FilteredGameState): PlayerId {
-    // We can tell which player we are by looking at which hand cards are visible
     const hasVisibleP1Hand = state.cards.some(c =>
       !('hidden' in c) && c.owner === 'player1' && c.zone === 'hand'
     );
@@ -72,19 +72,17 @@ export default function App() {
   };
 
   return (
-    <div style={{ fontFamily: 'monospace', padding: '16px', background: '#1a1a2e', color: '#e0e0e0', minHeight: '100vh' }}>
-      <h1 style={{ margin: '0 0 16px', fontSize: '20px', color: '#e94560' }}>Worldbreakers</h1>
+    <div className={styles.app}>
+      <h1 className={styles.appTitle}>Worldbreakers</h1>
 
       {error && (
-        <div style={{ background: '#e94560', color: 'white', padding: '8px 12px', borderRadius: '4px', marginBottom: '12px' }}>
-          {error}
-        </div>
+        <div className={styles.errorBanner}>{error}</div>
       )}
 
       {disconnected && (
-        <div style={{ background: '#e94560', color: 'white', padding: '8px 12px', borderRadius: '4px', marginBottom: '12px' }}>
+        <div className={styles.errorBanner}>
           Opponent disconnected.{' '}
-          <button onClick={returnToLobby} style={{ background: 'white', color: '#e94560', border: 'none', padding: '4px 8px', cursor: 'pointer' }}>
+          <button onClick={returnToLobby} className={styles.disconnectBtn}>
             Return to Lobby
           </button>
         </div>

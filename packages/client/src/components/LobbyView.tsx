@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { socket } from '../socket';
 import type { GameInfo } from '../types';
+import styles from './LobbyView.module.css';
 
 export default function LobbyView() {
   const [games, setGames] = useState<GameInfo[]>([]);
@@ -27,35 +28,21 @@ export default function LobbyView() {
 
   return (
     <div>
-      <h2 style={{ fontSize: '16px', marginBottom: '12px' }}>Lobby</h2>
+      <h2 className={styles.title}>Lobby</h2>
 
-      <button
-        onClick={createGame}
-        style={{
-          background: '#e94560', color: 'white', border: 'none',
-          padding: '8px 16px', cursor: 'pointer', borderRadius: '4px',
-          fontSize: '14px', marginBottom: '16px',
-        }}
-      >
+      <button onClick={createGame} className={styles.createBtn}>
         Create Game
       </button>
 
-      <h3 style={{ fontSize: '14px', marginBottom: '8px' }}>Open Games</h3>
+      <h3 className={styles.sectionTitle}>Open Games</h3>
       {games.length === 0 ? (
-        <p style={{ color: '#888' }}>No open games. Create one!</p>
+        <p className={styles.emptyMessage}>No open games. Create one!</p>
       ) : (
-        <ul style={{ listStyle: 'none', padding: 0 }}>
+        <ul className={styles.gameList}>
           {games.map(g => (
-            <li key={g.gameId} style={{ marginBottom: '8px' }}>
+            <li key={g.gameId} className={styles.gameItem}>
               <span>{g.gameId}</span>
-              <button
-                onClick={() => joinGame(g.gameId)}
-                style={{
-                  background: '#0f3460', color: 'white', border: 'none',
-                  padding: '4px 12px', cursor: 'pointer', borderRadius: '4px',
-                  marginLeft: '8px', fontSize: '12px',
-                }}
-              >
+              <button onClick={() => joinGame(g.gameId)} className={styles.joinBtn}>
                 Join
               </button>
             </li>

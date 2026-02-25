@@ -1,0 +1,172 @@
+.wrapper {
+  display: inline-block;
+}
+
+/* Portal container — position is set inline (computed) */
+.portal {
+  position: fixed;
+  transform: translateX(-50%);
+  z-index: 1000;
+  pointer-events: none;
+  font-family: monospace;
+}
+
+.tooltipBox {
+  background: var(--color-bg-dark);
+  border-radius: 8px;
+  padding: 10px 12px;
+  min-width: 200px;
+  max-width: 260px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+  /* border color is set inline (guild-based) */
+  border: 1px solid transparent;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.cardName {
+  font-weight: bold;
+  font-size: 14px;
+  /* color set inline */
+}
+
+.costBadge {
+  background: var(--color-bg-deep);
+  color: #7ec8e3;
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.typeLine {
+  font-size: 11px;
+  color: var(--color-muted);
+  border-bottom: 1px solid #333;
+  padding-bottom: 4px;
+  margin-bottom: 6px;
+}
+
+.statsRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 12px;
+  margin-bottom: 6px;
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px 6px;
+}
+
+.statLabel {
+  color: var(--color-muted);
+}
+
+.statLabelBold {
+  color: var(--color-muted);
+  font-weight: bold;
+}
+
+.statValue {
+  color: var(--color-text);
+  font-weight: bold;
+}
+
+.hpDamaged {
+  color: var(--color-accent-red);
+  font-weight: bold;
+}
+
+.locationStages {
+  margin-bottom: 6px;
+}
+
+.locationStage {
+  font-size: 11px;
+  line-height: 1.4;
+  margin-bottom: 2px;
+}
+
+.locationStage--available {
+  color: #d0d0d0;
+}
+
+.locationStage--spent {
+  color: var(--color-faint);
+  text-decoration: line-through;
+}
+
+.stageBullet--available {
+  color: var(--color-muted);
+  margin-right: 4px;
+}
+
+.stageBullet--spent {
+  color: var(--color-faint);
+  margin-right: 4px;
+}
+
+.keywordList {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+
+.keyword {
+  background: #2a2a4e;
+  color: #b0b0d0;
+  border-radius: 3px;
+  padding: 1px 6px;
+  font-size: 10px;
+  font-style: italic;
+}
+
+.description {
+  font-size: 12px;
+  color: #d0d0d0;
+  line-height: 1.4;
+}
+
+.standingRow {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  color: var(--color-muted);
+}
+
+.standingGroup {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.standingDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  /* background set inline */
+}
+
+.flavorText {
+  font-size: 11px;
+  color: #999;
+  font-style: italic;
+  border-top: 1px solid #333;
+  padding-top: 6px;
+  line-height: 1.4;
+}
+
+.mb {
+  margin-bottom: 6px;
+}

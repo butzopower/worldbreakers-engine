@@ -59,7 +59,7 @@ export const followers: CardDefinition[] = [
       {
         timing: 'attacks',
         effects: [{ type: 'gain_mythium', player: 'self', amount: 2 }],
-        description: 'Gain 2 Mythium.',
+        description: 'Attacks: Gain 2 Mythium.',
       },
     ],
     description: 'Attacks: Gain 2 Mythium.',
@@ -326,7 +326,7 @@ export const followers: CardDefinition[] = [
       effects: [
         { type: 'add_counter', target: { kind: 'self' }, counter: 'plus_one_plus_one', amount: 1 },
       ],
-      description: 'Put a +1/+1 counter on Khutulun\'s Kheshig.',
+      description: 'Attacks: Put a +1/+1 counter on Khutulun\'s Kheshig.',
     }],
   },
   {

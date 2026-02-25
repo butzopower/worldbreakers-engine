@@ -1,4 +1,5 @@
 import type { InteractionMode, FilteredGameState, PlayerId, PlayerAction } from '../types';
+import styles from './InteractionOverlay.module.css';
 
 interface Props {
   mode: InteractionMode;
@@ -11,29 +12,11 @@ interface Props {
 export default function InteractionOverlay({ mode, state, playerId, onSubmitAction, onCancel }: Props) {
   if (mode.type === 'none') return null;
 
-  const panelStyle: React.CSSProperties = {
-    marginTop: '12px',
-    padding: '10px',
-    background: '#0f3460',
-    borderRadius: '6px',
-    border: '1px solid #e94560',
-  };
-
-  const btnStyle: React.CSSProperties = {
-    background: '#e94560', color: 'white', border: 'none',
-    padding: '6px 12px', cursor: 'pointer', borderRadius: '4px',
-    fontSize: '12px', marginRight: '8px',
-  };
-
-  const cancelStyle: React.CSSProperties = {
-    ...btnStyle, background: '#555',
-  };
-
   switch (mode.type) {
     case 'select_attackers':
       return (
-        <div style={panelStyle}>
-          <div style={{ marginBottom: '6px', fontSize: '12px' }}>
+        <div className={styles.panel}>
+          <div className={styles.instructions}>
             Select attackers by clicking followers, then confirm.
             {mode.selected.length > 0 && ` (${mode.selected.length} selected)`}
           </div>
@@ -48,28 +31,25 @@ export default function InteractionOverlay({ mode, state, playerId, onSubmitActi
               }
             }}
             disabled={mode.selected.length === 0}
-            style={{ ...btnStyle, opacity: mode.selected.length === 0 ? 0.5 : 1 }}
+            className={`${styles.btn} ${mode.selected.length === 0 ? styles['btn--disabled'] : ''}`}
           >
             Confirm Attack
           </button>
-          <button onClick={onCancel} style={cancelStyle}>Cancel</button>
+          <button onClick={onCancel} className={styles.btnCancel}>Cancel</button>
         </div>
       );
 
     case 'select_blocker':
       return (
-        <div style={panelStyle}>
-          <div style={{ marginBottom: '6px', fontSize: '12px' }}>
+        <div className={styles.panel}>
+          <div className={styles.instructions}>
             {mode.selectedBlockerId
               ? `Blocker selected. ${mode.attackerIds.length > 1 ? 'Click an attacker to block.' : ''}`
               : 'Click a ready follower to block with.'
             }
             {` (${mode.attackerIds.length} attacker${mode.attackerIds.length !== 1 ? 's' : ''} remaining)`}
           </div>
-          <button
-            onClick={() => onSubmitAction({ type: 'pass_block' })}
-            style={cancelStyle}
-          >
+          <button onClick={() => onSubmitAction({ type: 'pass_block' })} className={styles.btnCancel}>
             Pass (No Block)
           </button>
         </div>
@@ -77,8 +57,8 @@ export default function InteractionOverlay({ mode, state, playerId, onSubmitActi
 
     case 'choose_target':
       return (
-        <div style={panelStyle}>
-          <div style={{ fontSize: '12px' }}>
+        <div className={styles.panel}>
+          <div className={styles.instructionsNoMargin}>
             Choose a target (click a highlighted card). {mode.validTargets.length} valid target(s).
           </div>
         </div>
@@ -86,8 +66,8 @@ export default function InteractionOverlay({ mode, state, playerId, onSubmitActi
 
     case 'choose_discard':
       return (
-        <div style={panelStyle}>
-          <div style={{ marginBottom: '6px', fontSize: '12px' }}>
+        <div className={styles.panel}>
+          <div className={styles.instructions}>
             Select {mode.count} card(s) to discard from hand.
             {mode.selected.length > 0 && ` (${mode.selected.length}/${mode.count} selected)`}
           </div>
@@ -98,7 +78,7 @@ export default function InteractionOverlay({ mode, state, playerId, onSubmitActi
               }
             }}
             disabled={mode.selected.length !== mode.count}
-            style={{ ...btnStyle, opacity: mode.selected.length !== mode.count ? 0.5 : 1 }}
+            className={`${styles.btn} ${mode.selected.length !== mode.count ? styles['btn--disabled'] : ''}`}
           >
             Confirm Discard
           </button>
@@ -107,14 +87,11 @@ export default function InteractionOverlay({ mode, state, playerId, onSubmitActi
 
     case 'choose_breach_target':
       return (
-        <div style={panelStyle}>
-          <div style={{ marginBottom: '6px', fontSize: '12px' }}>
+        <div className={styles.panel}>
+          <div className={styles.instructions}>
             Choose a location to breach (click a highlighted location), or skip.
           </div>
-          <button
-            onClick={() => onSubmitAction({ type: 'skip_breach_damage' })}
-            style={cancelStyle}
-          >
+          <button onClick={() => onSubmitAction({ type: 'skip_breach_damage' })} className={styles.btnCancel}>
             Skip Breach
           </button>
         </div>
@@ -122,16 +99,14 @@ export default function InteractionOverlay({ mode, state, playerId, onSubmitActi
 
     case 'choose_mode':
       return (
-        <div style={panelStyle}>
-          <div style={{ marginBottom: '6px', fontSize: '12px' }}>
-            Choose one:
-          </div>
-          <div style={{ display: 'flex', gap: '8px' }}>
+        <div className={styles.panel}>
+          <div className={styles.instructions}>Choose one:</div>
+          <div className={styles.btnRow}>
             {mode.modes.map((m, i) => (
               <button
                 key={i}
                 onClick={() => onSubmitAction({ type: 'choose_mode', modeIndex: i })}
-                style={btnStyle}
+                className={styles.btn}
               >
                 {m.label}
               </button>
@@ -139,6 +114,5 @@ export default function InteractionOverlay({ mode, state, playerId, onSubmitActi
           </div>
         </div>
       );
-
   }
 }

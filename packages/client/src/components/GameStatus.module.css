@@ -1,0 +1,18 @@
+.statusBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding: 8px 12px;
+  background: var(--color-bg-mid);
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+.turnIndicator {
+  color: var(--color-muted);
+}
+
+.turnIndicator--myTurn {
+  color: var(--color-active-player);
+}

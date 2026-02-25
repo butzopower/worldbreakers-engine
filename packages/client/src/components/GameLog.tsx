@@ -1,6 +1,7 @@
 import { useRef, useEffect } from 'react';
 import type { ClientCardDefinition, GameEvent } from '../types';
 import { useCardDefinitions } from "../context/CardDefinitions";
+import styles from './GameLog.module.css';
 
 interface Props {
   events: GameEvent[];
@@ -49,17 +50,13 @@ export default function GameLog({ events }: Props) {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [events.length]);
 
-  // Show last 50 events
   const recent = events.slice(-50);
 
   return (
-    <div style={{
-      background: '#16213e', borderRadius: '6px', padding: '8px',
-      maxHeight: '500px', overflowY: 'auto', fontSize: '11px',
-    }}>
-      <div style={{ fontWeight: 'bold', marginBottom: '6px', color: '#888' }}>Game Log</div>
+    <div className={styles.log}>
+      <div className={styles.logTitle}>Game Log</div>
       {recent.map((event, i) => (
-        <div key={i} style={{ color: '#aaa', marginBottom: '2px', borderBottom: '1px solid #1a1a2e', paddingBottom: '2px' }}>
+        <div key={i} className={styles.logEntry}>
           {formatEvent(event, cardDefinitions)}
         </div>
       ))}

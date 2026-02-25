@@ -1,6 +1,7 @@
 import { VisibleCard, ClientCardDefinition, LasingEffect } from '../types';
 import { useCardDefinitions } from '../context/CardDefinitions';
 import CardTooltip from './CardTooltip';
+import styles from './FollowerCard.module.css';
 
 const FALLBACK_CARD = { id: '', name: 'Unknown', type: 'follower', guild: 'neutral', cost: 0 } as const;
 
@@ -38,19 +39,12 @@ function StatusBadges({ card, cardDef, compact }: { card: VisibleCard; cardDef: 
   if (badges.length === 0) return null;
 
   return (
-    <div style={{ display: 'flex', gap: '3px', flexWrap: 'wrap', marginTop: '3px' }}>
+    <div className={styles.badgeList}>
       {badges.map(badge => (
         <span
           key={badge.label}
-          style={{
-            fontSize: compact ? '8px' : '9px',
-            color: badge.color,
-            background: badge.bg,
-            borderRadius: '3px',
-            padding: '0px 4px',
-            lineHeight: '1.5',
-            fontWeight: 'bold',
-          }}
+          className={`${styles.badge} ${compact ? styles['badge--compact'] : styles['badge--normal']}`}
+          style={{ color: badge.color, background: badge.bg }}
         >
           {badge.label}
         </span>
@@ -59,7 +53,7 @@ function StatusBadges({ card, cardDef, compact }: { card: VisibleCard; cardDef: 
   );
 }
 
-const GUILD_COLORS: Record<string, string> = {
+export const GUILD_COLORS: Record<string, string> = {
   earth: '#8B6914',
   moon: '#4a4a8a',
   void: '#6b2fa0',
@@ -92,53 +86,51 @@ export default function FollowerCard({ card, highlighted, selected, dimmed, onCl
     .filter(({targetInstanceIds}) => targetInstanceIds.includes(card.instanceId))
     .reduce((x, { amount }) => { return x + amount }, 0);
 
-  let border = `2px solid ${guildColor}`;
-  if (selected) border = '2px solid #00ff88';
-  if (highlighted) border = '2px solid #ffff00';
+  let borderColor = guildColor;
+  if (selected) borderColor = '#00ff88';
+  if (highlighted) borderColor = '#ffff00';
+
+  const cardClasses = [
+    styles.card,
+    compact ? styles['card--compact'] : '',
+    onClick ? styles['card--clickable'] : '',
+    dimmed ? styles['card--dimmed'] : '',
+    highlighted && !dimmed ? styles['card--highlighted'] : '',
+    card.exhausted && !dimmed ? styles['card--exhausted'] : '',
+  ].filter(Boolean).join(' ');
 
   return (
     <CardTooltip cardDef={cardDef} card={card} lastingEffects={lastingEffects}>
       <div
         onClick={onClick}
-        style={{
-          border,
-          borderRadius: '6px',
-          padding: compact ? '4px 6px 10px' : '6px 8px 10px',
-          background: dimmed ? '#1a1a2e' : highlighted ? 'rgba(255,255,0,0.1)' : '#16213e',
-          opacity: dimmed ? 0.5 : card.exhausted ? 0.7 : 1,
-          cursor: onClick ? 'pointer' : 'default',
-          minWidth: compact ? '90px' : '120px',
-          fontSize: compact ? '10px' : '12px',
-          position: 'relative',
-          transform: card.exhausted ? 'rotate(5deg)' : undefined,
-          transition: 'transform 0.2s',
-        }}
+        className={cardClasses}
+        style={{ border: `2px solid ${borderColor}` }}
       >
-        <div style={{ fontWeight: 'bold', marginBottom: '2px', color: guildColor }}>
+        <div className={styles.cardName} style={{ color: guildColor }}>
           {cardDef.name}
-          {compact && cardDef.cost > 0 && <span style={{ float: 'right', color: '#888' }}>{cardDef.cost}</span>}
+          {compact && cardDef.cost > 0 && <span className={styles.cardCost}>{cardDef.cost}</span>}
         </div>
 
         {cardDef.type === 'follower' && (
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: compact ? '10px' : '11px' }}>
+          <div className={`${styles.statsRow} ${compact ? styles['statsRow--compact'] : styles['statsRow--normal']}`}>
             <span>
               <span>STR {(cardDef.strength ?? 0) + (card.counters['strength_buff'] ?? 0) + plusOnePlusOne}</span>
-              { buffedStrength > 0 && <span>&nbsp;(<span style={{color: '#0A0'}}>+{buffedStrength}</span>)</span> }
+              {buffedStrength > 0 && <span>&nbsp;(<span style={{ color: '#0A0' }}>+{buffedStrength}</span>)</span>}
             </span>
-            <span style={{ color: wounds > 0 ? '#e94560' : undefined }}>
+            <span className={wounds > 0 ? styles.hpDamaged : undefined}>
               HP {effectiveHp}/{maxHp}
             </span>
           </div>
         )}
 
         {cardDef.type === 'location' && (
-          <div style={{ fontSize: compact ? '10px' : '11px' }}>
+          <div className={compact ? styles['stageLabel--compact'] : styles.stageLabel}>
             Stage {card.counters['stage'] ?? 0}
           </div>
         )}
 
         {cardDef.type === 'worldbreaker' && cardDef.description && (
-          <div style={{ fontSize: '10px', color: '#aaa', marginTop: '2px' }}>{cardDef.description}</div>
+          <div className={styles.worldbreakerDesc}>{cardDef.description}</div>
         )}
 
         {cardDef.type === 'follower' && (
@@ -146,22 +138,17 @@ export default function FollowerCard({ card, highlighted, selected, dimmed, onCl
         )}
 
         {cardDef.description && cardDef.type === 'follower' && (
-          <div style={{ fontSize: '9px', color: '#aaa', marginTop: '2px' }}>{cardDef.description}</div>
+          <div className={styles.description}>{cardDef.description}</div>
         )}
 
         {cardDef.standingRequirement && (
-          <div style={{ position: 'absolute', bottom: '3px', right: '4px', display: 'flex', gap: '2px' }}>
+          <div className={styles.standingDots}>
             {Object.entries(cardDef.standingRequirement).flatMap(([guild, count]) =>
               Array.from({ length: count }, (_, i) => (
                 <span
                   key={`${guild}-${i}`}
-                  style={{
-                    width: '6px',
-                    height: '6px',
-                    borderRadius: '50%',
-                    background: GUILD_COLORS[guild] ?? '#555',
-                    display: 'inline-block',
-                  }}
+                  className={styles.standingDot}
+                  style={{ background: GUILD_COLORS[guild] ?? '#555' }}
                 />
               ))
             )}

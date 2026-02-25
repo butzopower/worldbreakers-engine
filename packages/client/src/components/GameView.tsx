@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { socket } from '../socket';
 import { useInteractionMode } from '../hooks/useInteractionMode';
 import GameBoard from './GameBoard';
@@ -8,6 +8,7 @@ import GameStatus from './GameStatus';
 import GameLog from './GameLog';
 import type { PlayerId, FilteredGameState, PlayerAction, GameEvent, VisibleCard } from '../types';
 import { isVisible } from '../types';
+import styles from './GameView.module.css';
 
 interface Props {
   playerId: PlayerId;
@@ -27,7 +28,6 @@ export default function GameView({ playerId, state, legalActions, events, onRetu
     }
   }, [state.version]);
 
-  // Auto-enter interaction modes based on pending choices
   useEffect(() => {
     if (!state.pendingChoice || state.pendingChoice.playerId !== playerId) {
       if (interaction.mode.type !== 'none' && interaction.mode.type !== 'select_attackers') {
@@ -86,14 +86,11 @@ export default function GameView({ playerId, state, legalActions, events, onRetu
       }
       case 'select_blocker': {
         if (card.owner === playerId && card.zone === 'board') {
-          // Click own follower to select as blocker
           interaction.selectBlocker(card.instanceId);
-          // If only one attacker, auto-submit
           if (mode.attackerIds.length === 1) {
             submitAction({ type: 'declare_blocker', blockerId: card.instanceId, attackerId: mode.attackerIds[0] });
           }
         } else if (mode.selectedBlockerId && mode.attackerIds.includes(card.instanceId)) {
-          // Click an attacker to assign the selected blocker
           submitAction({ type: 'declare_blocker', blockerId: mode.selectedBlockerId, attackerId: card.instanceId });
         }
         break;
@@ -117,7 +114,6 @@ export default function GameView({ playerId, state, legalActions, events, onRetu
         break;
       }
       case 'none': {
-        // Click card in hand to play it
         if (card.owner === playerId && card.zone === 'hand') {
           const canPlay = legalActions.some(
             a => a.type === 'play_card' && a.cardInstanceId === card.instanceId
@@ -136,30 +132,17 @@ export default function GameView({ playerId, state, legalActions, events, onRetu
   const gameOver = state.phase === 'gameOver';
 
   return (
-    <div style={{ display: 'flex', gap: '16px' }}>
-      <div style={{ flex: 1 }}>
-        <GameStatus
-          state={state}
-          playerId={playerId}
-          isMyTurn={isMyTurn}
-        />
+    <div className={styles.gameView}>
+      <div className={styles.main}>
+        <GameStatus state={state} playerId={playerId} isMyTurn={isMyTurn} />
 
         {gameOver && (
-          <div style={{
-            background: '#0f3460', padding: '16px', borderRadius: '8px',
-            marginBottom: '12px', textAlign: 'center',
-          }}>
-            <h2 style={{ margin: '0 0 8px' }}>
+          <div className={styles.gameOverBanner}>
+            <h2 className={styles.gameOverTitle}>
               {state.winner === 'draw' ? 'Draw!' :
                 state.winner === playerId ? 'Victory!' : 'Defeat!'}
             </h2>
-            <button
-              onClick={onReturnToLobby}
-              style={{
-                background: '#e94560', color: 'white', border: 'none',
-                padding: '8px 16px', cursor: 'pointer', borderRadius: '4px',
-              }}
-            >
+            <button onClick={onReturnToLobby} className={styles.returnBtn}>
               Return to Lobby
             </button>
           </div>
@@ -196,7 +179,7 @@ export default function GameView({ playerId, state, legalActions, events, onRetu
         )}
       </div>
 
-      <div style={{ width: '250px' }}>
+      <div className={styles.sidebar}>
         <GameLog events={log} />
       </div>
     </div>

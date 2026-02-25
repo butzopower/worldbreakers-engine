@@ -1,0 +1,9 @@
+.battlefield {
+  border-top: 2px solid var(--color-accent-red);
+  border-bottom: 2px solid var(--color-accent-red);
+  padding: 4px 0;
+  margin: 8px 0;
+  text-align: center;
+  font-size: 11px;
+  color: var(--color-muted);
+}

@@ -1,0 +1,118 @@
+.card {
+  border-radius: 6px;
+  padding: 6px 8px 10px;
+  background: var(--color-bg-mid);
+  cursor: default;
+  min-width: 120px;
+  font-size: 12px;
+  position: relative;
+  transition: transform 0.2s;
+}
+
+.card--compact {
+  padding: 4px 6px 10px;
+  min-width: 90px;
+  font-size: 10px;
+}
+
+.card--clickable {
+  cursor: pointer;
+}
+
+.card--dimmed {
+  background: var(--color-bg-dark);
+  opacity: 0.5;
+}
+
+.card--highlighted {
+  background: rgba(255, 255, 0, 0.1);
+}
+
+.card--exhausted {
+  opacity: 0.7;
+  transform: rotate(5deg);
+}
+
+.cardName {
+  font-weight: bold;
+  margin-bottom: 2px;
+}
+
+.cardCost {
+  float: right;
+  color: var(--color-muted);
+}
+
+.statsRow {
+  display: flex;
+  justify-content: space-between;
+}
+
+.statsRow--compact {
+  font-size: 10px;
+}
+
+.statsRow--normal {
+  font-size: 11px;
+}
+
+.hpDamaged {
+  color: var(--color-accent-red);
+}
+
+.stageLabel {
+  font-size: 11px;
+}
+
+.stageLabel--compact {
+  font-size: 10px;
+}
+
+.worldbreakerDesc {
+  font-size: 10px;
+  color: #aaa;
+  margin-top: 2px;
+}
+
+.description {
+  font-size: 9px;
+  color: #aaa;
+  margin-top: 2px;
+}
+
+.badgeList {
+  display: flex;
+  gap: 3px;
+  flex-wrap: wrap;
+  margin-top: 3px;
+}
+
+.badge {
+  border-radius: 3px;
+  padding: 0px 4px;
+  line-height: 1.5;
+  font-weight: bold;
+}
+
+.badge--compact {
+  font-size: 8px;
+}
+
+.badge--normal {
+  font-size: 9px;
+}
+
+.standingDots {
+  position: absolute;
+  bottom: 3px;
+  right: 4px;
+  display: flex;
+  gap: 2px;
+}
+
+.standingDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  display: inline-block;
+}

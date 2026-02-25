@@ -1,0 +1,46 @@
+.card {
+  border-radius: 6px;
+  padding: 6px 8px;
+  background: var(--color-bg-mid);
+  min-width: 120px;
+  font-size: 12px;
+  cursor: default;
+  border: 2px solid var(--color-faint);
+}
+
+.card--clickable {
+  cursor: pointer;
+}
+
+.card--highlighted {
+  border-color: #ffff00;
+  background: rgba(255, 255, 0, 0.1);
+}
+
+.cardName {
+  font-weight: bold;
+  margin-bottom: 2px;
+  color: var(--guild-earth);
+}
+
+.stageRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.developBtn {
+  background: var(--color-bg-deep);
+  color: white;
+  border: none;
+  padding: 2px 6px;
+  cursor: pointer;
+  border-radius: 3px;
+  font-size: 10px;
+  font-family: inherit;
+}
+
+.hiddenKeyword {
+  font-size: 9px;
+  color: #aaa;
+}

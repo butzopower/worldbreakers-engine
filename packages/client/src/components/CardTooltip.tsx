@@ -1,14 +1,8 @@
 import { useState, useRef, useCallback, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { ClientCardDefinition, LasingEffect, VisibleCard } from '../types';
-
-const GUILD_COLORS: Record<string, string> = {
-  earth: '#8B6914',
-  moon: '#4a4a8a',
-  void: '#6b2fa0',
-  stars: '#c4a800',
-  neutral: '#777777',
-};
+import { GUILD_COLORS } from './FollowerCard';
+import styles from './CardTooltip.module.css';
 
 const GUILD_NAMES: Record<string, string> = {
   earth: 'Earth',
@@ -78,121 +72,72 @@ export default function CardTooltip({cardDef, card, lastingEffects, children}: P
   const buffedStrength = card ? (lastingEffects ?? [])
     .filter(({type}) => type === 'strength_buff')
     .filter(({targetInstanceIds}) => targetInstanceIds.includes(card.instanceId))
-    .reduce((x, {amount}) => {
-      return x + amount
-    }, 0) : 0;
+    .reduce((x, {amount}) => x + amount, 0) : 0;
+
+  const portalPositionStyle = above
+    ? { left: position.x, bottom: window.innerHeight - position.y + 8 }
+    : { left: position.x, top: position.y + 8 };
 
   return (
-    <div
-      ref={wrapperRef}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-      style={{display: 'inline-block'}}
-    >
+    <div ref={wrapperRef} onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave} className={styles.wrapper}>
       {children}
       {visible && createPortal(
-        <div
-          style={{
-            position: 'fixed',
-            left: position.x,
-            [above ? 'bottom' : 'top']: above
-              ? window.innerHeight - position.y + 8
-              : position.y + 8,
-            transform: 'translateX(-50%)',
-            zIndex: 1000,
-            pointerEvents: 'none',
-            fontFamily: 'monospace'
-          }}
-        >
-          <div style={{
-            background: '#1a1a2e',
-            border: `1px solid ${guildColor}`,
-            borderRadius: '8px',
-            padding: '10px 12px',
-            minWidth: '200px',
-            maxWidth: '260px',
-            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.6)',
-          }}>
+        <div className={styles.portal} style={portalPositionStyle}>
+          <div className={styles.tooltipBox} style={{ borderColor: guildColor }}>
             {/* Header: name + cost */}
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              marginBottom: '6px',
-            }}>
-              <span style={{fontWeight: 'bold', fontSize: '14px', color: guildColor}}>
+            <div className={styles.header}>
+              <span className={styles.cardName} style={{ color: guildColor }}>
                 {cardDef.name}
               </span>
               {cardDef.cost > 0 && (
-                <span style={{
-                  background: '#0f3460',
-                  color: '#7ec8e3',
-                  borderRadius: '4px',
-                  padding: '1px 6px',
-                  fontSize: '12px',
-                  fontWeight: 'bold',
-                }}>
-                  {cardDef.cost}
-                </span>
+                <span className={styles.costBadge}>{cardDef.cost}</span>
               )}
             </div>
 
             {/* Type line */}
-            <div style={{
-              fontSize: '11px',
-              color: '#888',
-              borderBottom: '1px solid #333',
-              paddingBottom: '4px',
-              marginBottom: '6px',
-            }}>
+            <div className={styles.typeLine}>
               {GUILD_NAMES[cardDef.guild] ?? cardDef.guild} {TYPE_NAMES[cardDef.type] ?? cardDef.type}
             </div>
 
             {/* Stats for followers */}
             {cardDef.type === 'follower' && (
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                gap: '12px',
-                fontSize: '12px',
-                marginBottom: '6px',
-              }}>
-                <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2px 6px'}}>
-                  <div style={{color: '#888', fontWeight: 'bold'}}>STR</div>
-                  <div style={{color: '#e0e0e0', fontWeight: 'bold'}}>{baseStrength + plusOnePlusOne + buffedStrength}</div>
-                  <div style={{color: '#888'}}>Base</div>
-                  <div style={{color: '#e0e0e0', fontWeight: 'bold'}}>{baseStrength}</div>
-                  {(plusOnePlusOne > 0) && (
+              <div className={`${styles.statsRow} ${styles.mb}`}>
+                <div className={styles.statsGrid}>
+                  <div className={styles.statLabelBold}>STR</div>
+                  <div className={styles.statValue}>{baseStrength + plusOnePlusOne + buffedStrength}</div>
+                  <div className={styles.statLabel}>Base</div>
+                  <div className={styles.statValue}>{baseStrength}</div>
+                  {plusOnePlusOne > 0 && (
                     <>
-                      <div style={{color: '#888'}}>+1/+1</div>
-                      <div style={{color: '#e0e0e0', fontWeight: 'bold'}}>{plusOnePlusOne}</div>
+                      <div className={styles.statLabel}>+1/+1</div>
+                      <div className={styles.statValue}>{plusOnePlusOne}</div>
                     </>
                   )}
-                  {(buffedStrength > 0) && (
+                  {buffedStrength > 0 && (
                     <>
-                      <div style={{color: '#888'}}>Buff</div>
-                      <div style={{color: '#e0e0e0', fontWeight: 'bold'}}>{buffedStrength}</div>
+                      <div className={styles.statLabel}>Buff</div>
+                      <div className={styles.statValue}>{buffedStrength}</div>
                     </>
                   )}
                 </div>
 
-                <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2px 6px'}}>
-                  <div style={{color: '#888'}}>HP</div>
-                  <div style={{color: wounds > 0 ? '#e94560' : '#e0e0e0', fontWeight: 'bold'}}>
+                <div className={styles.statsGrid}>
+                  <div className={styles.statLabel}>HP</div>
+                  <div className={wounds > 0 ? styles.hpDamaged : styles.statValue}>
                     {baseHealth + plusOnePlusOne - wounds} / {baseHealth + plusOnePlusOne}
                   </div>
-                  <div style={{color: '#888'}}>Base</div>
-                  <div style={{color: '#e0e0e0', fontWeight: 'bold'}}>{baseHealth} / {baseHealth}</div>
-                  {(plusOnePlusOne > 0) && (
+                  <div className={styles.statLabel}>Base</div>
+                  <div className={styles.statValue}>{baseHealth} / {baseHealth}</div>
+                  {plusOnePlusOne > 0 && (
                     <>
-                      <div style={{color: '#888'}}>+1/+1</div>
-                      <div style={{color: '#e0e0e0', fontWeight: 'bold'}}>{plusOnePlusOne} / {plusOnePlusOne}</div>
+                      <div className={styles.statLabel}>+1/+1</div>
+                      <div className={styles.statValue}>{plusOnePlusOne} / {plusOnePlusOne}</div>
                     </>
                   )}
-                  {(wounds > 0) && (
+                  {wounds > 0 && (
                     <>
-                      <div style={{color: '#888'}}>Wound</div>
-                      <div style={{color: '#e94560', fontWeight: 'bold'}}>{wounds} / 0</div>
+                      <div className={styles.statLabel}>Wound</div>
+                      <div className={styles.hpDamaged}>{wounds} / 0</div>
                     </>
                   )}
                 </div>
@@ -201,20 +146,17 @@ export default function CardTooltip({cardDef, card, lastingEffects, children}: P
 
             {/* Stages for locations */}
             {cardDef.type === 'location' && cardDef.locationStages && cardDef.locationStages.length > 0 && (
-              <div style={{marginBottom: '6px'}}>
+              <div className={`${styles.locationStages} ${styles.mb}`}>
                 {cardDef.locationStages.map(ls => {
                   const stageCountersRemaining = card ? (card.counters['stage'] ?? 0) : 0;
                   const spentStages = (cardDef.locationStages?.length ?? 0) - stageCountersRemaining;
                   const available = (card?.zone !== 'board') || ls.stage > spentStages;
                   return (
-                    <div key={ls.stage} style={{
-                      fontSize: '11px',
-                      lineHeight: '1.4',
-                      color: available ? '#d0d0d0' : '#555',
-                      textDecoration: available ? 'none' : 'line-through',
-                      marginBottom: '2px',
-                    }}>
-                      <span style={{color: available ? '#888' : '#555', marginRight: '4px'}}>
+                    <div
+                      key={ls.stage}
+                      className={`${styles.locationStage} ${available ? styles['locationStage--available'] : styles['locationStage--spent']}`}
+                    >
+                      <span className={available ? styles['stageBullet--available'] : styles['stageBullet--spent']}>
                         {available ? '●' : '○'}
                       </span>
                       {ls.description ?? `Stage ${ls.stage}`}
@@ -226,65 +168,34 @@ export default function CardTooltip({cardDef, card, lastingEffects, children}: P
 
             {/* Keywords */}
             {cardDef.keywords && cardDef.keywords.length > 0 && (
-              <div style={{
-                display: 'flex',
-                gap: '4px',
-                flexWrap: 'wrap',
-                marginBottom: '6px',
-              }}>
+              <div className={`${styles.keywordList} ${styles.mb}`}>
                 {cardDef.keywords.map(kw => (
-                  <span key={kw} style={{
-                    background: '#2a2a4e',
-                    color: '#b0b0d0',
-                    borderRadius: '3px',
-                    padding: '1px 6px',
-                    fontSize: '10px',
-                    fontStyle: 'italic',
-                  }}>
-                    {kw}
-                  </span>
+                  <span key={kw} className={styles.keyword}>{kw}</span>
                 ))}
               </div>
             )}
 
             {/* Ability description */}
             {cardDef.description && (
-              <div style={{
-                fontSize: '12px',
-                color: '#d0d0d0',
-                lineHeight: '1.4',
-                marginBottom: cardDef.cardDescription ? '6px' : 0,
-              }}>
+              <div className={`${styles.description} ${cardDef.cardDescription ? styles.mb : ''}`}>
                 {cardDef.description}
               </div>
             )}
 
             {/* Standing requirement */}
             {cardDef.standingRequirement && (
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '4px',
-                fontSize: '10px',
-                color: '#888',
-                marginBottom: cardDef.cardDescription ? '6px' : 0,
-              }}>
+              <div className={`${styles.standingRow} ${cardDef.cardDescription ? styles.mb : ''}`}>
                 <span>Requires</span>
                 {Object.entries(cardDef.standingRequirement).map(([guild, count]) => (
-                  <span key={guild} style={{display: 'flex', alignItems: 'center', gap: '2px'}}>
+                  <span key={guild} className={styles.standingGroup}>
                     {Array.from({length: count}, (_, i) => (
                       <span
                         key={i}
-                        style={{
-                          width: '8px',
-                          height: '8px',
-                          borderRadius: '50%',
-                          background: GUILD_COLORS[guild] ?? '#555',
-                          display: 'inline-block',
-                        }}
+                        className={styles.standingDot}
+                        style={{ background: GUILD_COLORS[guild] ?? '#555' }}
                       />
                     ))}
-                    <span style={{color: GUILD_COLORS[guild] ?? '#555'}}>
+                    <span style={{ color: GUILD_COLORS[guild] ?? '#555' }}>
                       {GUILD_NAMES[guild] ?? guild}
                     </span>
                   </span>
@@ -294,14 +205,7 @@ export default function CardTooltip({cardDef, card, lastingEffects, children}: P
 
             {/* Card description / flavor text */}
             {cardDef.cardDescription && (
-              <div style={{
-                fontSize: '11px',
-                color: '#999',
-                fontStyle: 'italic',
-                borderTop: '1px solid #333',
-                paddingTop: '6px',
-                lineHeight: '1.4',
-              }}>
+              <div className={styles.flavorText}>
                 {cardDef.cardDescription}
               </div>
             )}

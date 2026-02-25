@@ -1,0 +1,46 @@
+.title {
+  font-size: 16px;
+  margin-bottom: 12px;
+}
+
+.createBtn {
+  background: var(--color-accent-red);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  cursor: pointer;
+  border-radius: 4px;
+  font-size: 14px;
+  margin-bottom: 16px;
+  font-family: inherit;
+}
+
+.sectionTitle {
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.emptyMessage {
+  color: var(--color-muted);
+}
+
+.gameList {
+  list-style: none;
+  padding: 0;
+}
+
+.gameItem {
+  margin-bottom: 8px;
+}
+
+.joinBtn {
+  background: var(--color-bg-deep);
+  color: white;
+  border: none;
+  padding: 4px 12px;
+  cursor: pointer;
+  border-radius: 4px;
+  margin-left: 8px;
+  font-size: 12px;
+  font-family: inherit;
+}

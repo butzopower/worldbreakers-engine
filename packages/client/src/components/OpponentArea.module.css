@@ -1,0 +1,64 @@
+.opponentArea {
+  opacity: 0.9;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.opponentName {
+  font-size: 13px;
+  font-weight: bold;
+  color: var(--color-muted);
+}
+
+.opponentName--active {
+  color: var(--color-opponent-active);
+}
+
+.resourceBar {
+  display: flex;
+  gap: 12px;
+  font-size: 11px;
+}
+
+.mythium {
+  color: var(--color-mythium);
+}
+
+.power {
+  color: var(--color-power);
+}
+
+.worldbreaker {
+  margin-bottom: 8px;
+}
+
+.board {
+  display: flex;
+  gap: 16px;
+}
+
+.boardSection {
+  flex: 1;
+}
+
+.sectionLabel {
+  font-size: 11px;
+  color: var(--color-muted);
+  margin-bottom: 4px;
+}
+
+.cardList {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.emptyLabel {
+  color: var(--color-faint);
+  font-size: 11px;
+}

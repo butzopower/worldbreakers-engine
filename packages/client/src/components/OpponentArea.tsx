@@ -3,6 +3,7 @@ import { isVisible } from '../types';
 import FollowerCard from './FollowerCard';
 import LocationCard from './LocationCard';
 import { useCardDefinitions } from "../context/CardDefinitions";
+import styles from './OpponentArea.module.css';
 
 interface Props {
   state: FilteredGameState;
@@ -22,33 +23,33 @@ export default function OpponentArea({ state, opponent, interactionMode, onCardC
   const followers = allCards.filter(c => c.zone === 'board' && isFollower(cardDefs[c.definitionId]));
   const locations = allCards.filter(c => c.zone === 'board' && isLocation(cardDefs[c.definitionId]));
 
+  const isActive = state.activePlayer === opponent;
+
   return (
-    <div style={{ opacity: 0.9 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-        <div style={{ fontSize: '13px', fontWeight: 'bold', color: state.activePlayer === opponent ? '#ff6b6b' : '#888' }}>
+    <div className={styles.opponentArea}>
+      <div className={styles.header}>
+        <div className={`${styles.opponentName} ${isActive ? styles['opponentName--active'] : ''}`}>
           Opponent ({opponent})
         </div>
-        <div style={{ display: 'flex', gap: '12px', fontSize: '11px' }}>
-          <span style={{ color: '#00bcd4' }}>Mythium: {player.mythium}</span>
-          <span style={{ color: '#ff9800' }}>Power: {player.power}/10</span>
+        <div className={styles.resourceBar}>
+          <span className={styles.mythium}>Mythium: {player.mythium}</span>
+          <span className={styles.power}>Power: {player.power}/10</span>
           <span>Hand: {hiddenHandCount}</span>
           <span>Standing: E{player.standing.earth} M{player.standing.moon} V{player.standing.void} S{player.standing.stars}</span>
         </div>
       </div>
 
-      {/* Worldbreaker */}
       {worldbreaker && (
-        <div style={{ marginBottom: '8px' }}>
+        <div className={styles.worldbreaker}>
           <FollowerCard card={worldbreaker} />
         </div>
       )}
 
-      {/* Board */}
-      <div style={{ display: 'flex', gap: '16px' }}>
-        <div style={{ flex: 1 }}>
-          <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px' }}>Followers</div>
-          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-            {followers.length === 0 && <span style={{ color: '#555', fontSize: '11px' }}>none</span>}
+      <div className={styles.board}>
+        <div className={styles.boardSection}>
+          <div className={styles.sectionLabel}>Followers</div>
+          <div className={styles.cardList}>
+            {followers.length === 0 && <span className={styles.emptyLabel}>none</span>}
             {followers.map(card => {
               const isTargetable = interactionMode.type === 'choose_target' &&
                 interactionMode.validTargets.includes(card.instanceId);
@@ -67,10 +68,10 @@ export default function OpponentArea({ state, opponent, interactionMode, onCardC
           </div>
         </div>
 
-        <div style={{ flex: 1 }}>
-          <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px' }}>Locations</div>
-          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-            {locations.length === 0 && <span style={{ color: '#555', fontSize: '11px' }}>none</span>}
+        <div className={styles.boardSection}>
+          <div className={styles.sectionLabel}>Locations</div>
+          <div className={styles.cardList}>
+            {locations.length === 0 && <span className={styles.emptyLabel}>none</span>}
             {locations.map(card => {
               const isBreachTarget = interactionMode.type === 'choose_breach_target' &&
                 interactionMode.validLocations.includes(card.instanceId);
@@ -99,4 +100,3 @@ function isFollower(card: ClientCardDefinition): boolean {
 function isLocation(card: ClientCardDefinition): boolean {
   return card.type === 'location';
 }
-

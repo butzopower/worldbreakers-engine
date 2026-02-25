@@ -1,0 +1,83 @@
+.playerArea {
+  margin-top: 8px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.playerName {
+  font-size: 13px;
+  font-weight: bold;
+  color: var(--color-muted);
+}
+
+.playerName--active {
+  color: var(--color-active-player);
+}
+
+.resourceBar {
+  display: flex;
+  gap: 12px;
+  font-size: 11px;
+}
+
+.mythium {
+  color: var(--color-mythium);
+}
+
+.power {
+  color: var(--color-power);
+}
+
+.worldbreaker {
+  margin-bottom: 8px;
+}
+
+.board {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
+.boardSection {
+  flex: 1;
+}
+
+.sectionLabel {
+  font-size: 11px;
+  color: var(--color-muted);
+  margin-bottom: 4px;
+}
+
+.cardList {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.emptyLabel {
+  color: var(--color-faint);
+  font-size: 11px;
+}
+
+.cardWrapper {
+  position: relative;
+}
+
+.abilityButton {
+  position: absolute;
+  bottom: -8px;
+  right: -4px;
+  background: var(--color-bg-deep);
+  color: white;
+  border: none;
+  padding: 1px 4px;
+  cursor: pointer;
+  border-radius: 3px;
+  font-size: 9px;
+  font-family: inherit;
+}

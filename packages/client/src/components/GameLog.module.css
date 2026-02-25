@@ -1,0 +1,21 @@
+.log {
+  background: var(--color-bg-mid);
+  border-radius: 6px;
+  padding: 8px;
+  max-height: 500px;
+  overflow-y: auto;
+  font-size: 11px;
+}
+
+.logTitle {
+  font-weight: bold;
+  margin-bottom: 6px;
+  color: var(--color-muted);
+}
+
+.logEntry {
+  color: #aaa;
+  margin-bottom: 2px;
+  border-bottom: 1px solid var(--color-bg-dark);
+  padding-bottom: 2px;
+}

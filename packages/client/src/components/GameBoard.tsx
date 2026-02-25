@@ -1,6 +1,7 @@
 import type { PlayerId, FilteredGameState, VisibleCard, InteractionMode, PlayerAction } from '../types';
 import PlayerArea from './PlayerArea';
 import OpponentArea from './OpponentArea';
+import styles from './GameBoard.module.css';
 
 interface Props {
   state: FilteredGameState;
@@ -21,11 +22,7 @@ export default function GameBoard({ state, playerId, opponent, interactionMode, 
         onCardClick={onCardClick}
       />
 
-      <div style={{
-        borderTop: '2px solid #e94560', borderBottom: '2px solid #e94560',
-        padding: '4px 0', margin: '8px 0', textAlign: 'center',
-        fontSize: '11px', color: '#888',
-      }}>
+      <div className={styles.battlefield}>
         {state.combat ? `Combat - ${state.combat.step}` : 'Battlefield'}
       </div>
 

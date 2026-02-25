@@ -12,6 +12,7 @@ import LocationCard from './LocationCard';
 import Hand from './Hand';
 import { socket } from '../socket';
 import { useCardDefinitions } from "../context/CardDefinitions";
+import styles from './PlayerArea.module.css';
 
 interface Props {
   state: FilteredGameState;
@@ -32,32 +33,32 @@ export default function PlayerArea({ state, playerId, interactionMode, onCardCli
   const locations = allCards.filter(c => c.zone === 'board' && isLocation(cardDefs[c.definitionId]));
   const hand = allCards.filter(c => c.zone === 'hand');
 
+  const isActive = state.activePlayer === playerId;
+
   return (
-    <div style={{ marginTop: '8px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-        <div style={{ fontSize: '13px', fontWeight: 'bold', color: state.activePlayer === playerId ? '#00ff88' : '#888' }}>
+    <div className={styles.playerArea}>
+      <div className={styles.header}>
+        <div className={`${styles.playerName} ${isActive ? styles['playerName--active'] : ''}`}>
           You ({playerId})
         </div>
-        <div style={{ display: 'flex', gap: '12px', fontSize: '11px' }}>
-          <span style={{ color: '#00bcd4' }}>Mythium: {player.mythium}</span>
-          <span style={{ color: '#ff9800' }}>Power: {player.power}/10</span>
+        <div className={styles.resourceBar}>
+          <span className={styles.mythium}>Mythium: {player.mythium}</span>
+          <span className={styles.power}>Power: {player.power}/10</span>
           <span>Standing: E{player.standing.earth} M{player.standing.moon} V{player.standing.void} S{player.standing.stars}</span>
         </div>
       </div>
 
-      {/* Worldbreaker */}
       {worldbreaker && (
-        <div style={{ marginBottom: '8px' }}>
+        <div className={styles.worldbreaker}>
           <FollowerCard card={worldbreaker} />
         </div>
       )}
 
-      {/* Board - followers and locations */}
-      <div style={{ display: 'flex', gap: '16px', marginBottom: '8px' }}>
-        <div style={{ flex: 1 }}>
-          <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px' }}>Followers</div>
-          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-            {followers.length === 0 && <span style={{ color: '#555', fontSize: '11px' }}>none</span>}
+      <div className={styles.board}>
+        <div className={styles.boardSection}>
+          <div className={styles.sectionLabel}>Followers</div>
+          <div className={styles.cardList}>
+            {followers.length === 0 && <span className={styles.emptyLabel}>none</span>}
             {followers.map(card => {
               const isSelectedAttacker = interactionMode.type === 'select_attackers' &&
                 interactionMode.selected.includes(card.instanceId);
@@ -71,7 +72,7 @@ export default function PlayerArea({ state, playerId, interactionMode, onCardCli
               );
 
               return (
-                <div key={card.instanceId} style={{ position: 'relative' }}>
+                <div key={card.instanceId} className={styles.cardWrapper}>
                   <FollowerCard
                     card={card}
                     selected={isSelectedAttacker || isAssignedBlocker}
@@ -87,12 +88,7 @@ export default function PlayerArea({ state, playerId, interactionMode, onCardCli
                           action: { type: 'use_ability', cardInstanceId: card.instanceId, abilityIndex: 0 },
                         });
                       }}
-                      style={{
-                        position: 'absolute', bottom: '-8px', right: '-4px',
-                        background: '#0f3460', color: 'white', border: 'none',
-                        padding: '1px 4px', cursor: 'pointer', borderRadius: '3px',
-                        fontSize: '9px',
-                      }}
+                      className={styles.abilityButton}
                     >
                       Ability
                     </button>
@@ -103,10 +99,10 @@ export default function PlayerArea({ state, playerId, interactionMode, onCardCli
           </div>
         </div>
 
-        <div style={{ flex: 1 }}>
-          <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px' }}>Locations</div>
-          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-            {locations.length === 0 && <span style={{ color: '#555', fontSize: '11px' }}>none</span>}
+        <div className={styles.boardSection}>
+          <div className={styles.sectionLabel}>Locations</div>
+          <div className={styles.cardList}>
+            {locations.length === 0 && <span className={styles.emptyLabel}>none</span>}
             {locations.map(card => {
               const canDev = legalActions.some(
                 a => a.type === 'develop' && a.locationInstanceId === card.instanceId
@@ -133,7 +129,6 @@ export default function PlayerArea({ state, playerId, interactionMode, onCardCli
         </div>
       </div>
 
-      {/* Hand */}
       <Hand
         cards={hand}
         interactionMode={interactionMode}

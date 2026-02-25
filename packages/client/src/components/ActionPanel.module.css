@@ -1,0 +1,45 @@
+.actionPanel {
+  margin-top: 12px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.btn {
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-family: inherit;
+}
+
+.btnEnabled {
+  background: var(--color-bg-deep);
+  color: white;
+  cursor: pointer;
+}
+
+.btnDisabled {
+  background: #333;
+  color: #666;
+  cursor: default;
+}
+
+.btnAttack {
+  background: var(--color-accent-red);
+  color: white;
+  cursor: pointer;
+}
+
+.statusMessage {
+  margin-top: 8px;
+  font-size: 12px;
+}
+
+.statusWaiting {
+  color: #ffff00;
+}
+
+.statusOpponent {
+  color: var(--color-muted);
+}

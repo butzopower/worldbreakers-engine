@@ -1,0 +1,30 @@
+.app {
+  font-family: monospace;
+  padding: 16px;
+  background: var(--color-bg-dark);
+  color: var(--color-text);
+  min-height: 100vh;
+}
+
+.appTitle {
+  margin: 0 0 16px;
+  font-size: 20px;
+  color: var(--color-accent-red);
+}
+
+.errorBanner {
+  background: var(--color-accent-red);
+  color: white;
+  padding: 8px 12px;
+  border-radius: 4px;
+  margin-bottom: 12px;
+}
+
+.disconnectBtn {
+  background: white;
+  color: var(--color-accent-red);
+  border: none;
+  padding: 4px 8px;
+  cursor: pointer;
+  font-family: inherit;
+}

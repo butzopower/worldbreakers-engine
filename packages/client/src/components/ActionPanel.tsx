@@ -1,4 +1,5 @@
 import type { FilteredGameState, PlayerId, PlayerAction, InteractionMode } from '../types';
+import styles from './ActionPanel.module.css';
 
 interface Props {
   state: FilteredGameState;
@@ -16,37 +17,28 @@ export default function ActionPanel({
   const isMyTurn = state.activePlayer === playerId && !state.pendingChoice && !state.combat;
   const hasPending = state.pendingChoice?.playerId === playerId;
 
-  // In interaction mode, show cancel button
   if (interactionMode.type !== 'none') {
     return null; // InteractionOverlay handles this
   }
 
   if (!isMyTurn) {
     if (hasPending) {
-      return <div style={{ marginTop: '8px', color: '#ffff00', fontSize: '12px' }}>Waiting for your choice...</div>;
+      return <div className={`${styles.statusMessage} ${styles.statusWaiting}`}>Waiting for your choice...</div>;
     }
-    return <div style={{ marginTop: '8px', color: '#888', fontSize: '12px' }}>Opponent's turn</div>;
+    return <div className={`${styles.statusMessage} ${styles.statusOpponent}`}>Opponent's turn</div>;
   }
 
   const hasAction = (type: string) => legalActions.some(a => a.type === type);
   const canAttack = legalActions.some(a => a.type === 'attack');
 
-  const btnStyle = (enabled: boolean) => ({
-    background: enabled ? '#0f3460' : '#333',
-    color: enabled ? 'white' : '#666',
-    border: 'none',
-    padding: '6px 12px',
-    cursor: enabled ? 'pointer' : 'default',
-    borderRadius: '4px',
-    fontSize: '12px',
-  });
+  const btnClass = (enabled: boolean) => `${styles.btn} ${enabled ? styles.btnEnabled : styles.btnDisabled}`;
 
   return (
-    <div style={{ marginTop: '12px', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+    <div className={styles.actionPanel}>
       <button
         onClick={() => onAction({ type: 'gain_mythium' })}
         disabled={!hasAction('gain_mythium')}
-        style={btnStyle(hasAction('gain_mythium'))}
+        className={btnClass(hasAction('gain_mythium'))}
       >
         +1 Mythium
       </button>
@@ -54,7 +46,7 @@ export default function ActionPanel({
       <button
         onClick={() => onAction({ type: 'draw_card' })}
         disabled={!hasAction('draw_card')}
-        style={btnStyle(hasAction('draw_card'))}
+        className={btnClass(hasAction('draw_card'))}
       >
         Draw Card
       </button>
@@ -65,7 +57,7 @@ export default function ActionPanel({
           <button
             key={guild}
             onClick={() => onAction({ type: 'buy_standing', guild })}
-            style={btnStyle(true)}
+            className={`${styles.btn} ${styles.btnEnabled}`}
           >
             Buy {guild} Standing
           </button>
@@ -73,10 +65,7 @@ export default function ActionPanel({
       })}
 
       {canAttack && (
-        <button
-          onClick={onStartAttack}
-          style={{ ...btnStyle(true), background: '#e94560' }}
-        >
+        <button onClick={onStartAttack} className={`${styles.btn} ${styles.btnAttack}`}>
           Attack
         </button>
       )}
