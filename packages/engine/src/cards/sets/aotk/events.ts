@@ -16,7 +16,7 @@ export const events: CardDefinition[] = [
     cost: 0,
     standingRequirement: { earth: 1 },
     abilities: [{
-      timing: 'enters',
+      timing: 'play',
       customResolve: 'call_to_arms',
       description: 'Reveal cards from the top of your deck until you reveal two follower cards. Draw them both and shuffle your deck. You may play one of those cards (paying all costs).',
     }]
@@ -30,7 +30,7 @@ export const events: CardDefinition[] = [
     standingRequirement: { earth: 2 },
     description: 'Deplete a non-hidden location. (It is placed in its owner\'s discard pile.)',
     abilities: [{
-      timing: 'enters',
+      timing: 'play',
       effects: [{ type: 'destroy', target: { kind: 'choose', filter: { type: 'location', zone: ['board'], notKeyword: 'hidden' }, count: 1 } }],
       description: 'Deplete a non-hidden location.',
     }],
@@ -43,7 +43,7 @@ export const events: CardDefinition[] = [
     cost: 5,
     description: 'Gain 9 Mythium.',
     abilities: [{
-      timing: 'enters',
+      timing: 'play',
       effects: [{ type: 'gain_mythium', player: 'self', amount: 9 }],
       description: 'Gain 9 Mythium.',
     }],
@@ -56,7 +56,7 @@ export const events: CardDefinition[] = [
     cost: 2,
     description: 'Attack. Response: The first time you gain power during this combat → Gain 5 mythium.',
     abilities: [{
-      timing: 'enters',
+      timing: 'play',
       effects: [
         { type: 'register_combat_response', trigger: 'on_power_gain', effects: [{ type: 'gain_mythium', player: 'self', amount: 5 }] },
         { type: 'initiate_attack' },
@@ -73,7 +73,7 @@ export const events: CardDefinition[] = [
     standingRequirement: { void: 1 },
     description: 'Your followers gain lethal until end of combat. Attack.',
     abilities: [{
-      timing: 'enters',
+      timing: 'play',
       effects: [
         {
           type: 'grant_lasting_effect',
@@ -95,7 +95,7 @@ export const events: CardDefinition[] = [
     standingRequirement: { earth: 1 },
     description: 'Choose one: Draw 2 cards and gain 1 standing with any guild. • Spend 1 Earth standing. If you do, gain 5 Mythium.',
     abilities: [{
-      timing: 'enters',
+      timing: 'play',
       effects: [{
         type: 'choose_one',
         modes: [
@@ -126,7 +126,7 @@ export const events: CardDefinition[] = [
     cost: 0,
     description: 'Play a follower card, paying 2 mythium less.',
     abilities: [{
-      timing: 'enters',
+      timing: 'play',
       effects: [{ type: 'play_card', target: { kind: 'choose', filter: { type: 'follower', zone: ['hand'], owner: 'controller', canPay: { costReduction: 2 } }, count: 1 }, costReduction: 2 }],
       description: 'Play a follower card, paying 2 mythium less.',
     }],
@@ -140,7 +140,7 @@ export const events: CardDefinition[] = [
     standingRequirement: { moon: 1 },
     description: 'Defeat a follower with printed cost 3 or less.',
     abilities: [{
-      timing: 'enters',
+      timing: 'play',
       effects: [{ type: 'destroy', target: { kind: 'choose', filter: { type: 'follower', zone: ['board'], maxCost: 3 }, count: 1 } }],
       description: 'Defeat a follower with printed cost 3 or less.',
     }],
@@ -154,7 +154,7 @@ export const events: CardDefinition[] = [
     standingRequirement: { stars: 2 },
     description: 'Develop a location you control. Develop a location you control.',
     abilities: [{
-      timing: 'enters',
+      timing: 'play',
       effects: [
         { type: 'develop', target: { kind: 'choose', filter: { type: 'location', zone: ['board'], owner: 'controller' }, count: 1 } },
         { type: 'develop', target: { kind: 'choose', filter: { type: 'location', zone: ['board'], owner: 'controller' }, count: 1 } },
@@ -171,7 +171,7 @@ export const events: CardDefinition[] = [
     standingRequirement: { moon: 3 },
     description: 'Choose one: Defeat all followers. Deplete all locations.',
     abilities: [{
-      timing: 'enters',
+      timing: 'play',
       effects: [{
         type: 'choose_one',
         modes: [
@@ -197,7 +197,7 @@ export const events: CardDefinition[] = [
     standingRequirement: { void: 1 },
     description: 'Gain 2 Mythium. You may attack.',
     abilities: [{
-      timing: 'enters',
+      timing: 'play',
       effects: [
         { type: 'gain_mythium', player: 'self', amount: 2 },
         { type: 'choose_one', modes: [
@@ -217,7 +217,7 @@ export const events: CardDefinition[] = [
     standingRequirement: { earth: 3 },
     description: 'Play a follower card (paying all costs). Attack.',
     abilities: [{
-      timing: 'enters',
+      timing: 'play',
       effects: [
         { type: 'play_card', target: { kind: 'choose', filter: { type: 'follower', zone: ['hand'], owner: 'controller', canPay: {} }, count: 1 } },
         { type: 'initiate_attack' },
@@ -234,7 +234,7 @@ export const events: CardDefinition[] = [
     standingRequirement: { earth: 1 },
     description: 'Defeat a wounded follower.',
     abilities: [{
-      timing: 'enters',
+      timing: 'play',
       effects: [{ type: 'destroy', target: { kind: 'choose', filter: { type: 'follower', zone: ['board'], wounded: true }, count: 1 } }],
       description: 'Defeat a wounded follower.',
     }],

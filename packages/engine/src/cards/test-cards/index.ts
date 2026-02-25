@@ -111,7 +111,7 @@ const testCards: CardDefinition[] = [
     guild: 'neutral',
     cost: 0,
     abilities: [{
-      timing: 'enters',
+      timing: 'play',
       effects: [{ type: 'destroy', target: { kind: 'choose', filter: { type: 'follower', zone: ['board'] }, count: 1 } }],
       description: 'Defeat target follower.',
     }],
@@ -123,7 +123,7 @@ const testCards: CardDefinition[] = [
     guild: 'neutral',
     cost: 0,
     abilities: [{
-      timing: 'enters',
+      timing: 'play',
       effects: [{ type: 'destroy', target: { kind: 'choose', filter: { type: 'location', zone: ['board'] }, count: 1 } }],
       description: 'Deplete target location.',
     }],
@@ -135,7 +135,7 @@ const testCards: CardDefinition[] = [
     guild: 'neutral',
     cost: 0,
     abilities: [{
-      timing: 'enters',
+      timing: 'play',
       effects: [{ type: 'gain_mythium', player: 'self', amount: 3}],
       description: 'Choose one: Gain 2 mythium, or draw 2 cards.',
     }],
@@ -148,7 +148,7 @@ const testCards: CardDefinition[] = [
     standingRequirement: { earth: 1 },
     cost: 1,
     abilities: [{
-      timing: 'enters',
+      timing: 'play',
       effects: [{ type: 'deal_wounds', target: { kind: 'choose', filter: { type: 'follower', zone: ['board'] }, count: 1 }, amount: 2 }],
       description: 'Deal 2 wounds to target follower.',
     }],
@@ -161,7 +161,7 @@ const testCards: CardDefinition[] = [
     standingRequirement: { void: 3 },
     cost: 3,
     abilities: [{
-      timing: 'enters',
+      timing: 'play',
       customResolve: 'void_rift',
       description: 'Each player discards 1 card. Gain 1 power.',
     }],
@@ -173,7 +173,7 @@ const testCards: CardDefinition[] = [
     guild: 'neutral',
     cost: 0,
     abilities: [{
-      timing: 'enters',
+      timing: 'play',
       effects: [{
         type: 'choose_one',
         modes: [

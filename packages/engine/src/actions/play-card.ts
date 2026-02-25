@@ -33,11 +33,11 @@ export function handlePlayCard(
     events.push(...moveResult.events);
     events.push({ type: 'card_played', player, cardInstanceId, definitionId: def.id });
 
-    // Resolve enters abilities
+    // Resolve play abilities
     if (def.abilities) {
       for (let i = 0; i < def.abilities.length; i++) {
         const ability = def.abilities[i];
-        if (ability.timing === 'enters') {
+        if (ability.timing === 'play') {
           const abilityResult = resolveAbility(s, player, cardInstanceId, ability, i);
           s = abilityResult.state;
           events.push(...abilityResult.events);
