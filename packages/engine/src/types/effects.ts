@@ -59,6 +59,7 @@ export type EffectPrimitive =
 
 export type AbilityTiming =
   | 'enters'
+  | 'play'
   | 'action'
   | 'rally'
   | 'attacks'
