@@ -89,6 +89,7 @@ export function createGameState(config: GameConfig): GameState {
     combatResponses: [],
     rngState,
     winner: null,
+    stepQueue: null,
   };
 
   const p1Shuffle = shuffleDeck(state, 'player1');

@@ -18,6 +18,7 @@ export type { PlayerAction, ActionInput } from './types/actions';
 export type { GameEvent } from './types/events';
 export type { EffectPrimitive, AbilityDefinition, AbilityTiming, TargetSelector, PlayerSelector, CardFilter } from './types/effects';
 export type { CounterType, CounterMap } from './types/counters';
+export type { EngineStep } from './types/steps';
 
 // State queries
 export {

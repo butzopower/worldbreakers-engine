@@ -1,30 +1,25 @@
-import { GameState, PendingChoice } from '../types/state';
+import { CombatResponseTrigger, GameState, PendingChoice } from '../types/state';
 import { ActionInput, PlayerAction } from '../types/actions';
 import { GameEvent } from '../types/events';
 import { PlayerId, STANDING_GUILDS, opponentOf } from '../types/core';
+import { EngineStep } from '../types/steps';
 import { validateAction } from './validator';
-import { advanceTurn } from './phases';
-import { runCleanup } from './cleanup';
+import { drainQueue, resolveEffectsWithQueue } from './step-handlers';
 
-import { resolveTriggeredAbilities } from '../abilities/triggers';
-import { handleGainMythium } from '../actions/gain-mythium';
 import { handleDrawCard } from '../actions/draw-card';
 import { handleBuyStanding } from '../actions/buy-standing';
-import { handlePlayCard } from '../actions/play-card';
-import { handleAttack } from '../actions/attack';
-import { handleDevelop } from '../actions/develop';
-import { handleUseAbility } from '../actions/use-ability';
-import { declareBlocker, passBlock, endCombat, resumeBreach, resumePostBlock, initiateAttack } from '../combat/combat';
-import { handleBreachDamage, handleSkipBreachDamage } from '../combat/breach';
+
 import { resolveEffects } from '../abilities/resolver';
-import { ResolveContext, findValidTargets, resolvePrimitive } from '../abilities/primitives';
-import { moveCard, gainPower } from '../state/mutate';
-import { getCard, getHand, getCardDef, canPay, hasKeyword } from '../state/query';
+import { ResolveContext } from '../abilities/primitives';
+import { moveCard, gainPower, exhaustCard, spendMythium, addCounterToCard, removeCounterFromCard } from '../state/mutate';
+import { getCard, getHand, getCardDef, canPay, hasKeyword, getPassiveCostReduction, getLocationStage } from '../state/query';
 import { getCounter } from '../types/counters';
 import {
   canPlayCard, canAttack, canBlock, canBlockAttacker, canDevelop, canUseAbility,
   getFollowers, getLocations, getBoard,
 } from '../state/query';
+import { resolveSingleFight } from '../combat/damage';
+import { runCleanup } from './cleanup';
 
 export interface ProcessResult {
   state: GameState;
@@ -43,376 +38,612 @@ export function processAction(state: GameState, input: ActionInput): ProcessResu
   }
 
   const { player, action } = input;
-  let result: { state: GameState; events: GameEvent[] };
 
-  // Handle pending choices first
   if (state.pendingChoice) {
-    result = handlePendingChoice(state, player, action);
-  } else if (state.combat) {
-    result = handleCombatAction(state, player, action);
-  } else {
-    result = handleActionPhaseAction(state, player, action);
-  }
+    // Resolve choice, then resume draining the queue
+    const choiceResult = resolveChoice(state, player, action);
+    let s = choiceResult.state;
+    let events = choiceResult.events;
 
-  let s = result.state;
-  let events = result.events;
-
-  // Resolve triggered abilities for defeat/deplete events (when not waiting for input)
-  if (!s.pendingChoice && !s.combat) {
-    const triggerResult = resolveEventTriggers(s, events);
-    s = triggerResult.state;
-    events = triggerResult.events;
-  }
-
-  // If a new pending choice was created, return waiting
-  if (s.pendingChoice) {
-    return { state: s, events, waitingFor: s.pendingChoice };
-  }
-
-  return { state: s, events };
-}
-
-function handleActionPhaseAction(
-  state: GameState,
-  player: PlayerId,
-  action: PlayerAction,
-): { state: GameState; events: GameEvent[] } {
-  let result: { state: GameState; events: GameEvent[] };
-
-  switch (action.type) {
-    case 'gain_mythium':
-      result = handleGainMythium(state, player);
-      break;
-    case 'draw_card':
-      result = handleDrawCard(state, player);
-      break;
-    case 'buy_standing':
-      result = handleBuyStanding(state, player, action.guild);
-      break;
-    case 'play_card':
-      result = handlePlayCard(state, player, action.cardInstanceId);
-      break;
-    case 'attack':
-      result = handleAttack(state, player, action.attackerIds);
-      // Attack doesn't consume a turn action - it initiates combat
-      // But combat itself is the action, so we do advance after combat resolves
-      // Actually, attack IS the action - advance turn
-      // But we need to wait for combat to resolve first
-      if (result.state.combat || result.state.pendingChoice) {
-        return result; // Don't advance turn yet - combat in progress
-      }
-      break;
-    case 'develop':
-      result = handleDevelop(state, player, action.locationInstanceId);
-      break;
-    case 'use_ability':
-      result = handleUseAbility(state, player, action.cardInstanceId, action.abilityIndex);
-      break;
-    default:
-      throw new Error(`Unhandled action type in action phase: ${action.type}`);
-  }
-
-  // If there's a pending choice or combat, don't advance turn yet
-  if (result.state.pendingChoice || result.state.combat) {
-    return result;
-  }
-
-  // Advance turn (increment action count, switch player)
-  return advanceTurn(result.state, result.events);
-}
-
-function handleCombatAction(
-  state: GameState,
-  player: PlayerId,
-  action: PlayerAction,
-): { state: GameState; events: GameEvent[] } {
-  let result: { state: GameState; events: GameEvent[] };
-
-  switch (action.type) {
-    case 'declare_blocker':
-      result = declareBlocker(state, action.blockerId, action.attackerId);
-      break;
-    case 'pass_block':
-      result = passBlock(state);
-      break;
-    case 'damage_location':
-      result = handleBreachDamage(state, action.locationInstanceId);
-      break;
-    case 'skip_breach_damage':
-      result = handleSkipBreachDamage(state);
-      break;
-    default:
-      throw new Error(`Invalid combat action: ${action.type}`);
-  }
-
-  // If combat ended, advance turn
-  if (!result.state.combat && !result.state.pendingChoice) {
-    return advanceTurn(result.state, result.events);
-  }
-
-  return result;
-}
-
-function handlePendingChoice(
-  state: GameState,
-  player: PlayerId,
-  action: PlayerAction,
-): { state: GameState; events: GameEvent[] } {
-  const choice = state.pendingChoice!;
-  let s = state;
-  const events: GameEvent[] = [];
-
-  switch (choice.type) {
-    case 'choose_target': {
-      if (action.type !== 'choose_target') throw new Error('Expected choose_target');
-      s = { ...s, pendingChoice: null };
-
-      const ctx: ResolveContext = {
-        controller: choice.playerId,
-        sourceCardId: choice.sourceCardId,
-        triggeringCardId: choice.triggeringCardId,
-        chosenTargets: [action.targetInstanceId],
+    // Convert remainingEffects (from legacy resolveEffects) to a queue step
+    if (s.remainingEffects) {
+      const remaining = s.remainingEffects;
+      s = { ...s, remainingEffects: undefined };
+      const remainingStep: EngineStep = {
+        type: 'resolve_effects',
+        effects: remaining.effects,
+        ctx: { controller: remaining.controller, sourceCardId: remaining.sourceCardId, triggeringCardId: remaining.triggeringCardId },
       };
-      const effectResult = resolveEffects(s, choice.effects, ctx);
-      s = effectResult.state;
-      events.push(...effectResult.events);
-
-      const cleanupResult = runCleanup(s);
-      s = cleanupResult.state;
-      events.push(...cleanupResult.events);
-
-      break;
+      const existingQueue = s.stepQueue ?? [];
+      s = { ...s, stepQueue: [remainingStep, ...existingQueue] };
     }
 
-    case 'choose_discard': {
-      if (action.type !== 'choose_discard') throw new Error('Expected choose_discard');
-      s = { ...s, pendingChoice: null };
-      for (const cardId of action.cardInstanceIds) {
-        const moveResult = moveCard(s, cardId, 'discard');
-        s = moveResult.state;
-        events.push(...moveResult.events);
-        const card = getCard(state, cardId);
-        if (card) {
-          events.push({ type: 'card_discarded', player: card.owner, cardInstanceId: cardId });
-        }
+    // If the choice resolution already set a new pending choice, return
+    if (s.pendingChoice) {
+      // Merge any prepended steps into the queue
+      if (choiceResult.prepend && choiceResult.prepend.length > 0) {
+        const existingQueue = s.stepQueue ?? [];
+        s = { ...s, stepQueue: [...choiceResult.prepend, ...existingQueue] };
       }
-
-      // Handle Void Rift multi-phase discard
-      if (choice.nextPhase === 'controller_discard') {
-        const controller = opponentOf(choice.playerId);
-        const controllerHand = getHand(s, controller);
-        if (controllerHand.length > 0) {
-          s = {
-            ...s,
-            pendingChoice: {
-              type: 'choose_discard',
-              playerId: controller,
-              count: 1,
-              sourceCardId: choice.sourceCardId,
-              phase: 'controller_discard',
-              nextPhase: 'gain_power',
-            },
-          };
-          return { state: s, events };
-        }
-        // Fall through to gain power
-        const powerResult = gainPower(s, controller, 1);
-        s = powerResult.state;
-        events.push(...powerResult.events);
-      } else if (choice.nextPhase === 'gain_power') {
-        const powerResult = gainPower(s, choice.playerId, 1);
-        s = powerResult.state;
-        events.push(...powerResult.events);
-      }
-
-      break;
+      return { state: s, events, waitingFor: s.pendingChoice ?? undefined};
     }
 
-    case 'choose_blockers': {
-      if (action.type === 'declare_blocker') {
-        const result = declareBlocker(s, action.blockerId, action.attackerId);
-        // If combat ended, advance turn
-        if (!result.state.combat && !result.state.pendingChoice) {
-          return advanceTurn(result.state, result.events);
-        }
-        return result;
-      } else if (action.type === 'pass_block') {
-        const result = passBlock(s);
-        // If combat ended, advance turn
-        if (!result.state.combat && !result.state.pendingChoice) {
-          return advanceTurn(result.state, result.events);
-        }
-        return result;
-      }
-      throw new Error('Expected declare_blocker or pass_block');
+    // Prepend any new steps from choice resolution
+    if (choiceResult.prepend && choiceResult.prepend.length > 0) {
+      const existingQueue = s.stepQueue ?? [];
+      s = { ...s, stepQueue: [...choiceResult.prepend, ...existingQueue] };
     }
 
-    case 'choose_breach_target': {
-      let result: { state: GameState; events: GameEvent[] };
-      if (action.type === 'damage_location') {
-        result = handleBreachDamage(s, action.locationInstanceId);
-      } else if (action.type === 'skip_breach_damage') {
-        result = handleSkipBreachDamage(s);
-      } else {
-        throw new Error('Expected damage_location or skip_breach_damage');
-      }
-      if (!result.state.combat && !result.state.pendingChoice) {
-        return advanceTurn(result.state, result.events);
-      }
-      return result;
+    // Resume draining
+    if (s.stepQueue && s.stepQueue.length > 0) {
+      const drainResult = drainQueue(s, events);
+      s = drainResult.state;
+      events = drainResult.events;
+    } else {
+      s = { ...s, stepQueue: null };
     }
 
-    case 'choose_mode': {
-      if (action.type !== 'choose_mode') throw new Error('Expected choose_mode');
-      s = { ...s, pendingChoice: null };
-      const selectedMode = choice.modes[action.modeIndex];
-      const ctx: ResolveContext = {
-        controller: choice.playerId,
-        sourceCardId: choice.sourceCardId,
-      };
-      const effectResult = resolveEffects(s, selectedMode.effects, ctx);
-      s = effectResult.state;
-      events.push(...effectResult.events);
-
-      const cleanupResult = runCleanup(s);
-      s = cleanupResult.state;
-      events.push(...cleanupResult.events);
-      break;
+    if (s.pendingChoice) {
+      return { state: s, events, waitingFor: s.pendingChoice };
     }
-
-    case 'choose_attackers': {
-      if (action.type !== 'choose_attackers') throw new Error('Expected choose_attackers');
-      s = { ...s, pendingChoice: null };
-      const attackResult = initiateAttack(s, choice.playerId, action.attackerIds);
-      s = attackResult.state;
-      events.push(...attackResult.events);
-      break;
-    }
-
-  }
-
-  // Process remaining effects if no pending choice was set
-  if (!s.pendingChoice && s.remainingEffects) {
-    const remaining = s.remainingEffects;
-    s = { ...s, remainingEffects: undefined };
-
-    const remainCtx: ResolveContext = {
-      controller: remaining.controller,
-      sourceCardId: remaining.sourceCardId,
-      triggeringCardId: remaining.triggeringCardId,
-    };
-
-    for (let i = 0; i < remaining.effects.length; i++) {
-      const effect = remaining.effects[i];
-
-      if ('target' in effect && effect.target && effect.target.kind === 'choose') {
-        const validTargets = findValidTargets(s, effect.target, remainCtx);
-        if (validTargets.length === 0) {
-          continue;
-        }
-
-        const nextRemaining = remaining.effects.slice(i + 1);
-        s = {
-          ...s,
-          pendingChoice: {
-            type: 'choose_target',
-            playerId: remaining.controller,
-            sourceCardId: remaining.sourceCardId,
-            abilityIndex: 0,
-            effects: [effect],
-            filter: effect.target.filter,
-            triggeringCardId: remaining.triggeringCardId,
-          },
-        };
-        if (nextRemaining.length > 0) {
-          s.remainingEffects = { effects: nextRemaining, controller: remaining.controller, sourceCardId: remaining.sourceCardId, triggeringCardId: remaining.triggeringCardId };
-        }
-        break;
-      }
-
-      const r = resolvePrimitive(s, effect, remainCtx);
-      s = r.state;
-      events.push(...r.events);
-      if (s.pendingChoice) break;
-    }
-  }
-
-  // Attack-phase trigger resolved → transition to declare_blockers.
-  if (!s.pendingChoice && s.combat?.step === 'resolve_attack_abilities') {
-    const defender = opponentOf(s.combat.attackingPlayer);
-    s = {
-      ...s,
-      combat: { ...s.combat, step: 'declare_blockers' },
-      pendingChoice: { type: 'choose_blockers', playerId: defender, attackerIds: s.combat.attackerIds },
-    };
     return { state: s, events };
   }
 
-  // Post-block trigger (e.g. overwhelms) resolved → resume post-block flow.
-  if (!s.pendingChoice && s.combat?.step === 'declare_blockers') {
-    const result = resumePostBlock(s, [], s.combat.attackerIds);
+  // Build initial queue from the action
+  const { state: preState, events: preEvents, queue } = buildInitialQueue(state, player, action);
+  const result = drainQueue({ ...preState, stepQueue: queue }, preEvents);
+
+  if (result.state.pendingChoice) {
+    return { state: result.state, events: result.events, waitingFor: result.state.pendingChoice };
+  }
+  return { state: result.state, events: result.events };
+}
+
+// --- Queue Builders ---
+
+function buildInitialQueue(
+  state: GameState,
+  player: PlayerId,
+  action: PlayerAction,
+): { state: GameState; events: GameEvent[]; queue: EngineStep[] } {
+  switch (action.type) {
+    case 'gain_mythium':
+      return buildSimpleActionQueue(state, player, action);
+    case 'draw_card':
+      return buildSimpleActionQueue(state, player, action);
+    case 'buy_standing':
+      return buildSimpleActionQueue(state, player, action);
+    case 'play_card':
+      return advanceTurn(buildPlayCardQueue(state, player, action.cardInstanceId));
+    case 'attack':
+      return buildAttackQueue(state, player, action.attackerIds);
+    case 'develop':
+      return buildDevelopQueue(state, player, action.locationInstanceId);
+    case 'use_ability':
+      return buildUseAbilityQueue(state, player, action.cardInstanceId, action.abilityIndex);
+    default:
+      throw new Error(`Unhandled action type: ${(action as PlayerAction).type}`);
+  }
+}
+
+function advanceTurn(
+  {state, events, queue}: { state: GameState; events: GameEvent[]; queue: EngineStep[] }
+): { state: GameState; events: GameEvent[]; queue: EngineStep[] } {
+  return {state, events, queue: [...queue, { type: 'advance_turn' }]};
+}
+
+function buildSimpleActionQueue(
+  state: GameState,
+  player: PlayerId,
+  action: PlayerAction,
+): { state: GameState; events: GameEvent[]; queue: EngineStep[] } {
+  let s = state;
+  const events: GameEvent[] = [];
+
+  switch (action.type) {
+    case 'gain_mythium': {
+      return { state: s, events, queue: [{type: 'gain_mythium', player, amount: 1}, { type: 'cleanup' }, { type: 'advance_turn' }] }
+    }
+    case 'draw_card': {
+      const r = handleDrawCard(s, player);
+      s = r.state;
+      events.push(...r.events);
+      break;
+    }
+    case 'buy_standing': {
+      if (action.type !== 'buy_standing') break;
+      const r = handleBuyStanding(s, player, action.guild);
+      s = r.state;
+      events.push(...r.events);
+      break;
+    }
+  }
+
+  return { state: s, events, queue: [{ type: 'cleanup' }, { type: 'advance_turn' }] };
+}
+
+export function buildPlayCardQueue(
+  state: GameState,
+  player: PlayerId,
+  cardInstanceId: string,
+  opts?: { costReduction?: number },
+): { state: GameState; events: GameEvent[]; queue: EngineStep[] } {
+  const card = getCard(state, cardInstanceId)!;
+  const def = getCardDef(card);
+  const events: GameEvent[] = [];
+  let s = state;
+
+  // Pay mythium cost
+  const passiveReduction = getPassiveCostReduction(state, player, def);
+  const actualCost = Math.max(0, def.cost - passiveReduction - (opts?.costReduction ?? 0));
+  if (actualCost > 0) {
+    const payResult = spendMythium(s, player, actualCost);
+    s = payResult.state;
+    events.push(...payResult.events);
+  }
+
+  const queue: EngineStep[] = [];
+
+  if (def.type === 'event') {
+    // Events go to discard
+    const moveResult = moveCard(s, cardInstanceId, 'discard');
+    s = moveResult.state;
+    events.push(...moveResult.events);
+    events.push({ type: 'card_played', player, cardInstanceId, definitionId: def.id });
+
+    // Queue play abilities
+    if (def.abilities) {
+      for (let i = 0; i < def.abilities.length; i++) {
+        if (def.abilities[i].timing === 'play') {
+          if (def.abilities[i].customResolve) {
+            queue.push({ type: 'resolve_custom_ability', controller: player, sourceCardId: cardInstanceId, customResolve: def.abilities[i].customResolve! });
+          } else {
+            queue.push({ type: 'resolve_ability', controller: player, sourceCardId: cardInstanceId, abilityIndex: i });
+          }
+        }
+      }
+    }
+  } else if (def.type === 'location') {
+    // Location enters board with stage counters
+    const moveResult = moveCard(s, cardInstanceId, 'board');
+    s = moveResult.state;
+    events.push(...moveResult.events);
+    events.push({ type: 'card_played', player, cardInstanceId, definitionId: def.id });
+
+    if (def.stages && def.stages > 0) {
+      const counterResult = addCounterToCard(s, cardInstanceId, 'stage', def.stages);
+      s = counterResult.state;
+      events.push(...counterResult.events);
+    }
+
+    // Queue enters abilities
+    if (def.abilities) {
+      for (let i = 0; i < def.abilities.length; i++) {
+        if (def.abilities[i].timing === 'enters') {
+          if (def.abilities[i].customResolve) {
+            queue.push({ type: 'resolve_custom_ability', controller: player, sourceCardId: cardInstanceId, customResolve: def.abilities[i].customResolve! });
+          } else {
+            queue.push({ type: 'resolve_ability', controller: player, sourceCardId: cardInstanceId, abilityIndex: i });
+          }
+        }
+      }
+    }
+  } else {
+    // Followers enter board
+    const moveResult = moveCard(s, cardInstanceId, 'board');
+    s = moveResult.state;
+    events.push(...moveResult.events);
+    events.push({ type: 'card_played', player, cardInstanceId, definitionId: def.id });
+
+    // Queue enters abilities
+    if (def.abilities) {
+      for (let i = 0; i < def.abilities.length; i++) {
+        if (def.abilities[i].timing === 'enters') {
+          if (def.abilities[i].customResolve) {
+            queue.push({ type: 'resolve_custom_ability', controller: player, sourceCardId: cardInstanceId, customResolve: def.abilities[i].customResolve! });
+          } else {
+            queue.push({ type: 'resolve_ability', controller: player, sourceCardId: cardInstanceId, abilityIndex: i });
+          }
+        }
+      }
+    }
+  }
+
+  queue.push({ type: 'cleanup' });
+
+  return { state: s, events, queue };
+}
+
+function buildDevelopQueue(
+  state: GameState,
+  player: PlayerId,
+  locationInstanceId: string,
+): { state: GameState; events: GameEvent[]; queue: EngineStep[] } {
+  let s = state;
+  const events: GameEvent[] = [];
+
+  // Remove one stage counter
+  const removeResult = removeCounterFromCard(s, locationInstanceId, 'stage', 1);
+  s = removeResult.state;
+  events.push(...removeResult.events);
+
+  const card = getCard(s, locationInstanceId)!;
+  const def = getCardDef(card);
+  const currentStage = getLocationStage(card);
+  const developedStage = currentStage - 1;
+
+  events.push({ type: 'location_developed', locationInstanceId, stage: developedStage });
+
+  const queue: EngineStep[] = [];
+
+  // Queue the stage ability
+  if (def.locationStages) {
+    const stageAbility = def.locationStages.find(ls => ls.stage === developedStage);
+    if (stageAbility) {
+      if (stageAbility.ability.customResolve) {
+        queue.push({ type: 'resolve_custom_ability', controller: player, sourceCardId: locationInstanceId, customResolve: stageAbility.ability.customResolve });
+      } else if (stageAbility.ability.effects && stageAbility.ability.effects.length > 0) {
+        queue.push({ type: 'resolve_effects', effects: stageAbility.ability.effects, ctx: { controller: player, sourceCardId: locationInstanceId } });
+      }
+    }
+  }
+
+  // Cleanup immediately — handles depletion (0 stage counters) before abilities run
+  // This matches old behavior where handleDevelop ran runCleanup synchronously
+  const cleanupResult = runCleanup(s);
+  s = cleanupResult.state;
+  events.push(...cleanupResult.events);
+
+  queue.push({ type: 'cleanup' }, { type: 'advance_turn' });
+
+  return { state: s, events, queue };
+}
+
+function buildUseAbilityQueue(
+  state: GameState,
+  player: PlayerId,
+  cardInstanceId: string,
+  abilityIndex: number,
+): { state: GameState; events: GameEvent[]; queue: EngineStep[] } {
+  let s = state;
+  const events: GameEvent[] = [];
+  const card = getCard(s, cardInstanceId)!;
+  const def = getCardDef(card);
+
+  // Exhaust the card if it's a follower
+  if (def.type === 'follower') {
+    const exhaustResult = exhaustCard(s, cardInstanceId);
+    s = exhaustResult.state;
+    events.push(...exhaustResult.events);
+  }
+
+  // Mark ability as used this turn
+  s = {
+    ...s,
+    cards: s.cards.map(c =>
+      c.instanceId === cardInstanceId
+        ? { ...c, usedAbilities: [...c.usedAbilities, abilityIndex] }
+        : c
+    ),
+  };
+
+  const ability = def.abilities![abilityIndex];
+
+  const queue: EngineStep[] = [];
+
+  if (ability.customResolve) {
+    queue.push({ type: 'resolve_custom_ability', controller: player, sourceCardId: cardInstanceId, customResolve: ability.customResolve });
+  } else {
+    queue.push({ type: 'resolve_ability', controller: player, sourceCardId: cardInstanceId, abilityIndex });
+  }
+
+  queue.push({ type: 'cleanup' }, { type: 'advance_turn' });
+
+  return { state: s, events, queue };
+}
+
+function buildAttackQueue(
+  state: GameState,
+  player: PlayerId,
+  attackerIds: string[],
+): { state: GameState; events: GameEvent[]; queue: EngineStep[] } {
+  let s = state;
+  const events: GameEvent[] = [];
+
+  // Exhaust all attackers
+  for (const id of attackerIds) {
+    const result = exhaustCard(s, id);
     s = result.state;
     events.push(...result.events);
   }
 
-  // If a pending choice was resolved during breach, resume the breach flow
-  // (power gain + location damage choice).
-  if (!s.pendingChoice && s.combat?.step === 'breach') {
-    const breachResult = resumeBreach(s);
-    s = breachResult.state;
-    events.push(...breachResult.events);
+  // Create combat state
+  s = {
+    ...s,
+    combat: {
+      step: 'resolve_attack_abilities',
+      attackingPlayer: player,
+      attackerIds,
+    },
+  };
+  events.push({ type: 'combat_started', attackingPlayer: player, attackerIds });
+
+  const defender = opponentOf(player);
+
+  // Build queue: your_attack triggers, individual attacks triggers, then combat flow
+  const queue: EngineStep[] = [];
+
+  // "Your Attack:" triggers
+  queue.push({ type: 'check_triggers', timing: 'your_attack', player });
+
+  // "Attacks:" triggers for individual attackers
+  for (const id of attackerIds) {
+    const card = getCard(s, id);
+    if (!card) continue;
+    const def = getCardDef(card);
+    if (def.abilities) {
+      for (let i = 0; i < def.abilities.length; i++) {
+        if (def.abilities[i].timing === 'attacks') {
+          queue.push({ type: 'check_triggers', timing: 'attacks', player, triggeringCardId: id });
+          break; // One check_triggers per card is enough
+        }
+      }
+    }
   }
 
-  // If no more pending and no combat, may need to advance turn
-  if (!s.pendingChoice && !s.combat) {
-    // Check if this was part of a card play or other action
-    return advanceTurn(s, events);
+  queue.push(
+    { type: 'cleanup' },
+    { type: 'combat_declare_blockers', defender, attackerIds },
+    { type: 'combat_end' },
+    { type: 'advance_turn' },
+  );
+
+  return { state: s, events, queue };
+}
+
+// --- Choice Resolution ---
+
+interface ChoiceResult {
+  state: GameState;
+  events: GameEvent[];
+  prepend?: EngineStep[];
+}
+
+function resolveChoice(
+  state: GameState,
+  player: PlayerId,
+  action: PlayerAction,
+): ChoiceResult {
+  const choice = state.pendingChoice!;
+
+  switch (choice.type) {
+    case 'choose_target':
+      return resolveChooseTarget(state, player, action);
+    case 'choose_discard':
+      return resolveChooseDiscard(state, player, action);
+    case 'choose_mode':
+      return resolveChooseMode(state, player, action);
+    case 'choose_blockers':
+      return resolveChooseBlockers(state, player, action);
+    case 'choose_breach_target':
+      return resolveChooseBreachTarget(state, player, action);
+    case 'choose_attackers':
+      return resolveChooseAttackers(state, player, action);
+    default:
+      throw new Error(`Unknown choice type: ${(choice as PendingChoice).type}`);
+  }
+}
+
+function resolveChooseTarget(state: GameState, _player: PlayerId, action: PlayerAction): ChoiceResult {
+  if (action.type !== 'choose_target') throw new Error('Expected choose_target');
+  const choice = state.pendingChoice!;
+  if (choice.type !== 'choose_target') throw new Error('Expected choose_target choice');
+
+  let s: GameState = { ...state, pendingChoice: null };
+
+  const ctx: ResolveContext = {
+    controller: choice.playerId,
+    sourceCardId: choice.sourceCardId,
+    triggeringCardId: choice.triggeringCardId,
+    chosenTargets: [action.targetInstanceId],
+  };
+
+  const prepend: EngineStep[] = [
+    { type: 'resolve_effects', effects: choice.effects, ctx },
+    { type: 'cleanup' },
+  ];
+
+  return { state: s, events: [], prepend };
+}
+
+function resolveChooseDiscard(state: GameState, _player: PlayerId, action: PlayerAction): ChoiceResult {
+  if (action.type !== 'choose_discard') throw new Error('Expected choose_discard');
+  const choice = state.pendingChoice!;
+  if (choice.type !== 'choose_discard') throw new Error('Expected choose_discard choice');
+
+  let s: GameState = { ...state, pendingChoice: null };
+  const events: GameEvent[] = [];
+
+  for (const cardId of action.cardInstanceIds) {
+    const moveResult = moveCard(s, cardId, 'discard');
+    s = moveResult.state;
+    events.push(...moveResult.events);
+    const card = getCard(state, cardId);
+    if (card) {
+      events.push({ type: 'card_discarded', player: card.owner, cardInstanceId: cardId });
+    }
   }
 
   return { state: s, events };
 }
 
-/**
- * Fire triggered abilities for card_defeated and location_depleted events,
- * then run cleanup once more to handle any new defeats from those triggers.
- */
-function resolveEventTriggers(
-  state: GameState,
-  events: GameEvent[],
-): { state: GameState; events: GameEvent[] } {
-  let s = state;
-  let allEvents = events;
+function resolveChooseMode(state: GameState, _player: PlayerId, action: PlayerAction): ChoiceResult {
+  if (action.type !== 'choose_mode') throw new Error('Expected choose_mode');
+  const choice = state.pendingChoice!;
+  if (choice.type !== 'choose_mode') throw new Error('Expected choose_mode choice');
 
-  const defeatedEvents = events.filter(e => e.type === 'card_defeated');
-  const depletedEvents = events.filter(e => e.type === 'location_depleted');
+  let s: GameState = { ...state, pendingChoice: null };
+  const selectedMode = choice.modes[action.modeIndex];
+  const ctx: ResolveContext = {
+    controller: choice.playerId,
+    sourceCardId: choice.sourceCardId,
+  };
+  const effectResult = resolveEffectsWithQueue(s, selectedMode.effects, ctx);
+  s = effectResult.state;
+  const events = [...effectResult.events];
 
-  if (defeatedEvents.length === 0 && depletedEvents.length === 0) {
-    return { state: s, events: allEvents };
+  return { state: s, events, prepend: [...(effectResult.prepend ?? []), { type: 'cleanup' }] };
+}
+
+function resolveChooseBlockers(state: GameState, _player: PlayerId, action: PlayerAction): ChoiceResult {
+  if (action.type === 'declare_blocker') {
+    return resolveDeclareBlocker(state, action.blockerId, action.attackerId);
+  } else if (action.type === 'pass_block') {
+    return resolvePassBlock(state);
+  }
+  throw new Error('Expected declare_blocker or pass_block');
+}
+
+function resolveDeclareBlocker(state: GameState, blockerId: string, attackerId: string): ChoiceResult {
+  let s: GameState = { ...state, pendingChoice: null };
+  const events: GameEvent[] = [];
+  const prepend: EngineStep[] = [];
+
+  if (!s.combat) return { state: s, events, prepend };
+
+  const defender = opponentOf(s.combat.attackingPlayer);
+
+  // Exhaust the blocker
+  const exhaustResult = exhaustCard(s, blockerId);
+  s = exhaustResult.state;
+  events.push(...exhaustResult.events);
+
+  events.push({ type: 'blocker_declared', defendingPlayer: defender, blockerId, attackerId });
+
+  // Resolve fight between this pair
+  const fightResult = resolveSingleFight(s, attackerId, blockerId);
+  s = fightResult.state;
+  events.push(...fightResult.events);
+  events.push({ type: 'fight_resolved' });
+
+  // If overwhelm granted power during the fight, fire combat responses
+  if (fightResult.events.some(e => e.type === 'power_gained')) {
+    prepend.push(
+      {
+        type: 'check_combat_responses',
+        timing: 'on_power_gain',
+      },
+    )
   }
 
-  for (const e of defeatedEvents) {
-    for (const p of ['player1', 'player2'] as PlayerId[]) {
-      const r = resolveTriggeredAbilities(s, 'follower_defeated', p, { triggeringCardId: e.cardInstanceId });
-      s = r.state;
-      allEvents = [...allEvents, ...r.events];
-    }
-  }
-
-  for (const e of depletedEvents) {
-    for (const p of ['player1', 'player2'] as PlayerId[]) {
-      const r = resolveTriggeredAbilities(s, 'location_depleted', p, { triggeringCardId: e.locationInstanceId });
-      s = r.state;
-      allEvents = [...allEvents, ...r.events];
-    }
-  }
-
-  // Re-run cleanup in case triggers caused new defeats/depletes
+  // Cleanup after fight
   const cleanupResult = runCleanup(s);
   s = cleanupResult.state;
-  allEvents = [...allEvents, ...cleanupResult.events];
+  events.push(...cleanupResult.events);
 
-  return { state: s, events: allEvents };
+  if (!s.combat) return { state: s, events, prepend };
+
+  // Remove this attacker from attackerIds
+  const remainingAttackerIds = s.combat.attackerIds.filter(id => id !== attackerId);
+  s = {
+    ...s,
+    combat: { ...s.combat, attackerIds: remainingAttackerIds },
+  };
+
+  // Queue 'overwhelms' trigger if applicable
+  const blockerAfterCleanup = getCard(s, blockerId);
+  const attackerAfterCleanup = getCard(s, attackerId);
+  const blockerDefeated = !blockerAfterCleanup || blockerAfterCleanup.zone !== 'board';
+  if (blockerDefeated && attackerAfterCleanup) {
+    const attackerDef = getCardDef(attackerAfterCleanup);
+    if (hasKeyword(s, attackerAfterCleanup, 'overwhelm') && attackerDef.abilities) {
+      for (let i = 0; i < attackerDef.abilities.length; i++) {
+        if (attackerDef.abilities[i].timing === 'overwhelms') {
+          prepend.push(
+            {
+              type: 'resolve_ability',
+              controller: s.combat!.attackingPlayer,
+              sourceCardId: attackerId,
+              abilityIndex: i,
+            }
+          )
+        }
+      }
+    }
+  }
+
+  // Queue cleanup (for overwhelms effects like destroy) then post-block
+  return {
+    state: s,
+    events,
+    prepend: [...prepend, { type: 'cleanup' }, { type: 'combat_post_block', remainingAttackerIds }],
+  };
 }
+
+function resolvePassBlock(state: GameState): ChoiceResult {
+  if (!state.combat) return { state, events: [] };
+
+  const s: GameState = { ...state, pendingChoice: null };
+  const remainingAttackerIds = state.combat.attackerIds;
+
+  // Check which attackers are still on the board
+  const livingAttackerIds = remainingAttackerIds.filter(
+    id => s.cards.some(c => c.instanceId === id && c.zone === 'board')
+  );
+
+  if (livingAttackerIds.length > 0) {
+    return {
+      state: s,
+      events: [],
+      prepend: [{ type: 'combat_breach', livingAttackerIds }],
+    };
+  }
+
+  // No living attackers — end combat
+  return { state: s, events: [], prepend: [{ type: 'combat_end' }] };
+}
+
+function resolveChooseBreachTarget(state: GameState, _player: PlayerId, action: PlayerAction): ChoiceResult {
+  let s: GameState = { ...state, pendingChoice: null };
+  const events: GameEvent[] = [];
+
+  if (action.type === 'damage_location') {
+    const location = getCard(s, action.locationInstanceId);
+    if (location) {
+      const removeResult = removeCounterFromCard(s, action.locationInstanceId, 'stage', 1);
+      s = removeResult.state;
+      events.push(...removeResult.events);
+      events.push({ type: 'location_damaged', locationInstanceId: action.locationInstanceId, amount: 1 });
+
+      const cleanupResult = runCleanup(s);
+      s = cleanupResult.state;
+      events.push(...cleanupResult.events);
+    }
+  }
+  // skip_breach_damage: just continue to combat_end
+
+  return { state: s, events, prepend: [{ type: 'combat_end' }] };
+}
+
+function resolveChooseAttackers(state: GameState, _player: PlayerId, action: PlayerAction): ChoiceResult {
+  if (action.type !== 'choose_attackers') throw new Error('Expected choose_attackers');
+  const choice = state.pendingChoice!;
+  if (choice.type !== 'choose_attackers') throw new Error('Expected choose_attackers choice');
+
+  let s: GameState = { ...state, pendingChoice: null };
+  const events: GameEvent[] = [];
+
+  // Build an attack queue inline, but strip advance_turn since the original
+  // action's queue already has one
+  const attackResult = buildAttackQueue(s, choice.playerId, action.attackerIds);
+  s = attackResult.state;
+  events.push(...attackResult.events);
+
+  const queue = attackResult.queue.filter(step => step.type !== 'advance_turn');
+  return { state: s, events, prepend: queue };
+}
+
+import { resolveAbility } from '../abilities/resolver';
 
 /**
  * Compute all legal actions for the current game state.
@@ -457,8 +688,6 @@ export function getLegalActions(state: GameState): ActionInput[] {
   // Attack with followers
   const attackable = getFollowers(state, player).filter(f => canAttack(state, f));
   if (attackable.length > 0) {
-    // Generate combinations (at least 1 attacker)
-    // For simplicity, generate single and all-attacker options
     for (const f of attackable) {
       actions.push({ player, action: { type: 'attack', attackerIds: [f.instanceId] } });
     }

@@ -35,6 +35,7 @@ export class StateBuilder {
       combatResponses: [],
       rngState: 42,
       winner: null,
+      stepQueue: null,
     };
   }
 

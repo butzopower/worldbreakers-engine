@@ -34,6 +34,11 @@ export type Condition =
   | { type: 'standing_less_than'; guild: StandingGuild; amount: number }
   | { type: 'any_standing_at_least'; amount: number };
 
+export interface Mode {
+  label: string;
+  effects: EffectPrimitive[];
+}
+
 export type EffectPrimitive =
   | { type: 'gain_mythium'; player: PlayerSelector; amount: number }
   | { type: 'draw_cards'; player: PlayerSelector; count: number }
@@ -46,7 +51,7 @@ export type EffectPrimitive =
   | { type: 'exhaust'; target: TargetSelector }
   | { type: 'ready'; target: TargetSelector }
   | { type: 'buff_attackers'; counter: 'strength_buff'; amount: number }
-  | { type: 'choose_one'; modes: { label: string; effects: EffectPrimitive[] }[] }
+  | { type: 'choose_one'; modes: Mode[] }
   | { type: 'play_card'; target: TargetSelector; costReduction?: number }
   | { type: 'conditional'; condition: Condition; effects: EffectPrimitive[] }
   | { type: 'develop'; target: TargetSelector }

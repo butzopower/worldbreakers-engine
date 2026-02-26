@@ -3,6 +3,6 @@ import { GameState } from '../types/state';
 import { GameEvent } from '../types/events';
 import { gainMythium } from '../state/mutate';
 
-export function handleGainMythium(state: GameState, player: PlayerId): { state: GameState; events: GameEvent[] } {
-  return gainMythium(state, player, 1);
+export function handleGainMythium(state: GameState, player: PlayerId, amount: number): { state: GameState; events: GameEvent[] } {
+  return gainMythium(state, player, amount);
 }

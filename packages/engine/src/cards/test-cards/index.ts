@@ -162,7 +162,10 @@ const testCards: CardDefinition[] = [
     cost: 3,
     abilities: [{
       timing: 'play',
-      customResolve: 'void_rift',
+      effects: [
+        { type: 'discard', player: 'both', count: 1 },
+        { type: 'gain_power', player: 'self', amount: 1 },
+      ],
       description: 'Each player discards 1 card. Gain 1 power.',
     }],
   },

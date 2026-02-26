@@ -1,11 +1,11 @@
 import { PlayerId, opponentOf, STANDING_GUILDS } from '../types/core';
 import { GameState, LastingEffect, CombatResponse } from '../types/state';
 import { GameEvent } from '../types/events';
-import { EffectPrimitive, PlayerSelector, TargetSelector, CardFilter } from '../types/effects';
+import { EffectPrimitive, PlayerSelector, TargetSelector, CardFilter, Mode } from '../types/effects';
 import { CardInstance } from '../types/state';
 import {
   gainMythium, drawCard, gainStanding, loseStanding, gainPower, addCounterToCard,
-  removeCounterFromCard, exhaustCard, readyCard, moveCard, addLastingEffect, destroy,
+  removeCounterFromCard, exhaustCard, readyCard, moveCard, addLastingEffect, destroy, setPendingChoice,
 } from '../state/mutate';
 import { getCard, getCardDef, getBoard, getFollowers, canPay, canDevelop, canAttack, hasKeyword } from '../state/query';
 import { CounterType, getCounter } from '../types/counters';
@@ -13,6 +13,8 @@ import { handleDevelop } from '../actions/develop';
 import { generateEffectId } from '../utils/id';
 import { handlePlayCard } from "../actions/play-card";
 import { defeat } from "../combat/damage";
+import { EngineStep } from "../types/steps";
+import { buildPlayCardQueue } from "../engine/engine";
 
 export interface ResolveContext {
   controller: PlayerId;
@@ -92,19 +94,20 @@ export function resolvePrimitive(
   state: GameState,
   effect: EffectPrimitive,
   ctx: ResolveContext,
-): { state: GameState; events: GameEvent[] } {
+): { state: GameState; events: GameEvent[]; prepend?: EngineStep[] } {
   let s = state;
   const events: GameEvent[] = [];
 
   switch (effect.type) {
     case 'gain_mythium': {
       const players = resolvePlayerSelector(effect.player, ctx);
-      for (const p of players) {
-        const r = gainMythium(s, p, effect.amount);
-        s = r.state;
-        events.push(...r.events);
-      }
-      break;
+      const steps: EngineStep[] = players.map(player => ({
+        type: 'gain_mythium',
+        player,
+        amount: effect.amount,
+      }))
+
+      return { state, events, prepend: steps };
     }
     case 'draw_cards': {
       const players = resolvePlayerSelector(effect.player, ctx);
@@ -120,18 +123,15 @@ export function resolvePrimitive(
     case 'gain_standing': {
       if (effect.guild === 'choose') {
         const player = resolvePlayerSelector(effect.player, ctx)[0];
-        s = {
-          ...s,
-          pendingChoice: {
-            type: 'choose_mode',
-            playerId: player,
-            sourceCardId: ctx.sourceCardId,
-            modes: STANDING_GUILDS.map(g => ({
-              label: `Gain ${effect.amount} ${g.charAt(0).toUpperCase() + g.slice(1)} standing`,
-              effects: [{ type: 'gain_standing' as const, player: effect.player, guild: g, amount: effect.amount }],
-            })),
-          },
-        };
+        s = setPendingChoice(s, {
+          type: 'choose_mode',
+          playerId: player,
+          sourceCardId: ctx.sourceCardId,
+          modes: STANDING_GUILDS.map(g => ({
+            label: `Gain ${effect.amount} ${g.charAt(0).toUpperCase() + g.slice(1)} standing`,
+            effects: [{ type: 'gain_standing' as const, player: effect.player, guild: g, amount: effect.amount }],
+          })),
+        }).state
         break;
       }
       const players = resolvePlayerSelector(effect.player, ctx);
@@ -179,6 +179,7 @@ export function resolvePrimitive(
       break;
     }
     case 'discard': {
+      const prepend: EngineStep[] = [];
       // This creates a pending choice for the player to choose cards to discard
       const players = resolvePlayerSelector(effect.player, ctx);
       for (const p of players) {
@@ -187,20 +188,15 @@ export function resolvePrimitive(
         const hand = s.cards.filter(c => c.owner === p && c.zone === 'hand');
         if (hand.length === 0) continue;
 
-        // Set pending choice for discard
-        s = {
-          ...s,
-          pendingChoice: {
-            type: 'choose_discard',
-            playerId: p,
-            count: effect.count,
-            sourceCardId: ctx.sourceCardId,
-          },
-        };
-        // Only one pending choice at a time - break after first
-        break;
+        prepend.push({
+          type: 'request_choose_discard',
+          player: p,
+          count: effect.count,
+          sourceCardId: ctx.sourceCardId,
+        });
       }
-      break;
+
+      return { state: s, events, prepend }
     }
     case 'exhaust': {
       const targets = resolveTargets(s, effect.target, ctx);
@@ -241,9 +237,9 @@ export function resolvePrimitive(
       const targets = resolveTargets(s, effect.target, ctx);
 
       if (targets.length === 1) {
-        const r = handlePlayCard(s, ctx.controller, targets[0], {costReduction: effect.costReduction});
-        s = r.state;
-        events.push(...r.events);
+        const r = buildPlayCardQueue(s, ctx.controller, targets[0], {costReduction: effect.costReduction})
+
+        return { state: r.state, events: r.events, prepend: r.queue };
       }
 
       break;
@@ -347,7 +343,7 @@ export function resolvePrimitive(
       const controller = ctx.controller;
       const hasEarth = s.players[controller].standing.earth >= 1;
 
-      const modes: { label: string; effects: EffectPrimitive[] }[] = [
+      const modes: Mode[] = [
         {
           label: 'Gain 1 Earth standing',
           effects: [{ type: 'gain_standing', player: 'controller', guild: 'earth', amount: 1 }],
