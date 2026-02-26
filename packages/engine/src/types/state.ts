@@ -1,6 +1,7 @@
 import { PlayerId, StandingGuild, Phase, Zone, CombatStep } from './core';
 import { CounterMap } from './counters';
-import { CardFilter, EffectPrimitive } from './effects';
+import { CardFilter, EffectPrimitive, Mode } from './effects';
+import { EngineStep } from './steps';
 
 export type CombatResponseTrigger = 'on_power_gain';
 
@@ -49,9 +50,9 @@ export type PendingChoiceChooseTarget = { type: 'choose_target'; playerId: Playe
 export type PendingChoice =
   | { type: 'choose_blockers'; playerId: PlayerId; attackerIds: string[] }
   | PendingChoiceChooseTarget
-  | { type: 'choose_discard'; playerId: PlayerId; count: number; sourceCardId: string; phase?: string; nextPhase?: string }
+  | { type: 'choose_discard'; playerId: PlayerId; count: number; sourceCardId: string }
   | { type: 'choose_breach_target'; playerId: PlayerId; validLocationIds: string[] }
-  | { type: 'choose_mode'; playerId: PlayerId; sourceCardId: string; modes: { label: string; effects: EffectPrimitive[] }[] }
+  | { type: 'choose_mode'; playerId: PlayerId; sourceCardId: string; modes: Mode[] }
   | { type: 'choose_attackers'; playerId: PlayerId };
 
 export interface PlayerState {
@@ -85,4 +86,6 @@ export interface GameState {
   combatResponses: CombatResponse[];
   /** Effects remaining to resolve after the current pending choice completes */
   remainingEffects?: { effects: EffectPrimitive[]; controller: PlayerId; sourceCardId: string; triggeringCardId?: string };
+  /** Step queue for the queue-based engine lifecycle */
+  stepQueue: EngineStep[] | null;
 }

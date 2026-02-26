@@ -1,5 +1,5 @@
 import { opponentOf, PlayerId, StandingGuild, Zone } from '../types/core';
-import { GameState, CardInstance, LastingEffect } from '../types/state';
+import { GameState, CardInstance, LastingEffect, PendingChoice } from '../types/state';
 import { CounterType, addCounter as addCounterToMap, getCounter } from '../types/counters';
 import { GameEvent } from '../types/events';
 import { nextRandom, seededShuffle } from '../utils/random';
@@ -332,6 +332,21 @@ export function destroy(
   };
 }
 
+export function setPendingChoice(
+  state: GameState,
+  pendingChoice: PendingChoice
+): MutationResult {
+  if (state.pendingChoice) {
+    throw new Error("Pending choice already has been set")
+  }
+
+  const newState = bump({
+    ...state,
+    pendingChoice: pendingChoice,
+  })
+
+  return { state: newState, events: [] }
+}
 
 export function setActivePlayer(state: GameState, player: PlayerId): GameState {
   return bump({ ...state, activePlayer: player });
