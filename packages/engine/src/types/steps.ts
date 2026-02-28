@@ -32,6 +32,8 @@ export type EngineStep =
   | { type: 'choose_breach_target', player: PlayerId; }
   | { type: 'combat_breach_complete' }
   | { type: 'combat_end' }
+  // Locations
+  | { type: 'develop'; player: PlayerId; locationId: string; }
   // Board State
   | { type: 'gain_mythium'; player: PlayerId; amount: number }
   | { type: 'gain_power', player: PlayerId; amount: number }

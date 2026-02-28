@@ -4,7 +4,7 @@ import { GameEvent } from '../types/events';
 import { PlayerId, STANDING_GUILDS, opponentOf } from '../types/core';
 import { EngineStep } from '../types/steps';
 import { validateAction } from './validator';
-import { drainQueue, resolveEffectsWithQueue } from './step-handlers';
+import { drainQueue, resolveEffectsWithQueue, StepResult } from './step-handlers';
 
 import { handleDrawCard } from '../actions/draw-card';
 import { handleBuyStanding } from '../actions/buy-standing';
@@ -118,7 +118,7 @@ function buildInitialQueue(
     case 'attack':
       return buildAttackQueue(state, player, action.attackerIds);
     case 'develop':
-      return buildDevelopQueue(state, player, action.locationInstanceId);
+      return advanceTurn(handleDevelop(state, player, action.locationInstanceId));
     case 'use_ability':
       return buildUseAbilityQueue(state, player, action.cardInstanceId, action.abilityIndex);
     default:
@@ -127,9 +127,9 @@ function buildInitialQueue(
 }
 
 function advanceTurn(
-  {state, events, queue}: { state: GameState; events: GameEvent[]; queue: EngineStep[] }
+  {state, events, prepend}: { state: GameState; events: GameEvent[]; prepend?: EngineStep[] }
 ): { state: GameState; events: GameEvent[]; queue: EngineStep[] } {
-  return {state, events, queue: [...queue, { type: 'advance_turn' }]};
+  return {state, events, queue: [...(prepend ?? []), { type: 'advance_turn' }]};
 }
 
 function buildSimpleActionQueue(
@@ -167,7 +167,7 @@ export function buildPlayCardQueue(
   player: PlayerId,
   cardInstanceId: string,
   opts?: { costReduction?: number },
-): { state: GameState; events: GameEvent[]; queue: EngineStep[] } {
+): StepResult {
   const card = getCard(state, cardInstanceId)!;
   const def = getCardDef(card);
   const events: GameEvent[] = [];
@@ -182,7 +182,7 @@ export function buildPlayCardQueue(
     events.push(...payResult.events);
   }
 
-  const queue: EngineStep[] = [];
+  const prepend: EngineStep[] = [];
 
   if (def.type === 'event') {
     // Events go to discard
@@ -195,11 +195,7 @@ export function buildPlayCardQueue(
     if (def.abilities) {
       for (let i = 0; i < def.abilities.length; i++) {
         if (def.abilities[i].timing === 'play') {
-          if (def.abilities[i].customResolve) {
-            queue.push({ type: 'resolve_custom_ability', controller: player, sourceCardId: cardInstanceId, customResolve: def.abilities[i].customResolve! });
-          } else {
-            queue.push({ type: 'resolve_ability_at_index', controller: player, sourceCardId: cardInstanceId, abilityIndex: i });
-          }
+          prepend.push({ type: 'resolve_ability_at_index', controller: player, sourceCardId: cardInstanceId, abilityIndex: i });
         }
       }
     }
@@ -220,11 +216,7 @@ export function buildPlayCardQueue(
     if (def.abilities) {
       for (let i = 0; i < def.abilities.length; i++) {
         if (def.abilities[i].timing === 'enters') {
-          if (def.abilities[i].customResolve) {
-            queue.push({ type: 'resolve_custom_ability', controller: player, sourceCardId: cardInstanceId, customResolve: def.abilities[i].customResolve! });
-          } else {
-            queue.push({ type: 'resolve_ability_at_index', controller: player, sourceCardId: cardInstanceId, abilityIndex: i });
-          }
+          prepend.push({ type: 'resolve_ability_at_index', controller: player, sourceCardId: cardInstanceId, abilityIndex: i });
         }
       }
     }
@@ -239,64 +231,15 @@ export function buildPlayCardQueue(
     if (def.abilities) {
       for (let i = 0; i < def.abilities.length; i++) {
         if (def.abilities[i].timing === 'enters') {
-          if (def.abilities[i].customResolve) {
-            queue.push({ type: 'resolve_custom_ability', controller: player, sourceCardId: cardInstanceId, customResolve: def.abilities[i].customResolve! });
-          } else {
-            queue.push({ type: 'resolve_ability_at_index', controller: player, sourceCardId: cardInstanceId, abilityIndex: i });
-          }
+          prepend.push({ type: 'resolve_ability_at_index', controller: player, sourceCardId: cardInstanceId, abilityIndex: i });
         }
       }
     }
   }
 
-  queue.push({ type: 'cleanup' });
+  prepend.push({ type: 'cleanup' });
 
-  return { state: s, events, queue };
-}
-
-function buildDevelopQueue(
-  state: GameState,
-  player: PlayerId,
-  locationInstanceId: string,
-): { state: GameState; events: GameEvent[]; queue: EngineStep[] } {
-  let s = state;
-  const events: GameEvent[] = [];
-
-  // Remove one stage counter
-  const removeResult = removeCounterFromCard(s, locationInstanceId, 'stage', 1);
-  s = removeResult.state;
-  events.push(...removeResult.events);
-
-  const card = getCard(s, locationInstanceId)!;
-  const def = getCardDef(card);
-  const currentStage = getLocationStage(card);
-  const developedStage = currentStage - 1;
-
-  events.push({ type: 'location_developed', locationInstanceId, stage: developedStage });
-
-  const queue: EngineStep[] = [];
-
-  // Queue the stage ability
-  if (def.locationStages) {
-    const stageAbility = def.locationStages.find(ls => ls.stage === developedStage);
-    if (stageAbility) {
-      if (stageAbility.ability.customResolve) {
-        queue.push({ type: 'resolve_custom_ability', controller: player, sourceCardId: locationInstanceId, customResolve: stageAbility.ability.customResolve });
-      } else if (stageAbility.ability.effects && stageAbility.ability.effects.length > 0) {
-        queue.push({ type: 'resolve_effects', effects: stageAbility.ability.effects, ctx: { controller: player, sourceCardId: locationInstanceId } });
-      }
-    }
-  }
-
-  // Cleanup immediately — handles depletion (0 stage counters) before abilities run
-  // This matches old behavior where handleDevelop ran runCleanup synchronously
-  const cleanupResult = runCleanup(s);
-  s = cleanupResult.state;
-  events.push(...cleanupResult.events);
-
-  queue.push({ type: 'cleanup' }, { type: 'advance_turn' });
-
-  return { state: s, events, queue };
+  return { state: s, events, prepend };
 }
 
 function buildUseAbilityQueue(
@@ -327,17 +270,10 @@ function buildUseAbilityQueue(
     ),
   };
 
-  const ability = def.abilities![abilityIndex];
-
-  const queue: EngineStep[] = [];
-
-  if (ability.customResolve) {
-    queue.push({ type: 'resolve_custom_ability', controller: player, sourceCardId: cardInstanceId, customResolve: ability.customResolve });
-  } else {
-    queue.push({ type: 'resolve_ability_at_index', controller: player, sourceCardId: cardInstanceId, abilityIndex });
-  }
-
-  queue.push({ type: 'cleanup' }, { type: 'advance_turn' });
+  const queue: EngineStep[] = [
+    { type: 'resolve_ability_at_index', controller: player, sourceCardId: cardInstanceId, abilityIndex },
+    { type: 'advance_turn' },
+  ];
 
   return { state: s, events, queue };
 }
@@ -644,6 +580,7 @@ function resolveChooseAttackers(state: GameState, _player: PlayerId, action: Pla
 }
 
 import { resolveAbility } from '../abilities/resolver';
+import { handleDevelop } from "../actions/develop";
 
 /**
  * Compute all legal actions for the current game state.

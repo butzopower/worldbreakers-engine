@@ -11,6 +11,7 @@ import { getCustomResolver } from '../abilities/system';
 import { getCard } from '../state/query';
 import { getFollowers, getLocations, isHidden, canBlock, canBlockAttacker } from '../state/query';
 import { AbilityDefinition, EffectPrimitive, Mode } from '../types/effects';
+import { handleDevelop } from "../actions/develop";
 
 export interface StepResult {
   state: GameState;
@@ -69,6 +70,8 @@ export function executeStep(state: GameState, step: EngineStep): StepResult {
       return handleChooseBreachTarget(state, step.player);
     case 'combat_end':
       return handleCombatEnd(state);
+    case 'develop':
+      return handleDevelop(state, step.player, step.locationId);
     case 'gain_mythium':
       return gainMythium(state, step.player, step.amount);
     case 'gain_power':

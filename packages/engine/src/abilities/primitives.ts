@@ -4,15 +4,12 @@ import { GameEvent } from '../types/events';
 import { EffectPrimitive, PlayerSelector, TargetSelector, CardFilter, Mode } from '../types/effects';
 import { CardInstance } from '../types/state';
 import {
-  gainMythium, drawCard, gainStanding, loseStanding, gainPower, addCounterToCard,
-  removeCounterFromCard, exhaustCard, readyCard, moveCard, addLastingEffect, destroy, setPendingChoice,
+  drawCard, gainStanding, loseStanding, addCounterToCard,
+  removeCounterFromCard, exhaustCard, readyCard, addLastingEffect, destroy, setPendingChoice,
 } from '../state/mutate';
-import { getCard, getCardDef, getBoard, getFollowers, canPay, canDevelop, canAttack, hasKeyword } from '../state/query';
-import { CounterType, getCounter } from '../types/counters';
-import { handleDevelop } from '../actions/develop';
+import { getCard, getCardDef, getFollowers, canPay, canDevelop, canAttack, hasKeyword } from '../state/query';
+import { getCounter } from '../types/counters';
 import { generateEffectId } from '../utils/id';
-import { handlePlayCard } from "../actions/play-card";
-import { defeat } from "../combat/damage";
 import { EngineStep } from "../types/steps";
 import { buildPlayCardQueue } from "../engine/engine";
 
@@ -94,9 +91,10 @@ export function resolvePrimitive(
   state: GameState,
   effect: EffectPrimitive,
   ctx: ResolveContext,
-): { state: GameState; events: GameEvent[]; prepend?: EngineStep[] } {
+): { state: GameState; events: GameEvent[]; prepend: EngineStep[] } {
   let s = state;
   const events: GameEvent[] = [];
+  const prepend: EngineStep[] = [];
 
   switch (effect.type) {
     case 'gain_mythium': {
@@ -144,12 +142,13 @@ export function resolvePrimitive(
     }
     case 'gain_power': {
       const players = resolvePlayerSelector(effect.player, ctx);
-      for (const p of players) {
-        const r = gainPower(s, p, effect.amount);
-        s = r.state;
-        events.push(...r.events);
-      }
-      break;
+      const steps: EngineStep[] = players.map(player => ({
+        type: 'gain_power',
+        player,
+        amount: effect.amount,
+      }))
+
+      return { state, events, prepend: steps };
     }
     case 'deal_wounds': {
       const targets = resolveTargets(s, effect.target, ctx);
@@ -237,9 +236,7 @@ export function resolvePrimitive(
       const targets = resolveTargets(s, effect.target, ctx);
 
       if (targets.length === 1) {
-        const r = buildPlayCardQueue(s, ctx.controller, targets[0], {costReduction: effect.costReduction})
-
-        return { state: r.state, events: r.events, prepend: r.queue };
+        return buildPlayCardQueue(s, ctx.controller, targets[0], {costReduction: effect.costReduction})
       }
 
       break;
@@ -254,16 +251,19 @@ export function resolvePrimitive(
       break;
     }
     case 'develop': {
+      const prepend: EngineStep[] = [];
       const targets = resolveTargets(s, effect.target, ctx);
       for (const targetId of targets) {
         const card = getCard(s, targetId);
         if (card && canDevelop(s, ctx.controller, card)) {
-          const r = handleDevelop(s, ctx.controller, targetId);
-          s = r.state;
-          events.push(...r.events);
+          prepend.push({
+            type: 'develop',
+            player: ctx.controller,
+            locationId: targetId,
+          })
         }
       }
-      break;
+      return { state, events, prepend };
     }
     case 'conditional': {
       const { condition, effects: innerEffects } = effect;
@@ -283,6 +283,7 @@ export function resolvePrimitive(
           const r = resolvePrimitive(s, inner, ctx);
           s = r.state;
           events.push(...r.events);
+          prepend.push(...r.prepend);
         }
       }
       break;
@@ -380,7 +381,7 @@ export function resolvePrimitive(
     }
   }
 
-  return { state: s, events };
+  return { state: s, events, prepend };
 }
 
 /**
