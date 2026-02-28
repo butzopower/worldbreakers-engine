@@ -10,7 +10,7 @@ import { ResolveContext, findValidTargets, resolvePrimitive } from '../abilities
 import { getCustomResolver } from '../abilities/system';
 import { getCard } from '../state/query';
 import { getFollowers, getLocations, isHidden, canBlock, canBlockAttacker } from '../state/query';
-import { EffectPrimitive, Mode } from '../types/effects';
+import { AbilityDefinition, EffectPrimitive, Mode } from '../types/effects';
 
 export interface StepResult {
   state: GameState;
@@ -47,8 +47,10 @@ export function executeStep(state: GameState, step: EngineStep): StepResult {
       return handleRallyNewRound(state);
     case 'resolve_effects':
       return handleResolveEffects(state, step.effects, step.ctx);
+    case 'resolve_ability_at_index':
+      return handleResolveAbilityAtIndex(state, step.controller, step.sourceCardId, step.abilityIndex, step.triggeringCardId);
     case 'resolve_ability':
-      return handleResolveAbility(state, step.controller, step.sourceCardId, step.abilityIndex, step.triggeringCardId);
+      return handleResolveAbility(state, step.controller, step.sourceCardId, step.ability, step.triggeringCardId);
     case 'resolve_custom_ability':
       return handleResolveCustomAbility(state, step.controller, step.sourceCardId, step.customResolve, step.triggeringCardId);
     case 'check_triggers':
@@ -211,7 +213,7 @@ function handleRallyTriggers(state: GameState, player: PlayerId): StepResult {
           if (wbDef.abilities[i].customResolve) {
             prepend.push({ type: 'resolve_custom_ability', controller: player, sourceCardId: wb.instanceId, customResolve: wbDef.abilities[i].customResolve! });
           } else {
-            prepend.push({ type: 'resolve_ability', controller: player, sourceCardId: wb.instanceId, abilityIndex: i });
+            prepend.push({ type: 'resolve_ability_at_index', controller: player, sourceCardId: wb.instanceId, abilityIndex: i });
           }
         }
       }
@@ -227,7 +229,7 @@ function handleRallyTriggers(state: GameState, player: PlayerId): StepResult {
         if (def.abilities[i].customResolve) {
           prepend.push({ type: 'resolve_custom_ability', controller: player, sourceCardId: card.instanceId, customResolve: def.abilities[i].customResolve! });
         } else {
-          prepend.push({ type: 'resolve_ability', controller: player, sourceCardId: card.instanceId, abilityIndex: i });
+          prepend.push({ type: 'resolve_ability_at_index', controller: player, sourceCardId: card.instanceId, abilityIndex: i });
         }
       }
     }
@@ -351,26 +353,41 @@ function handleResolveEffects(state: GameState, effects: EffectPrimitive[], ctx:
   return { state: result.state, events: result.events, prepend: result.prepend };
 }
 
-function handleResolveAbility(state: GameState, controller: PlayerId, sourceCardId: string, abilityIndex: number, triggeringCardId?: string): StepResult {
+function handleResolveAbilityAtIndex(state: GameState, controller: PlayerId, sourceCardId: string, abilityIndex: number, triggeringCardId?: string): StepResult {
   const card = getCard(state, sourceCardId);
   if (!card) return { state, events: [] };
   const def = getCardDef(card);
   if (!def.abilities || !def.abilities[abilityIndex]) return { state, events: [] };
 
   const ability = def.abilities[abilityIndex];
+  const prepend: EngineStep[] = [
+    {
+      type: 'resolve_ability',
+      controller,
+      sourceCardId,
+      triggeringCardId,
+      ability
+    }
+  ]
+  return { state, events: [], prepend}
+}
+
+function handleResolveAbility(state: GameState, controller: PlayerId, sourceCardId: string, ability: AbilityDefinition, triggeringCardId?: string) {
   const events: GameEvent[] = [
-    { type: 'ability_triggered', cardInstanceId: sourceCardId, abilityIndex, timing: ability.timing },
+    { type: 'ability_triggered', cardInstanceId: sourceCardId, timing: ability.timing },
   ];
 
   if (ability.customResolve) {
-    const customFn = getCustomResolver(ability.customResolve);
-    if (customFn) {
-      const ctx: ResolveContext = { controller, sourceCardId, triggeringCardId };
-      const result = customFn(state, ctx);
-      events.push(...result.events);
-      return { state: result.state, events };
-    }
-    return { state, events };
+    const prepend: EngineStep[] = [
+      {
+        type: 'resolve_custom_ability',
+        controller,
+        sourceCardId,
+        customResolve: ability.customResolve,
+        triggeringCardId,
+      }
+    ]
+    return { state, events, prepend };
   }
 
   if (!ability.effects || ability.effects.length === 0) {
@@ -378,7 +395,7 @@ function handleResolveAbility(state: GameState, controller: PlayerId, sourceCard
   }
 
   const ctx: ResolveContext = { controller, sourceCardId, triggeringCardId };
-  const result = resolveEffectsWithQueue(state, ability.effects, ctx, abilityIndex);
+  const result = resolveEffectsWithQueue(state, ability.effects, ctx);
   events.push(...result.events);
   return { state: result.state, events, prepend: result.prepend };
 }
@@ -423,7 +440,7 @@ function handleCheckTriggers(state: GameState, timing: import('../types/effects'
           if (wbDef.abilities[i].customResolve) {
             prepend.push({ type: 'resolve_custom_ability', controller: player, sourceCardId: wb.instanceId, customResolve: wbDef.abilities[i].customResolve!, triggeringCardId });
           } else {
-            prepend.push({ type: 'resolve_ability', controller: player, sourceCardId: wb.instanceId, abilityIndex: i, triggeringCardId });
+            prepend.push({ type: 'resolve_ability_at_index', controller: player, sourceCardId: wb.instanceId, abilityIndex: i, triggeringCardId });
           }
         }
       }
@@ -440,7 +457,7 @@ function handleCheckTriggers(state: GameState, timing: import('../types/effects'
         if (def.abilities[i].customResolve) {
           prepend.push({ type: 'resolve_custom_ability', controller: player, sourceCardId: card.instanceId, customResolve: def.abilities[i].customResolve!, triggeringCardId });
         } else {
-          prepend.push({ type: 'resolve_ability', controller: player, sourceCardId: card.instanceId, abilityIndex: i, triggeringCardId });
+          prepend.push({ type: 'resolve_ability_at_index', controller: player, sourceCardId: card.instanceId, abilityIndex: i, triggeringCardId });
         }
       }
     }

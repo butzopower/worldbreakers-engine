@@ -24,7 +24,7 @@ export type GameEvent =
   | { type: 'breach'; attackingPlayer: PlayerId; attackerIds: string[] }
   | { type: 'location_damaged'; locationInstanceId: string; amount: number }
   | { type: 'combat_ended' }
-  | { type: 'ability_triggered'; cardInstanceId: string; abilityIndex: number; timing: string }
+  | { type: 'ability_triggered'; cardInstanceId: string; abilityIndex?: number; timing: string }
   | { type: 'location_developed'; locationInstanceId: string; stage: number }
   | { type: 'location_depleted'; locationInstanceId: string }
   | { type: 'card_discarded'; player: PlayerId; cardInstanceId: string }

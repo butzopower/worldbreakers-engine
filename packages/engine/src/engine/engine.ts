@@ -198,7 +198,7 @@ export function buildPlayCardQueue(
           if (def.abilities[i].customResolve) {
             queue.push({ type: 'resolve_custom_ability', controller: player, sourceCardId: cardInstanceId, customResolve: def.abilities[i].customResolve! });
           } else {
-            queue.push({ type: 'resolve_ability', controller: player, sourceCardId: cardInstanceId, abilityIndex: i });
+            queue.push({ type: 'resolve_ability_at_index', controller: player, sourceCardId: cardInstanceId, abilityIndex: i });
           }
         }
       }
@@ -223,7 +223,7 @@ export function buildPlayCardQueue(
           if (def.abilities[i].customResolve) {
             queue.push({ type: 'resolve_custom_ability', controller: player, sourceCardId: cardInstanceId, customResolve: def.abilities[i].customResolve! });
           } else {
-            queue.push({ type: 'resolve_ability', controller: player, sourceCardId: cardInstanceId, abilityIndex: i });
+            queue.push({ type: 'resolve_ability_at_index', controller: player, sourceCardId: cardInstanceId, abilityIndex: i });
           }
         }
       }
@@ -242,7 +242,7 @@ export function buildPlayCardQueue(
           if (def.abilities[i].customResolve) {
             queue.push({ type: 'resolve_custom_ability', controller: player, sourceCardId: cardInstanceId, customResolve: def.abilities[i].customResolve! });
           } else {
-            queue.push({ type: 'resolve_ability', controller: player, sourceCardId: cardInstanceId, abilityIndex: i });
+            queue.push({ type: 'resolve_ability_at_index', controller: player, sourceCardId: cardInstanceId, abilityIndex: i });
           }
         }
       }
@@ -334,7 +334,7 @@ function buildUseAbilityQueue(
   if (ability.customResolve) {
     queue.push({ type: 'resolve_custom_ability', controller: player, sourceCardId: cardInstanceId, customResolve: ability.customResolve });
   } else {
-    queue.push({ type: 'resolve_ability', controller: player, sourceCardId: cardInstanceId, abilityIndex });
+    queue.push({ type: 'resolve_ability_at_index', controller: player, sourceCardId: cardInstanceId, abilityIndex });
   }
 
   queue.push({ type: 'cleanup' }, { type: 'advance_turn' });
@@ -561,7 +561,7 @@ function resolveDeclareBlocker(state: GameState, blockerId: string, attackerId: 
         if (attackerDef.abilities[i].timing === 'overwhelms') {
           prepend.push(
             {
-              type: 'resolve_ability',
+              type: 'resolve_ability_at_index',
               controller: s.combat!.attackingPlayer,
               sourceCardId: attackerId,
               abilityIndex: i,

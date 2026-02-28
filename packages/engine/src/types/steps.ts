@@ -1,5 +1,5 @@
 import { PlayerId } from './core';
-import { AbilityTiming, EffectPrimitive, Mode } from './effects';
+import { AbilityDefinition, AbilityTiming, EffectPrimitive, Mode } from './effects';
 import { CombatResponseTrigger } from "./state";
 import { ResolveContext } from "../abilities/primitives";
 
@@ -9,7 +9,8 @@ export type EngineStep =
   | { type: 'request_choose_discard', player: PlayerId; sourceCardId: string; count: number }
   // Effect Resolution
   | { type: 'resolve_effects'; effects: EffectPrimitive[]; ctx: ResolveContext }
-  | { type: 'resolve_ability'; controller: PlayerId; sourceCardId: string; abilityIndex: number; triggeringCardId?: string }
+  | { type: 'resolve_ability_at_index'; controller: PlayerId; sourceCardId: string; abilityIndex: number; triggeringCardId?: string }
+  | { type: 'resolve_ability'; controller: PlayerId; sourceCardId: string; ability: AbilityDefinition; triggeringCardId?: string }
   | { type: 'resolve_custom_ability'; controller: PlayerId; sourceCardId: string; customResolve: string; triggeringCardId?: string }
   // Cleanup & Triggers
   | { type: 'cleanup' }
