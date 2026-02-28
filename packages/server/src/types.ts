@@ -52,7 +52,6 @@ export type FilteredCard = {
   zone: string;
   exhausted: boolean;
   counters: Record<string, number>;
-  usedAbilities: number[];
 } | HiddenCard;
 
 export interface FilteredGameState {

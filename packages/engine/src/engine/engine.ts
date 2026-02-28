@@ -1,4 +1,4 @@
-import { CombatResponseTrigger, GameState, PendingChoice } from '../types/state';
+import { GameState, PendingChoice } from '../types/state';
 import { ActionInput, PlayerAction } from '../types/actions';
 import { GameEvent } from '../types/events';
 import { PlayerId, STANDING_GUILDS, opponentOf } from '../types/core';
@@ -9,10 +9,9 @@ import { drainQueue, resolveEffectsWithQueue, StepResult } from './step-handlers
 import { handleDrawCard } from '../actions/draw-card';
 import { handleBuyStanding } from '../actions/buy-standing';
 
-import { resolveEffects } from '../abilities/resolver';
 import { ResolveContext } from '../abilities/primitives';
-import { moveCard, gainPower, exhaustCard, spendMythium, addCounterToCard, removeCounterFromCard } from '../state/mutate';
-import { getCard, getHand, getCardDef, canPay, hasKeyword, getPassiveCostReduction, getLocationStage } from '../state/query';
+import { moveCard, exhaustCard, spendMythium, addCounterToCard, removeCounterFromCard } from '../state/mutate';
+import { getCard, getHand, getCardDef, canPay, hasKeyword, getPassiveCostReduction } from '../state/query';
 import { getCounter } from '../types/counters';
 import {
   canPlayCard, canAttack, canBlock, canBlockAttacker, canDevelop, canUseAbility,
@@ -44,19 +43,6 @@ export function processAction(state: GameState, input: ActionInput): ProcessResu
     const choiceResult = resolveChoice(state, player, action);
     let s = choiceResult.state;
     let events = choiceResult.events;
-
-    // Convert remainingEffects (from legacy resolveEffects) to a queue step
-    if (s.remainingEffects) {
-      const remaining = s.remainingEffects;
-      s = { ...s, remainingEffects: undefined };
-      const remainingStep: EngineStep = {
-        type: 'resolve_effects',
-        effects: remaining.effects,
-        ctx: { controller: remaining.controller, sourceCardId: remaining.sourceCardId, triggeringCardId: remaining.triggeringCardId },
-      };
-      const existingQueue = s.stepQueue ?? [];
-      s = { ...s, stepQueue: [remainingStep, ...existingQueue] };
-    }
 
     // If the choice resolution already set a new pending choice, return
     if (s.pendingChoice) {
@@ -120,7 +106,7 @@ function buildInitialQueue(
     case 'develop':
       return advanceTurn(handleDevelop(state, player, action.locationInstanceId));
     case 'use_ability':
-      return buildUseAbilityQueue(state, player, action.cardInstanceId, action.abilityIndex);
+      return advanceTurn(buildUseAbilityQueue(state, player, action.cardInstanceId, action.abilityIndex));
     default:
       throw new Error(`Unhandled action type: ${(action as PlayerAction).type}`);
   }
@@ -247,35 +233,12 @@ function buildUseAbilityQueue(
   player: PlayerId,
   cardInstanceId: string,
   abilityIndex: number,
-): { state: GameState; events: GameEvent[]; queue: EngineStep[] } {
-  let s = state;
-  const events: GameEvent[] = [];
-  const card = getCard(s, cardInstanceId)!;
-  const def = getCardDef(card);
-
-  // Exhaust the card if it's a follower
-  if (def.type === 'follower') {
-    const exhaustResult = exhaustCard(s, cardInstanceId);
-    s = exhaustResult.state;
-    events.push(...exhaustResult.events);
-  }
-
-  // Mark ability as used this turn
-  s = {
-    ...s,
-    cards: s.cards.map(c =>
-      c.instanceId === cardInstanceId
-        ? { ...c, usedAbilities: [...c.usedAbilities, abilityIndex] }
-        : c
-    ),
-  };
-
-  const queue: EngineStep[] = [
+): StepResult {
+  const prepend: EngineStep[] = [
     { type: 'resolve_ability_at_index', controller: player, sourceCardId: cardInstanceId, abilityIndex },
-    { type: 'advance_turn' },
   ];
 
-  return { state: s, events, queue };
+  return { state, events: [], prepend };
 }
 
 function buildAttackQueue(
@@ -579,7 +542,6 @@ function resolveChooseAttackers(state: GameState, _player: PlayerId, action: Pla
   return { state: s, events, prepend: queue };
 }
 
-import { resolveAbility } from '../abilities/resolver';
 import { handleDevelop } from "../actions/develop";
 
 /**

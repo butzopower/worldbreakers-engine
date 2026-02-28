@@ -1,7 +1,6 @@
 import { PlayerId, Guild, PLAYERS } from '../types/core';
 import { GameState, PlayerState, CardInstance } from '../types/state';
 import { generateInstanceId, resetIdCounter } from '../utils/id';
-import { seededShuffle } from '../utils/random';
 import { getCardDefinition } from "../cards/registry";
 import { shuffleDeck } from "./mutate";
 
@@ -44,7 +43,6 @@ function createCardInstance(
     zone,
     exhausted: false,
     counters: {},
-    usedAbilities: [],
     markAsDestroyed: false,
   };
 }

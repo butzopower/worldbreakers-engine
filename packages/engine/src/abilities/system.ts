@@ -1,9 +1,6 @@
 import { GameState } from '../types/state';
 import { GameEvent } from '../types/events';
 import { ResolveContext } from './primitives';
-import { gainPower } from '../state/mutate';
-import { getHand } from '../state/query';
-import { opponentOf } from '../types/core';
 
 export type CustomResolverFn = (
   state: GameState,

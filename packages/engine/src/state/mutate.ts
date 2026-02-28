@@ -52,7 +52,6 @@ export function moveCard(
     // Reset state when leaving board
     exhausted: toZone === 'board' ? card.exhausted : false,
     counters: toZone === 'board' ? card.counters : {},
-    usedAbilities: [],
   };
 
   const newState = bump({

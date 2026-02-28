@@ -266,14 +266,6 @@ function handleRallyReady(state: GameState, player: PlayerId): StepResult {
     }
   }
 
-  // Reset used abilities
-  s = {
-    ...s,
-    cards: s.cards.map(c =>
-      c.owner === player ? { ...c, usedAbilities: [] } : c
-    ),
-  };
-
   return { state: s, events };
 }
 
@@ -577,7 +569,7 @@ function handleCombatBreachComplete(state: GameState): StepResult {
   const events: GameEvent[] = [];
 
   // Get living attackers
-  const livingAttackerIds = s.combat.attackerIds.filter(
+  const livingAttackerIds = state.combat.attackerIds.filter(
     id => s.cards.some(c => c.instanceId === id && c.zone === 'board')
   );
 
@@ -605,6 +597,8 @@ function handleCombatBreachComplete(state: GameState): StepResult {
 }
 
 function handleChooseBreachTarget(s: GameState, playerId: PlayerId): StepResult {
+  if (!s.combat) return { state: s, events: [] };
+
   // Check if defender has locations to damage
   const defender = opponentOf(playerId);
   const defenderLocations = getLocations(s, defender).filter(loc => !isHidden(s, loc));

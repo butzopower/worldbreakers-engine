@@ -228,7 +228,6 @@ export function canUseAbility(state: GameState, player: PlayerId, card: CardInst
 
   const ability = abilities[abilityIndex];
   if (ability.timing !== 'action') return false;
-  if (card.usedAbilities.includes(abilityIndex)) return false;
 
   // Action abilities on followers require exhausting (not already exhausted)
   if (def.type === 'follower' && card.exhausted) return false;

@@ -1,4 +1,4 @@
-import { Guild, StandingGuild, PlayerId, Zone } from './core';
+import { Guild, StandingGuild, Zone } from './core';
 import { CounterType } from './counters';
 import { CardType, Keyword } from './cards';
 import { CombatResponseTrigger, LastingEffectExpiration, LastingEffectType } from "./state";

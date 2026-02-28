@@ -12,6 +12,7 @@ import { getCounter } from '../types/counters';
 import { generateEffectId } from '../utils/id';
 import { EngineStep } from "../types/steps";
 import { buildPlayCardQueue } from "../engine/engine";
+import { StepResult } from "../engine/step-handlers";
 
 export interface ResolveContext {
   controller: PlayerId;
@@ -91,7 +92,7 @@ export function resolvePrimitive(
   state: GameState,
   effect: EffectPrimitive,
   ctx: ResolveContext,
-): { state: GameState; events: GameEvent[]; prepend: EngineStep[] } {
+): StepResult {
   let s = state;
   const events: GameEvent[] = [];
   const prepend: EngineStep[] = [];
@@ -283,7 +284,7 @@ export function resolvePrimitive(
           const r = resolvePrimitive(s, inner, ctx);
           s = r.state;
           events.push(...r.events);
-          prepend.push(...r.prepend);
+          prepend.push(...(r.prepend ?? []));
         }
       }
       break;

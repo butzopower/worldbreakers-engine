@@ -79,7 +79,6 @@ export class GameSession {
         zone: card.zone,
         exhausted: card.exhausted,
         counters: { ...card.counters },
-        usedAbilities: [...card.usedAbilities],
       };
     });
 

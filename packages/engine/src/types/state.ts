@@ -20,8 +20,6 @@ export interface CardInstance {
   zone: Zone;
   exhausted: boolean;
   counters: CounterMap;
-  /** Tracks which "Action:" abilities have been used this turn */
-  usedAbilities: number[];
   markAsDestroyed: boolean;
 }
 
@@ -84,8 +82,6 @@ export interface GameState {
   winner: PlayerId | 'draw' | null;
   /** Combat responses registered by cards, fire once during combat */
   combatResponses: CombatResponse[];
-  /** Effects remaining to resolve after the current pending choice completes */
-  remainingEffects?: { effects: EffectPrimitive[]; controller: PlayerId; sourceCardId: string; triggeringCardId?: string };
   /** Step queue for the queue-based engine lifecycle */
   stepQueue: EngineStep[] | null;
 }

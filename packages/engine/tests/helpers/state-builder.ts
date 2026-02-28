@@ -88,7 +88,6 @@ export class StateBuilder {
       zone,
       exhausted: opts?.exhausted ?? false,
       counters: opts?.counters ?? {},
-      usedAbilities: [],
       markAsDestroyed: false,
     };
     this.state.cards.push(card);

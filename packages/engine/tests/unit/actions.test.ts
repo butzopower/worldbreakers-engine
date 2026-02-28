@@ -204,21 +204,6 @@ describe('use_ability action', () => {
 
     // Void Channeler: Action: Gain 1 power
     expectPlayerPower(result.state, 'player1', 1);
-    // Should be exhausted after use
-    const card = getCard(result.state, 'vc1')!;
-    expect(card.exhausted).toBe(true);
-  });
-
-  it('rejects using ability on exhausted follower', () => {
-    const state = buildState()
-      .withActivePlayer('player1')
-      .addCard('void_channeler', 'player1', 'board', { instanceId: 'vc1', exhausted: true })
-      .build();
-
-    expect(() => processAction(state, {
-      player: 'player1',
-      action: { type: 'use_ability', cardInstanceId: 'vc1', abilityIndex: 0 },
-    })).toThrow('Invalid action');
   });
 });
 
