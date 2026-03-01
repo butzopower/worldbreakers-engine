@@ -120,26 +120,24 @@ export function resolvePrimitive(
       break;
     }
     case 'gain_standing': {
-      if (effect.guild === 'choose') {
-        const player = resolvePlayerSelector(effect.player, ctx)[0];
-        s = setPendingChoice(s, {
-          type: 'choose_mode',
-          playerId: player,
-          sourceCardId: ctx.sourceCardId,
-          modes: STANDING_GUILDS.map(g => ({
-            label: `Gain ${effect.amount} ${g.charAt(0).toUpperCase() + g.slice(1)} standing`,
-            effects: [{ type: 'gain_standing' as const, player: effect.player, guild: g, amount: effect.amount }],
-          })),
-        }).state
-        break;
+      const guild = effect.guild;
+      if (guild === 'choose') {
+        const modes = STANDING_GUILDS.map(g => ({
+          label: `Gain ${effect.amount} ${g.charAt(0).toUpperCase() + g.slice(1)} standing`,
+          effects: [{ type: 'gain_standing' as const, player: effect.player, guild: g, amount: effect.amount }],
+        }));
+        const prepend: EngineStep[] = [{type: 'request_choose_mode', player: ctx.controller, sourceCardId: ctx.sourceCardId, modes}];
+        return { state, events, prepend: prepend };
       }
+
       const players = resolvePlayerSelector(effect.player, ctx);
-      for (const p of players) {
-        const r = gainStanding(s, p, effect.guild, effect.amount);
-        s = r.state;
-        events.push(...r.events);
-      }
-      break;
+      const prepend: EngineStep[] = players.map(player => (
+        {
+          type: 'gain_standing', player, guild, amount: effect.amount
+        }
+      ));
+
+      return { state, events, prepend };
     }
     case 'gain_power': {
       const players = resolvePlayerSelector(effect.player, ctx);

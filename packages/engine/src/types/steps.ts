@@ -1,4 +1,4 @@
-import { PlayerId } from './core';
+import { PlayerId, StandingGuild } from './core';
 import { AbilityDefinition, AbilityTiming, EffectPrimitive, Mode } from './effects';
 import { CombatResponseTrigger } from "./state";
 import { ResolveContext } from "../abilities/primitives";
@@ -36,5 +36,6 @@ export type EngineStep =
   | { type: 'develop'; player: PlayerId; locationId: string; }
   // Board State
   | { type: 'gain_mythium'; player: PlayerId; amount: number }
-  | { type: 'gain_power', player: PlayerId; amount: number }
+  | { type: 'gain_power'; player: PlayerId; amount: number }
+  | { type: 'gain_standing', player: PlayerId; guild: StandingGuild; amount: number }
   ;

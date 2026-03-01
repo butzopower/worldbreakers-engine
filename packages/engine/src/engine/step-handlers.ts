@@ -3,7 +3,15 @@ import { GameEvent } from '../types/events';
 import { EngineStep } from '../types/steps';
 import { PlayerId, PLAYERS, opponentOf } from '../types/core';
 import { runCleanup, expireLastingEffects } from './cleanup';
-import { drawCard, gainMythium, gainPower, readyCard, removeCounterFromCard, setPendingChoice } from '../state/mutate';
+import {
+  drawCard,
+  gainMythium,
+  gainPower,
+  gainStanding,
+  readyCard,
+  removeCounterFromCard,
+  setPendingChoice
+} from '../state/mutate';
 import { getBoard, getCardDef, getWorldbreaker } from '../state/query';
 import { getCounter } from '../types/counters';
 import { ResolveContext, findValidTargets, resolvePrimitive } from '../abilities/primitives';
@@ -75,7 +83,9 @@ export function executeStep(state: GameState, step: EngineStep): StepResult {
     case 'gain_mythium':
       return gainMythium(state, step.player, step.amount);
     case 'gain_power':
-      return gainPower(state, step.player, step.amount)
+      return gainPower(state, step.player, step.amount);
+    case 'gain_standing':
+      return gainStanding(state, step.player, step.guild, step.amount);
   }
 }
 
