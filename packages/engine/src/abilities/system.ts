@@ -1,11 +1,11 @@
 import { GameState } from '../types/state';
 import { ResolveContext } from './primitives';
-import { StepResult } from "../engine/step-handlers";
+import { EngineStep } from "../types/steps";
 
 export type CustomResolverFn = (
   state: GameState,
   ctx: ResolveContext,
-) => StepResult;
+) => EngineStep[];
 
 const customResolvers = new Map<string, CustomResolverFn>();
 

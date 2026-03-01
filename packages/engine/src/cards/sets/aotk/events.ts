@@ -7,6 +7,7 @@ import { getCardDef, getDeck, isFollower } from "../../../state/query";
 import { drawCard, moveCard, shuffleDeck } from "../../../state/mutate";
 import { STANDING_GUILDS } from "../../../types/core";
 import { StepResult } from "../../../engine/step-handlers";
+import { EngineStep } from "../../../types/steps";
 
 export const events: CardDefinition[] = [
   {
@@ -248,13 +249,13 @@ export const eventResolvers: {key: string, resolver: CustomResolverFn}[] = [
     resolver: (
       state: GameState,
       ctx: ResolveContext,
-    ): StepResult => {
+    ): EngineStep[] => {
       const player = ctx.controller;
       const deck = getDeck(state, player);
       const cardsToReveal: CardInstance[] = [];
 
       if (deck.length === 0) {
-        return { state, events: [] };
+        return [];
       }
 
       for (const card of deck) {
@@ -262,33 +263,34 @@ export const eventResolvers: {key: string, resolver: CustomResolverFn}[] = [
         if (cardsToReveal.filter(isFollower).length >= 2) break;
       }
 
-      let newState = state;
-      const events: GameEvent[] = [
-        {
-          type: 'reveal',
-          player,
-          cardDefinitionIds: cardsToReveal.map(c => c.definitionId)
-        }
-      ];
-
       const revealedFollowers = cardsToReveal.filter(isFollower);
+      const steps: EngineStep[] = revealedFollowers.map(follower => (
+        {
+          type: 'move_card',
+          cardInstanceId: follower.instanceId,
+          toZone: 'hand'
+        }
+      ));
 
-      for (const follower of revealedFollowers) {
-        const r = moveCard(newState, follower.instanceId, 'hand');
-        newState = r.state;
-        events.push(...r.events)
-      }
+      steps.push(
+        {
+          type: 'reveal_cards',
+          player,
+          cardDefinitionIds: cardsToReveal.map(c => c.definitionId),
+        }
+      )
 
-      const shuffleResult = shuffleDeck(newState, player);
-      newState = shuffleResult.state;
-      events.push(...shuffleResult.events)
+      steps.push(
+        {
+          type: 'shuffle_deck',
+          player,
+        }
+      )
 
       if (revealedFollowers.length > 0) {
         const cardInstanceIds = revealedFollowers.map(f => f.instanceId);
-        return {
-          state: newState,
-          events,
-          prepend: [{
+        steps.push(
+          {
             type: 'request_choose_mode',
             player,
             sourceCardId: ctx.sourceCardId,
@@ -299,11 +301,11 @@ export const eventResolvers: {key: string, resolver: CustomResolverFn}[] = [
               },
               { label: 'Pass', effects: [] },
             ],
-          }],
-        };
+          }
+        )
       }
 
-      return { state: newState, events }
+      return steps;
     }
   }
 ]

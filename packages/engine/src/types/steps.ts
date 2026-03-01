@@ -1,4 +1,4 @@
-import { PlayerId, StandingGuild } from './core';
+import { PlayerId, StandingGuild, Zone } from './core';
 import { AbilityDefinition, AbilityTiming, EffectPrimitive, Mode } from './effects';
 import { CombatResponseTrigger } from "./state";
 import { ResolveContext } from "../abilities/primitives";
@@ -37,7 +37,11 @@ export type EngineStep =
   | { type: 'combat_end' }
   // Locations
   | { type: 'develop'; player: PlayerId; locationId: string; }
+  // Log
+  | { type: 'reveal_cards', player: PlayerId; cardDefinitionIds: string[] }
   // Board State
+  | { type: 'move_card', cardInstanceId: string; toZone: Zone }
+  | { type: 'shuffle_deck', player: PlayerId }
   | { type: 'gain_mythium'; player: PlayerId; amount: number }
   | { type: 'gain_power'; player: PlayerId; amount: number }
   | { type: 'gain_standing', player: PlayerId; guild: StandingGuild; amount: number }

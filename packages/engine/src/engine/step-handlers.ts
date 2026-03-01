@@ -8,10 +8,10 @@ import {
   exhaustCard,
   gainMythium,
   gainPower,
-  gainStanding,
+  gainStanding, moveCard,
   readyCard,
   removeCounterFromCard,
-  setPendingChoice
+  setPendingChoice, shuffleDeck
 } from '../state/mutate';
 import { getBoard, getCardDef, getWorldbreaker, isDefeated } from '../state/query';
 import { getCounter } from '../types/counters';
@@ -88,6 +88,12 @@ export function executeStep(state: GameState, step: EngineStep): StepResult {
       return handleCombatEnd(state);
     case 'develop':
       return handleDevelop(state, step.player, step.locationId);
+    case 'reveal_cards':
+      return revealCards(state, step.player, step.cardDefinitionIds);
+    case 'move_card':
+      return moveCard(state, step.cardInstanceId, step.toZone)
+    case 'shuffle_deck':
+      return shuffleDeck(state, step.player);
     case 'gain_mythium':
       return gainMythium(state, step.player, step.amount);
     case 'gain_power':
@@ -240,11 +246,7 @@ function handleRallyTriggers(state: GameState, player: PlayerId): StepResult {
     if (wbDef.abilities) {
       for (let i = 0; i < wbDef.abilities.length; i++) {
         if (wbDef.abilities[i].timing === 'rally') {
-          if (wbDef.abilities[i].customResolve) {
-            prepend.push({ type: 'resolve_custom_ability', controller: player, sourceCardId: wb.instanceId, customResolve: wbDef.abilities[i].customResolve! });
-          } else {
-            prepend.push({ type: 'resolve_ability_at_index', controller: player, sourceCardId: wb.instanceId, abilityIndex: i });
-          }
+          prepend.push({ type: 'resolve_ability_at_index', controller: player, sourceCardId: wb.instanceId, abilityIndex: i });
         }
       }
     }
@@ -256,11 +258,7 @@ function handleRallyTriggers(state: GameState, player: PlayerId): StepResult {
     if (!def.abilities) continue;
     for (let i = 0; i < def.abilities.length; i++) {
       if (def.abilities[i].timing === 'rally') {
-        if (def.abilities[i].customResolve) {
-          prepend.push({ type: 'resolve_custom_ability', controller: player, sourceCardId: card.instanceId, customResolve: def.abilities[i].customResolve! });
-        } else {
-          prepend.push({ type: 'resolve_ability_at_index', controller: player, sourceCardId: card.instanceId, abilityIndex: i });
-        }
+        prepend.push({ type: 'resolve_ability_at_index', controller: player, sourceCardId: card.instanceId, abilityIndex: i });
       }
     }
   }
@@ -442,9 +440,7 @@ function handleResolveCustomAbility(state: GameState, controller: PlayerId, sour
   const customFn = getCustomResolver(customResolve);
   if (customFn) {
     const ctx: ResolveContext = { controller, sourceCardId, triggeringCardId };
-    const result = customFn(state, ctx);
-    events.push(...result.events);
-    return { state: result.state, events, prepend: result.prepend };
+    return { state, events, prepend: customFn(state, ctx) };
   }
   return { state, events };
 }
@@ -459,11 +455,7 @@ function handleCheckTriggers(state: GameState, timing: import('../types/effects'
     if (wbDef.abilities) {
       for (let i = 0; i < wbDef.abilities.length; i++) {
         if (wbDef.abilities[i].timing === timing) {
-          if (wbDef.abilities[i].customResolve) {
-            prepend.push({ type: 'resolve_custom_ability', controller: player, sourceCardId: wb.instanceId, customResolve: wbDef.abilities[i].customResolve!, triggeringCardId });
-          } else {
-            prepend.push({ type: 'resolve_ability_at_index', controller: player, sourceCardId: wb.instanceId, abilityIndex: i, triggeringCardId });
-          }
+          prepend.push({ type: 'resolve_ability_at_index', controller: player, sourceCardId: wb.instanceId, abilityIndex: i, triggeringCardId });
         }
       }
     }
@@ -476,11 +468,7 @@ function handleCheckTriggers(state: GameState, timing: import('../types/effects'
     if (!def.abilities) continue;
     for (let i = 0; i < def.abilities.length; i++) {
       if (def.abilities[i].timing === timing) {
-        if (def.abilities[i].customResolve) {
-          prepend.push({ type: 'resolve_custom_ability', controller: player, sourceCardId: card.instanceId, customResolve: def.abilities[i].customResolve!, triggeringCardId });
-        } else {
-          prepend.push({ type: 'resolve_ability_at_index', controller: player, sourceCardId: card.instanceId, abilityIndex: i, triggeringCardId });
-        }
+        prepend.push({ type: 'resolve_ability_at_index', controller: player, sourceCardId: card.instanceId, abilityIndex: i, triggeringCardId });
       }
     }
   }
@@ -730,11 +718,6 @@ function handleCombatEnd(state: GameState): StepResult {
   return { state: s, events };
 }
 
-// -- Board State --
-function handleGainPower(state: GameState, player: PlayerId, amount: number): StepResult {
-  return gainPower(state, player, amount)
-}
-
 // --- Utility ---
 
 /**
@@ -808,4 +791,15 @@ export function resolveEffectsWithQueue(
   }
 
   return { state: s, events };
+}
+
+function revealCards(state: GameState, player: PlayerId, cardDefinitionIds: string[]) {
+  const events: GameEvent[] = [
+    {
+      type: 'reveal',
+      player,
+      cardDefinitionIds
+    }
+  ]
+  return { state, events };
 }

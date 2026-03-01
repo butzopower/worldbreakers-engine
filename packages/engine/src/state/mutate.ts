@@ -2,8 +2,7 @@ import { opponentOf, PlayerId, StandingGuild, Zone } from '../types/core';
 import { GameState, CardInstance, LastingEffect, PendingChoice } from '../types/state';
 import { CounterType, addCounter as addCounterToMap, getCounter } from '../types/counters';
 import { GameEvent } from '../types/events';
-import { nextRandom, seededShuffle } from '../utils/random';
-import { getDeck } from "./query";
+import { seededShuffle } from '../utils/random';
 
 export interface MutationResult {
   state: GameState;

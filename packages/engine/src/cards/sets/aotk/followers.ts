@@ -542,9 +542,8 @@ export const followerResolvers: { key: string; resolver: CustomResolverFn }[] = 
     resolver: (state: GameState, ctx: ResolveContext) => {
       const standing = state.players[ctx.controller].standing;
       const total = STANDING_GUILDS.reduce((sum, guild) => sum + standing[guild], 0);
-      if (total <= 0) return { state, events: [] };
-      const result = gainMythium(state, ctx.controller, total);
-      return { state: result.state, events: result.events };
+      if (total <= 0) return [];
+      return [{ type: 'gain_mythium', player: ctx.controller, amount: total}];
     },
   },
 ];

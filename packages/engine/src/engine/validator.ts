@@ -3,7 +3,7 @@ import { ActionInput, PlayerAction } from '../types/actions';
 import { PlayerId, opponentOf } from '../types/core';
 import {
   getCard, getCardDef, canPlayCard, canAttack, canBlock, canBlockAttacker, canDevelop, canUseAbility, canPay,
-  getFollowers, getHand, getLocations, hasKeyword,
+  getHand, hasKeyword,
 } from '../state/query';
 import { getCounter } from '../types/counters';
 
