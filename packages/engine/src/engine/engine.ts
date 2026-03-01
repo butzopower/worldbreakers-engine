@@ -17,8 +17,6 @@ import {
   canPlayCard, canAttack, canBlock, canBlockAttacker, canDevelop, canUseAbility,
   getFollowers, getLocations, getBoard,
 } from '../state/query';
-import { resolveSingleFight } from '../combat/damage';
-import { runCleanup } from './cleanup';
 
 export interface ProcessResult {
   state: GameState;
@@ -404,78 +402,11 @@ function resolveChooseBlockers(state: GameState, _player: PlayerId, action: Play
 }
 
 function resolveDeclareBlocker(state: GameState, blockerId: string, attackerId: string): ChoiceResult {
-  let s: GameState = { ...state, pendingChoice: null };
-  const events: GameEvent[] = [];
-  const prepend: EngineStep[] = [];
-
-  if (!s.combat) return { state: s, events, prepend };
-
-  const defender = opponentOf(s.combat.attackingPlayer);
-
-  // Exhaust the blocker
-  const exhaustResult = exhaustCard(s, blockerId);
-  s = exhaustResult.state;
-  events.push(...exhaustResult.events);
-
-  events.push({ type: 'blocker_declared', defendingPlayer: defender, blockerId, attackerId });
-
-  // Resolve fight between this pair
-  const fightResult = resolveSingleFight(s, attackerId, blockerId);
-  s = fightResult.state;
-  events.push(...fightResult.events);
-  events.push({ type: 'fight_resolved' });
-
-  // If overwhelm granted power during the fight, fire combat responses
-  if (fightResult.events.some(e => e.type === 'power_gained')) {
-    prepend.push(
-      {
-        type: 'check_combat_responses',
-        timing: 'on_power_gain',
-      },
-    )
-  }
-
-  // Cleanup after fight
-  const cleanupResult = runCleanup(s);
-  s = cleanupResult.state;
-  events.push(...cleanupResult.events);
-
-  if (!s.combat) return { state: s, events, prepend };
-
-  // Remove this attacker from attackerIds
-  const remainingAttackerIds = s.combat.attackerIds.filter(id => id !== attackerId);
-  s = {
-    ...s,
-    combat: { ...s.combat, attackerIds: remainingAttackerIds },
-  };
-
-  // Queue 'overwhelms' trigger if applicable
-  const blockerAfterCleanup = getCard(s, blockerId);
-  const attackerAfterCleanup = getCard(s, attackerId);
-  const blockerDefeated = !blockerAfterCleanup || blockerAfterCleanup.zone !== 'board';
-  if (blockerDefeated && attackerAfterCleanup) {
-    const attackerDef = getCardDef(attackerAfterCleanup);
-    if (hasKeyword(s, attackerAfterCleanup, 'overwhelm') && attackerDef.abilities) {
-      for (let i = 0; i < attackerDef.abilities.length; i++) {
-        if (attackerDef.abilities[i].timing === 'overwhelms') {
-          prepend.push(
-            {
-              type: 'resolve_ability_at_index',
-              controller: s.combat!.attackingPlayer,
-              sourceCardId: attackerId,
-              abilityIndex: i,
-            }
-          )
-        }
-      }
-    }
-  }
-
-  // Queue cleanup (for overwhelms effects like destroy) then post-block
+  const s: GameState = { ...state, pendingChoice: null };
   return {
     state: s,
-    events,
-    prepend: [...prepend, { type: 'cleanup' }, { type: 'combat_post_block', remainingAttackerIds }],
+    events: [],
+    prepend: [{ type: 'combat_fight', attackerId, blockerId }],
   };
 }
 
@@ -505,6 +436,7 @@ function resolvePassBlock(state: GameState): ChoiceResult {
 function resolveChooseBreachTarget(state: GameState, _player: PlayerId, action: PlayerAction): ChoiceResult {
   let s: GameState = { ...state, pendingChoice: null };
   const events: GameEvent[] = [];
+  const prepend: EngineStep[] = [];
 
   if (action.type === 'damage_location') {
     const location = getCard(s, action.locationInstanceId);
@@ -513,15 +445,12 @@ function resolveChooseBreachTarget(state: GameState, _player: PlayerId, action: 
       s = removeResult.state;
       events.push(...removeResult.events);
       events.push({ type: 'location_damaged', locationInstanceId: action.locationInstanceId, amount: 1 });
-
-      const cleanupResult = runCleanup(s);
-      s = cleanupResult.state;
-      events.push(...cleanupResult.events);
+      prepend.push({ type: 'cleanup' });
     }
   }
   // skip_breach_damage: just continue to combat_end
 
-  return { state: s, events, prepend: [{ type: 'combat_end' }] };
+  return { state: s, events, prepend: [...prepend, { type: 'combat_end' }] };
 }
 
 function resolveChooseAttackers(state: GameState, _player: PlayerId, action: PlayerAction): ChoiceResult {

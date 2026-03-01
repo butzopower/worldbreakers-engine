@@ -6,6 +6,7 @@ import { GameEvent } from "../../../types/events";
 import { getCardDef, getDeck, isFollower } from "../../../state/query";
 import { drawCard, moveCard, shuffleDeck } from "../../../state/mutate";
 import { STANDING_GUILDS } from "../../../types/core";
+import { StepResult } from "../../../engine/step-handlers";
 
 export const events: CardDefinition[] = [
   {
@@ -247,7 +248,7 @@ export const eventResolvers: {key: string, resolver: CustomResolverFn}[] = [
     resolver: (
       state: GameState,
       ctx: ResolveContext,
-    ): { state: GameState; events: GameEvent[] } => {
+    ): StepResult => {
       const player = ctx.controller;
       const deck = getDeck(state, player);
       const cardsToReveal: CardInstance[] = [];
@@ -284,28 +285,25 @@ export const eventResolvers: {key: string, resolver: CustomResolverFn}[] = [
 
       if (revealedFollowers.length > 0) {
         const cardInstanceIds = revealedFollowers.map(f => f.instanceId);
-        newState = {
-          ...newState,
-          pendingChoice: {
-            type: 'choose_mode',
-            playerId: player,
+        return {
+          state: newState,
+          events,
+          prepend: [{
+            type: 'request_choose_mode',
+            player,
             sourceCardId: ctx.sourceCardId,
             modes: [
-              { label: 'Play one of the drawn followers',
-                effects: [
-                  {
-                    type: 'play_card',
-                    target: { kind: 'choose', filter: { cardInstanceIds, canPay: {} }, count: 1 }
-                  }
-                ]
+              {
+                label: 'Play one of the drawn followers',
+                effects: [{ type: 'play_card', target: { kind: 'choose', filter: { cardInstanceIds, canPay: {} }, count: 1 } }],
               },
-              { label: 'Pass', effects: [] }
+              { label: 'Pass', effects: [] },
             ],
-          }
-        }
+          }],
+        };
       }
 
-      return { state: newState, events}
+      return { state: newState, events }
     }
   }
 ]

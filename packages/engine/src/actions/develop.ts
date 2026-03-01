@@ -5,7 +5,6 @@ import { getCard, getCardDef, getLocationStage } from '../state/query';
 import { removeCounterFromCard } from '../state/mutate';
 import { EngineStep } from "../types/steps";
 import { StepResult } from "../engine/step-handlers";
-import { runCleanup } from "../engine/cleanup";
 
 export function handleDevelop(
   state: GameState,
@@ -32,7 +31,10 @@ export function handleDevelop(
 
   events.push({ type: 'location_developed', locationInstanceId, stage: developedStage });
 
-  // Resolve the stage ability
+  // Run cleanup first to handle depletion (location with 0 stage counters)
+  prepend.push({ type: 'cleanup' });
+
+  // Then resolve the stage ability (runs after the location may have been depleted)
   if (def.locationStages) {
     const stageAbility = def.locationStages.find(ls => ls.stage === developedStage);
     if (stageAbility) {
@@ -41,19 +43,12 @@ export function handleDevelop(
           type: 'resolve_ability',
           controller: player,
           sourceCardId: locationInstanceId,
-          ability: stageAbility.ability
-        }
-      )
+          ability: stageAbility.ability,
+        },
+        { type: 'cleanup' },
+      );
     }
   }
-
-  // Run cleanup (handles depletion)
-  // TODO: figure out why this needs to be called here rather than just pushing a cleanup step
-  const cleanupResult = runCleanup(s);
-  s = cleanupResult.state;
-  events.push(...cleanupResult.events);
-
-  prepend.push({ type: 'cleanup' })
 
   return { state: s, events, prepend };
 }

@@ -5,6 +5,7 @@ import { PlayerId, PLAYERS, opponentOf } from '../types/core';
 import { runCleanup, expireLastingEffects } from './cleanup';
 import {
   drawCard,
+  exhaustCard,
   gainMythium,
   gainPower,
   gainStanding,
@@ -12,14 +13,15 @@ import {
   removeCounterFromCard,
   setPendingChoice
 } from '../state/mutate';
-import { getBoard, getCardDef, getWorldbreaker } from '../state/query';
+import { getBoard, getCardDef, getWorldbreaker, isDefeated } from '../state/query';
 import { getCounter } from '../types/counters';
 import { ResolveContext, findValidTargets, resolvePrimitive } from '../abilities/primitives';
 import { getCustomResolver } from '../abilities/system';
 import { getCard } from '../state/query';
-import { getFollowers, getLocations, isHidden, canBlock, canBlockAttacker } from '../state/query';
+import { getFollowers, getLocations, isHidden, canAttack, canBlock, canBlockAttacker, hasKeyword } from '../state/query';
 import { AbilityDefinition, EffectPrimitive, Mode } from '../types/effects';
 import { handleDevelop } from "../actions/develop";
+import { resolveSingleFight } from '../combat/damage';
 
 export interface StepResult {
   state: GameState;
@@ -38,6 +40,8 @@ export function executeStep(state: GameState, step: EngineStep): StepResult {
       return handleRequestChooseMode(state, step.player, step.sourceCardId, step.modes)
     case 'request_choose_discard':
       return handleRequestChooseDiscard(state, step.player, step.sourceCardId, step.count)
+    case 'request_choose_attackers':
+      return handleRequestChooseAttackers(state, step.player)
     case 'cleanup':
       return handleCleanup(state);
     case 'advance_turn':
@@ -68,6 +72,10 @@ export function executeStep(state: GameState, step: EngineStep): StepResult {
       return handleCheckCombatResponses(state, step.timing);
     case 'combat_declare_blockers':
       return handleCombatDeclareBlockers(state, step.defender, step.attackerIds);
+    case 'combat_fight':
+      return handleCombatFight(state, step.attackerId, step.blockerId);
+    case 'check_overwhelm_trigger':
+      return handleCombatCheckOverwhelm(state, step.attackerId);
     case 'combat_post_block':
       return handleCombatPostBlock(state, step.remainingAttackerIds);
     case 'combat_breach':
@@ -143,6 +151,15 @@ function handleRequestChooseDiscard(state: GameState, player: PlayerId, sourceCa
     playerId: player,
     sourceCardId: sourceCardId,
     count,
+  });
+}
+
+function handleRequestChooseAttackers(state: GameState, player: PlayerId): StepResult {
+  const attackable = getFollowers(state, player).filter(f => canAttack(state, f));
+  if (attackable.length === 0) return { state, events: [] };
+  return setPendingChoice(state, {
+    type: 'choose_attackers',
+    playerId: player,
   });
 }
 
@@ -427,7 +444,7 @@ function handleResolveCustomAbility(state: GameState, controller: PlayerId, sour
     const ctx: ResolveContext = { controller, sourceCardId, triggeringCardId };
     const result = customFn(state, ctx);
     events.push(...result.events);
-    return { state: result.state, events };
+    return { state: result.state, events, prepend: result.prepend };
   }
   return { state, events };
 }
@@ -506,6 +523,76 @@ function handleCombatDeclareBlockers(state: GameState, defender: PlayerId, attac
     },
   };
   return { state: s, events: [] };
+}
+
+function handleCombatFight(state: GameState, attackerId: string, blockerId: string): StepResult {
+  if (!state.combat) return { state, events: [] };
+
+  let s = state;
+  const events: GameEvent[] = [];
+  const prepend: EngineStep[] = [];
+
+  const defender = opponentOf(state.combat.attackingPlayer);
+
+  const exhaustResult = exhaustCard(s, blockerId);
+  s = exhaustResult.state;
+  events.push(...exhaustResult.events);
+  events.push({ type: 'blocker_declared', defendingPlayer: defender, blockerId, attackerId });
+
+  const fightResult = resolveSingleFight(s, attackerId, blockerId);
+  s = fightResult.state;
+  events.push(...fightResult.events);
+  events.push({ type: 'fight_resolved' });
+
+  if (fightResult.events.some(e => e.type === 'power_gained')) {
+    prepend.push({ type: 'check_combat_responses', timing: 'on_power_gain' });
+  }
+
+  const postBlockBlocker = getCard(s, blockerId);
+  const blockerDefeated = !!postBlockBlocker && isDefeated(postBlockBlocker);
+
+  const remainingAttackerIds = s.combat!.attackerIds.filter(id => id !== attackerId);
+  s = { ...s, combat: { ...state.combat, attackerIds: remainingAttackerIds } };
+
+  prepend.push({ type: 'cleanup' });
+
+  if (blockerDefeated) {
+    prepend.push({ type: 'check_overwhelm_trigger', attackerId });
+  }
+
+  prepend.push({ type: 'combat_post_block', remainingAttackerIds });
+
+  return { state: s, events, prepend };
+}
+
+function handleCombatCheckOverwhelm(state: GameState, attackerId: string): StepResult {
+  if (!state.combat) return { state, events: [] };
+
+  const prepend: EngineStep[] = [];
+
+  const attackerCard = getCard(state, attackerId);
+
+  if (attackerCard) {
+    const attackerDef = getCardDef(attackerCard);
+    if (hasKeyword(state, attackerCard, 'overwhelm') && attackerDef.abilities) {
+      for (let i = 0; i < attackerDef.abilities.length; i++) {
+        if (attackerDef.abilities[i].timing === 'overwhelms') {
+          prepend.push({
+            type: 'resolve_ability_at_index',
+            controller: state.combat.attackingPlayer,
+            sourceCardId: attackerId,
+            abilityIndex: i,
+          });
+        }
+      }
+    }
+  }
+
+  if (prepend.length > 0) {
+    prepend.push({ type: 'cleanup' });
+  }
+
+  return { state, events: [], prepend };
 }
 
 function handleCombatPostBlock(state: GameState, remainingAttackerIds: string[]): StepResult {

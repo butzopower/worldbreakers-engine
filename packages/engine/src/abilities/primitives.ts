@@ -4,8 +4,8 @@ import { GameEvent } from '../types/events';
 import { EffectPrimitive, PlayerSelector, TargetSelector, CardFilter, Mode } from '../types/effects';
 import { CardInstance } from '../types/state';
 import {
-  drawCard, gainStanding, loseStanding, addCounterToCard,
-  removeCounterFromCard, exhaustCard, readyCard, addLastingEffect, destroy, setPendingChoice,
+  drawCard, loseStanding, addCounterToCard,
+  removeCounterFromCard, exhaustCard, readyCard, addLastingEffect, destroy,
 } from '../state/mutate';
 import { getCard, getCardDef, getFollowers, canPay, canDevelop, canAttack, hasKeyword } from '../state/query';
 import { getCounter } from '../types/counters';
@@ -178,7 +178,6 @@ export function resolvePrimitive(
     }
     case 'discard': {
       const prepend: EngineStep[] = [];
-      // This creates a pending choice for the player to choose cards to discard
       const players = resolvePlayerSelector(effect.player, ctx);
       for (const p of players) {
         // If there's a pending choice system, we'd set it here
@@ -290,13 +289,7 @@ export function resolvePrimitive(
     case 'initiate_attack': {
       const attackable = getFollowers(s, ctx.controller).filter(f => canAttack(s, f));
       if (attackable.length > 0) {
-        s = {
-          ...s,
-          pendingChoice: {
-            type: 'choose_attackers',
-            playerId: ctx.controller,
-          },
-        };
+        prepend.push({ type: 'request_choose_attackers', player: ctx.controller });
       }
       break;
     }
@@ -362,19 +355,9 @@ export function resolvePrimitive(
 
       if (modes.length === 1) {
         // Only one option - auto-resolve gain standing
-        const r = gainStanding(s, controller, 'earth', 1);
-        s = r.state;
-        events.push(...r.events);
+        prepend.push({ type: 'gain_standing', player: controller, guild: 'earth', amount: 1 });
       } else {
-        s = {
-          ...s,
-          pendingChoice: {
-            type: 'choose_mode',
-            playerId: controller,
-            sourceCardId: ctx.sourceCardId,
-            modes,
-          },
-        };
+        prepend.push({ type: 'request_choose_mode', player: controller, sourceCardId: ctx.sourceCardId, modes });
       }
       break;
     }
