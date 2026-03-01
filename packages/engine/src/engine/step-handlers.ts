@@ -1,17 +1,23 @@
-import { CombatResponseTrigger, GameState } from '../types/state';
+import { CombatResponse, CombatResponseTrigger, GameState, LastingEffect } from '../types/state';
 import { GameEvent } from '../types/events';
 import { EngineStep } from '../types/steps';
 import { PlayerId, PLAYERS, opponentOf } from '../types/core';
 import { runCleanup, expireLastingEffects } from './cleanup';
 import {
+  addCounterToCard,
+  addLastingEffect,
+  destroy,
   drawCard,
   exhaustCard,
   gainMythium,
   gainPower,
-  gainStanding, moveCard,
+  gainStanding,
+  loseStanding,
+  moveCard,
   readyCard,
   removeCounterFromCard,
-  setPendingChoice, shuffleDeck
+  setPendingChoice,
+  shuffleDeck,
 } from '../state/mutate';
 import { getBoard, getCardDef, getWorldbreaker, isDefeated } from '../state/query';
 import { getCounter } from '../types/counters';
@@ -22,6 +28,7 @@ import { getFollowers, getLocations, isHidden, canAttack, canBlock, canBlockAtta
 import { AbilityDefinition, EffectPrimitive, Mode } from '../types/effects';
 import { handleDevelop } from "../actions/develop";
 import { resolveSingleFight } from '../combat/damage';
+import { generateEffectId } from '../utils/id';
 
 export interface StepResult {
   state: GameState;
@@ -90,16 +97,34 @@ export function executeStep(state: GameState, step: EngineStep): StepResult {
       return handleDevelop(state, step.player, step.locationId);
     case 'reveal_cards':
       return revealCards(state, step.player, step.cardDefinitionIds);
+    case 'draw_card':
+      return drawCard(state, step.player);
     case 'move_card':
-      return moveCard(state, step.cardInstanceId, step.toZone)
+      return moveCard(state, step.cardInstanceId, step.toZone);
     case 'shuffle_deck':
       return shuffleDeck(state, step.player);
+    case 'add_counter':
+      return addCounterToCard(state, step.cardInstanceId, step.counter, step.amount);
+    case 'remove_counter':
+      return removeCounterFromCard(state, step.cardInstanceId, step.counter, step.amount);
+    case 'exhaust_card':
+      return exhaustCard(state, step.cardInstanceId);
+    case 'ready_card':
+      return readyCard(state, step.cardInstanceId);
+    case 'destroy_card':
+      return destroy(state, step.cardInstanceId);
     case 'gain_mythium':
       return gainMythium(state, step.player, step.amount);
     case 'gain_power':
       return gainPower(state, step.player, step.amount);
     case 'gain_standing':
       return gainStanding(state, step.player, step.guild, step.amount);
+    case 'lose_standing':
+      return loseStanding(state, step.player, step.guild, step.amount);
+    case 'grant_lasting_effect':
+      return handleGrantLastingEffect(state, step);
+    case 'register_combat_response':
+      return handleRegisterCombatResponse(state, step);
   }
 }
 
@@ -779,7 +804,7 @@ export function resolveEffectsWithQueue(
     const result = resolvePrimitive(s, effect, ctx);
     s = result.state;
     events.push(...result.events);
-    if (s.pendingChoice || result.prepend) {
+    if (s.pendingChoice || (result.prepend && result.prepend.length > 0)) {
       // A primitive set a pending choice (e.g. initiate_attack)
       const remainingEffects = effects.slice(i + 1);
       const prepend: EngineStep[] = [...(result.prepend ?? [])];
@@ -791,6 +816,38 @@ export function resolveEffectsWithQueue(
   }
 
   return { state: s, events };
+}
+
+function handleGrantLastingEffect(
+  state: GameState,
+  step: { effectType: import('../types/state').LastingEffectType; amount: number; targetInstanceIds: string[]; expiresAt: import('../types/state').LastingEffectExpiration },
+): StepResult {
+  const lastingEffect: LastingEffect = {
+    id: generateEffectId(),
+    type: step.effectType,
+    amount: step.amount,
+    targetInstanceIds: step.targetInstanceIds,
+    expiresAt: step.expiresAt,
+  };
+  return addLastingEffect(state, lastingEffect);
+}
+
+function handleRegisterCombatResponse(
+  state: GameState,
+  step: { trigger: CombatResponseTrigger; effects: EffectPrimitive[]; controller: PlayerId; sourceCardId: string },
+): StepResult {
+  const response: CombatResponse = {
+    id: generateEffectId(),
+    trigger: step.trigger,
+    effects: step.effects,
+    controller: step.controller,
+    sourceCardId: step.sourceCardId,
+  };
+  const newState = {
+    ...state,
+    combatResponses: [...state.combatResponses, response],
+  };
+  return { state: newState, events: [] };
 }
 
 function revealCards(state: GameState, player: PlayerId, cardDefinitionIds: string[]) {

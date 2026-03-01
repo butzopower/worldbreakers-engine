@@ -1,7 +1,8 @@
 import { PlayerId, StandingGuild, Zone } from './core';
 import { AbilityDefinition, AbilityTiming, EffectPrimitive, Mode } from './effects';
-import { CombatResponseTrigger } from "./state";
+import { CombatResponseTrigger, LastingEffectExpiration, LastingEffectType } from "./state";
 import { ResolveContext } from "../abilities/primitives";
+import { CounterType } from './counters';
 
 export type EngineStep =
   // Player Input
@@ -40,9 +41,18 @@ export type EngineStep =
   // Log
   | { type: 'reveal_cards', player: PlayerId; cardDefinitionIds: string[] }
   // Board State
+  | { type: 'draw_card'; player: PlayerId }
   | { type: 'move_card', cardInstanceId: string; toZone: Zone }
   | { type: 'shuffle_deck', player: PlayerId }
+  | { type: 'add_counter'; cardInstanceId: string; counter: CounterType; amount: number }
+  | { type: 'remove_counter'; cardInstanceId: string; counter: CounterType; amount: number }
+  | { type: 'exhaust_card'; cardInstanceId: string }
+  | { type: 'ready_card'; cardInstanceId: string }
+  | { type: 'destroy_card'; cardInstanceId: string }
   | { type: 'gain_mythium'; player: PlayerId; amount: number }
   | { type: 'gain_power'; player: PlayerId; amount: number }
-  | { type: 'gain_standing', player: PlayerId; guild: StandingGuild; amount: number }
+  | { type: 'gain_standing'; player: PlayerId; guild: StandingGuild; amount: number }
+  | { type: 'lose_standing'; player: PlayerId; guild: StandingGuild; amount: number }
+  | { type: 'grant_lasting_effect'; effectType: LastingEffectType; amount: number; targetInstanceIds: string[]; expiresAt: LastingEffectExpiration }
+  | { type: 'register_combat_response'; trigger: CombatResponseTrigger; effects: EffectPrimitive[]; controller: PlayerId; sourceCardId: string }
   ;

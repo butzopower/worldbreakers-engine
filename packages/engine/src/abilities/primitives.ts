@@ -1,15 +1,10 @@
 import { PlayerId, opponentOf, STANDING_GUILDS } from '../types/core';
-import { GameState, LastingEffect, CombatResponse } from '../types/state';
+import { GameState } from '../types/state';
 import { GameEvent } from '../types/events';
 import { EffectPrimitive, PlayerSelector, TargetSelector, CardFilter, Mode } from '../types/effects';
 import { CardInstance } from '../types/state';
-import {
-  drawCard, loseStanding, addCounterToCard,
-  removeCounterFromCard, exhaustCard, readyCard, addLastingEffect, destroy,
-} from '../state/mutate';
 import { getCard, getCardDef, getFollowers, canPay, canDevelop, canAttack, hasKeyword } from '../state/query';
 import { getCounter } from '../types/counters';
-import { generateEffectId } from '../utils/id';
 import { EngineStep } from "../types/steps";
 import { buildPlayCardQueue } from "../engine/engine";
 import { StepResult } from "../engine/step-handlers";
@@ -93,28 +88,22 @@ export function resolvePrimitive(
   effect: EffectPrimitive,
   ctx: ResolveContext,
 ): StepResult {
-  let s = state;
   const events: GameEvent[] = [];
   const prepend: EngineStep[] = [];
 
   switch (effect.type) {
     case 'gain_mythium': {
       const players = resolvePlayerSelector(effect.player, ctx);
-      const steps: EngineStep[] = players.map(player => ({
-        type: 'gain_mythium',
-        player,
-        amount: effect.amount,
-      }))
-
-      return { state, events, prepend: steps };
+      for (const p of players) {
+        prepend.push({ type: 'gain_mythium', player: p, amount: effect.amount });
+      }
+      break;
     }
     case 'draw_cards': {
       const players = resolvePlayerSelector(effect.player, ctx);
       for (const p of players) {
         for (let i = 0; i < effect.count; i++) {
-          const r = drawCard(s, p);
-          s = r.state;
-          events.push(...r.events);
+          prepend.push({ type: 'draw_card', player: p });
         }
       }
       break;
@@ -126,65 +115,48 @@ export function resolvePrimitive(
           label: `Gain ${effect.amount} ${g.charAt(0).toUpperCase() + g.slice(1)} standing`,
           effects: [{ type: 'gain_standing' as const, player: effect.player, guild: g, amount: effect.amount }],
         }));
-        const prepend: EngineStep[] = [{type: 'request_choose_mode', player: ctx.controller, sourceCardId: ctx.sourceCardId, modes}];
-        return { state, events, prepend: prepend };
+        prepend.push({ type: 'request_choose_mode', player: ctx.controller, sourceCardId: ctx.sourceCardId, modes });
+        break;
       }
-
       const players = resolvePlayerSelector(effect.player, ctx);
-      const prepend: EngineStep[] = players.map(player => (
-        {
-          type: 'gain_standing', player, guild, amount: effect.amount
-        }
-      ));
-
-      return { state, events, prepend };
+      for (const p of players) {
+        prepend.push({ type: 'gain_standing', player: p, guild, amount: effect.amount });
+      }
+      break;
     }
     case 'gain_power': {
       const players = resolvePlayerSelector(effect.player, ctx);
-      const steps: EngineStep[] = players.map(player => ({
-        type: 'gain_power',
-        player,
-        amount: effect.amount,
-      }))
-
-      return { state, events, prepend: steps };
+      for (const p of players) {
+        prepend.push({ type: 'gain_power', player: p, amount: effect.amount });
+      }
+      break;
     }
     case 'deal_wounds': {
-      const targets = resolveTargets(s, effect.target, ctx);
+      const targets = resolveTargets(state, effect.target, ctx);
       for (const targetId of targets) {
-        const r = addCounterToCard(s, targetId, 'wound', effect.amount);
-        s = r.state;
-        events.push(...r.events);
+        prepend.push({ type: 'add_counter', cardInstanceId: targetId, counter: 'wound', amount: effect.amount });
       }
       break;
     }
     case 'add_counter': {
-      const targets = resolveTargets(s, effect.target, ctx);
+      const targets = resolveTargets(state, effect.target, ctx);
       for (const targetId of targets) {
-        const r = addCounterToCard(s, targetId, effect.counter, effect.amount);
-        s = r.state;
-        events.push(...r.events);
+        prepend.push({ type: 'add_counter', cardInstanceId: targetId, counter: effect.counter, amount: effect.amount });
       }
       break;
     }
     case 'remove_counter': {
-      const targets = resolveTargets(s, effect.target, ctx);
+      const targets = resolveTargets(state, effect.target, ctx);
       for (const targetId of targets) {
-        const r = removeCounterFromCard(s, targetId, effect.counter, effect.amount);
-        s = r.state;
-        events.push(...r.events);
+        prepend.push({ type: 'remove_counter', cardInstanceId: targetId, counter: effect.counter, amount: effect.amount });
       }
       break;
     }
     case 'discard': {
-      const prepend: EngineStep[] = [];
       const players = resolvePlayerSelector(effect.player, ctx);
       for (const p of players) {
-        // If there's a pending choice system, we'd set it here
-        // For now, if no cards in hand, skip
-        const hand = s.cards.filter(c => c.owner === p && c.zone === 'hand');
+        const hand = state.cards.filter(c => c.owner === p && c.zone === 'hand');
         if (hand.length === 0) continue;
-
         prepend.push({
           type: 'request_choose_discard',
           player: p,
@@ -192,102 +164,82 @@ export function resolvePrimitive(
           sourceCardId: ctx.sourceCardId,
         });
       }
-
-      return { state: s, events, prepend }
+      break;
     }
     case 'exhaust': {
-      const targets = resolveTargets(s, effect.target, ctx);
+      const targets = resolveTargets(state, effect.target, ctx);
       for (const targetId of targets) {
-        const r = exhaustCard(s, targetId);
-        s = r.state;
-        events.push(...r.events);
+        prepend.push({ type: 'exhaust_card', cardInstanceId: targetId });
       }
       break;
     }
     case 'ready': {
-      const targets = resolveTargets(s, effect.target, ctx);
+      const targets = resolveTargets(state, effect.target, ctx);
       for (const targetId of targets) {
-        const r = readyCard(s, targetId);
-        s = r.state;
-        events.push(...r.events);
+        prepend.push({ type: 'ready_card', cardInstanceId: targetId });
       }
       break;
     }
     case 'buff_attackers': {
-      // Apply to all attackers in current combat
-      if (s.combat) {
-        const effectId = generateEffectId();
-        const lastingEffect: LastingEffect = {
-          id: effectId,
-          type: effect.counter,
+      if (state.combat) {
+        prepend.push({
+          type: 'grant_lasting_effect',
+          effectType: effect.counter,
           amount: effect.amount,
-          targetInstanceIds: [...s.combat.attackerIds],
+          targetInstanceIds: [...state.combat.attackerIds],
           expiresAt: 'end_of_combat',
-        };
-        const r = addLastingEffect(s, lastingEffect);
-        s = r.state;
-        events.push(...r.events);
+        });
       }
       break;
     }
     case 'play_card': {
-      const targets = resolveTargets(s, effect.target, ctx);
-
+      const targets = resolveTargets(state, effect.target, ctx);
       if (targets.length === 1) {
-        return buildPlayCardQueue(s, ctx.controller, targets[0], {costReduction: effect.costReduction})
+        return buildPlayCardQueue(state, ctx.controller, targets[0], { costReduction: effect.costReduction });
       }
-
       break;
     }
     case 'destroy': {
-      const targets = resolveTargets(s, effect.target, ctx);
+      const targets = resolveTargets(state, effect.target, ctx);
       for (const targetId of targets) {
-        const r = destroy(s, targetId);
-        s = r.state;
-        events.push(...r.events);
+        prepend.push({ type: 'destroy_card', cardInstanceId: targetId });
       }
       break;
     }
     case 'develop': {
-      const prepend: EngineStep[] = [];
-      const targets = resolveTargets(s, effect.target, ctx);
+      const targets = resolveTargets(state, effect.target, ctx);
       for (const targetId of targets) {
-        const card = getCard(s, targetId);
-        if (card && canDevelop(s, ctx.controller, card)) {
-          prepend.push({
-            type: 'develop',
-            player: ctx.controller,
-            locationId: targetId,
-          })
+        const card = getCard(state, targetId);
+        if (card && canDevelop(state, ctx.controller, card)) {
+          prepend.push({ type: 'develop', player: ctx.controller, locationId: targetId });
         }
       }
-      return { state, events, prepend };
+      break;
     }
     case 'conditional': {
       const { condition, effects: innerEffects } = effect;
       let conditionMet = false;
       if (condition.type === 'min_card_count') {
-        const matching = s.cards.filter(c => matchesFilter(s, c, condition.filter, ctx));
+        const matching = state.cards.filter(c => matchesFilter(state, c, condition.filter, ctx));
         conditionMet = matching.length >= condition.count;
       } else if (condition.type === 'attacking_alone') {
-        conditionMet = s.combat !== null && s.combat.attackerIds.length === 1;
+        conditionMet = state.combat !== null && state.combat.attackerIds.length === 1;
       } else if (condition.type === 'standing_less_than') {
-        conditionMet = s.players[ctx.controller].standing[condition.guild] < condition.amount;
+        conditionMet = state.players[ctx.controller].standing[condition.guild] < condition.amount;
       } else if (condition.type === 'any_standing_at_least') {
-        conditionMet = STANDING_GUILDS.some(g => s.players[ctx.controller].standing[g] >= condition.amount);
+        conditionMet = STANDING_GUILDS.some(g => state.players[ctx.controller].standing[g] >= condition.amount);
       }
       if (conditionMet) {
-        for (const inner of innerEffects) {
-          const r = resolvePrimitive(s, inner, ctx);
-          s = r.state;
-          events.push(...r.events);
-          prepend.push(...(r.prepend ?? []));
-        }
+        prepend.push({
+          type: 'resolve_effects',
+          effects: innerEffects,
+          ctx: { controller: ctx.controller, sourceCardId: ctx.sourceCardId, triggeringCardId: ctx.triggeringCardId },
+        });
       }
       break;
     }
     case 'initiate_attack': {
-      const attackable = getFollowers(s, ctx.controller).filter(f => canAttack(s, f));
+      const attackable = getFollowers(state, ctx.controller).filter(f => canAttack(state, f));
       if (attackable.length > 0) {
         prepend.push({ type: 'request_choose_attackers', player: ctx.controller });
       }
@@ -296,45 +248,36 @@ export function resolvePrimitive(
     case 'lose_standing': {
       const players = resolvePlayerSelector(effect.player, ctx);
       for (const p of players) {
-        const r = loseStanding(s, p, effect.guild, effect.amount);
-        s = r.state;
-        events.push(...r.events);
+        prepend.push({ type: 'lose_standing', player: p, guild: effect.guild, amount: effect.amount });
       }
       break;
     }
     case 'grant_lasting_effect': {
-      const targets = resolveTargets(s, effect.target, ctx);
+      const targets = resolveTargets(state, effect.target, ctx);
       if (targets.length > 0) {
-        const lastingEffect: LastingEffect = {
-          id: generateEffectId(),
-          type: effect.effect,
+        prepend.push({
+          type: 'grant_lasting_effect',
+          effectType: effect.effect,
           amount: effect.amount ?? 0,
           targetInstanceIds: targets,
           expiresAt: effect.expiresAt,
-        };
-        const r = addLastingEffect(s, lastingEffect);
-        s = r.state;
-        events.push(...r.events);
+        });
       }
       break;
     }
     case 'register_combat_response': {
-      const response: CombatResponse = {
-        id: generateEffectId(),
+      prepend.push({
+        type: 'register_combat_response',
         trigger: effect.trigger,
         effects: effect.effects,
         controller: ctx.controller,
         sourceCardId: ctx.sourceCardId,
-      };
-      s = {
-        ...s,
-        combatResponses: [...s.combatResponses, response],
-      };
+      });
       break;
     }
     case 'migrate': {
       const controller = ctx.controller;
-      const hasEarth = s.players[controller].standing.earth >= 1;
+      const hasEarth = state.players[controller].standing.earth >= 1;
 
       const modes: Mode[] = [
         {
@@ -354,7 +297,6 @@ export function resolvePrimitive(
       }
 
       if (modes.length === 1) {
-        // Only one option - auto-resolve gain standing
         prepend.push({ type: 'gain_standing', player: controller, guild: 'earth', amount: 1 });
       } else {
         prepend.push({ type: 'request_choose_mode', player: controller, sourceCardId: ctx.sourceCardId, modes });
@@ -363,7 +305,7 @@ export function resolvePrimitive(
     }
   }
 
-  return { state: s, events, prepend };
+  return { state, events, prepend };
 }
 
 /**
