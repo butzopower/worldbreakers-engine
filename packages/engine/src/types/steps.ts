@@ -40,6 +40,7 @@ export type EngineStep =
   | { type: 'develop'; player: PlayerId; locationId: string; }
   // Log
   | { type: 'reveal_cards', player: PlayerId; cardDefinitionIds: string[] }
+  | { type: 'card_played'; player: PlayerId; cardInstanceId: string }
   // Board State
   | { type: 'draw_card'; player: PlayerId }
   | { type: 'move_card', cardInstanceId: string; toZone: Zone }
@@ -49,6 +50,7 @@ export type EngineStep =
   | { type: 'exhaust_card'; cardInstanceId: string }
   | { type: 'ready_card'; cardInstanceId: string }
   | { type: 'destroy_card'; cardInstanceId: string }
+  | { type: 'spend_mythium'; player: PlayerId; amount: number }
   | { type: 'gain_mythium'; player: PlayerId; amount: number }
   | { type: 'gain_power'; player: PlayerId; amount: number }
   | { type: 'gain_standing'; player: PlayerId; guild: StandingGuild; amount: number }

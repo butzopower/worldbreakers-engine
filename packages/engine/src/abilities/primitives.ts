@@ -6,7 +6,7 @@ import { CardInstance } from '../types/state';
 import { getCard, getCardDef, getFollowers, canPay, canDevelop, canAttack, hasKeyword } from '../state/query';
 import { getCounter } from '../types/counters';
 import { EngineStep } from "../types/steps";
-import { buildPlayCardQueue } from "../engine/engine";
+import { playCard } from "../engine/engine";
 import { StepResult } from "../engine/step-handlers";
 
 export interface ResolveContext {
@@ -195,7 +195,7 @@ export function resolvePrimitive(
     case 'play_card': {
       const targets = resolveTargets(state, effect.target, ctx);
       if (targets.length === 1) {
-        return buildPlayCardQueue(state, ctx.controller, targets[0], { costReduction: effect.costReduction });
+        return playCard(state, ctx.controller, targets[0], { costReduction: effect.costReduction });
       }
       break;
     }

@@ -10,7 +10,7 @@ import { handleDrawCard } from '../actions/draw-card';
 import { handleBuyStanding } from '../actions/buy-standing';
 
 import { ResolveContext } from '../abilities/primitives';
-import { moveCard, exhaustCard, spendMythium, addCounterToCard, removeCounterFromCard } from '../state/mutate';
+import { moveCard, exhaustCard, removeCounterFromCard } from '../state/mutate';
 import { getCard, getHand, getCardDef, canPay, hasKeyword, getPassiveCostReduction } from '../state/query';
 import { getCounter } from '../types/counters';
 import {
@@ -98,7 +98,7 @@ function buildInitialQueue(
     case 'buy_standing':
       return buildSimpleActionQueue(state, player, action);
     case 'play_card':
-      return advanceTurn(buildPlayCardQueue(state, player, action.cardInstanceId));
+      return advanceTurn(playCard(state, player, action.cardInstanceId));
     case 'attack':
       return buildAttackQueue(state, player, action.attackerIds);
     case 'develop':
@@ -146,7 +146,7 @@ function buildSimpleActionQueue(
   return { state: s, events, queue: [{ type: 'cleanup' }, { type: 'advance_turn' }] };
 }
 
-export function buildPlayCardQueue(
+export function playCard(
   state: GameState,
   player: PlayerId,
   cardInstanceId: string,
@@ -154,76 +154,44 @@ export function buildPlayCardQueue(
 ): StepResult {
   const card = getCard(state, cardInstanceId)!;
   const def = getCardDef(card);
-  const events: GameEvent[] = [];
-  let s = state;
+
+  const prepend: EngineStep[] = [];
 
   // Pay mythium cost
   const passiveReduction = getPassiveCostReduction(state, player, def);
   const actualCost = Math.max(0, def.cost - passiveReduction - (opts?.costReduction ?? 0));
   if (actualCost > 0) {
-    const payResult = spendMythium(s, player, actualCost);
-    s = payResult.state;
-    events.push(...payResult.events);
+    prepend.push({ type: 'spend_mythium', player, amount: actualCost });
   }
-
-  const prepend: EngineStep[] = [];
 
   if (def.type === 'event') {
     // Events go to discard
-    const moveResult = moveCard(s, cardInstanceId, 'discard');
-    s = moveResult.state;
-    events.push(...moveResult.events);
-    events.push({ type: 'card_played', player, cardInstanceId, definitionId: def.id });
-
-    // Queue play abilities
-    if (def.abilities) {
-      for (let i = 0; i < def.abilities.length; i++) {
-        if (def.abilities[i].timing === 'play') {
-          prepend.push({ type: 'resolve_ability_at_index', controller: player, sourceCardId: cardInstanceId, abilityIndex: i });
-        }
-      }
-    }
-  } else if (def.type === 'location') {
-    // Location enters board with stage counters
-    const moveResult = moveCard(s, cardInstanceId, 'board');
-    s = moveResult.state;
-    events.push(...moveResult.events);
-    events.push({ type: 'card_played', player, cardInstanceId, definitionId: def.id });
-
-    if (def.stages && def.stages > 0) {
-      const counterResult = addCounterToCard(s, cardInstanceId, 'stage', def.stages);
-      s = counterResult.state;
-      events.push(...counterResult.events);
-    }
-
-    // Queue enters abilities
-    if (def.abilities) {
-      for (let i = 0; i < def.abilities.length; i++) {
-        if (def.abilities[i].timing === 'enters') {
-          prepend.push({ type: 'resolve_ability_at_index', controller: player, sourceCardId: cardInstanceId, abilityIndex: i });
-        }
-      }
-    }
+    prepend.push({ type: 'move_card', cardInstanceId, toZone: 'discard' });
   } else {
-    // Followers enter board
-    const moveResult = moveCard(s, cardInstanceId, 'board');
-    s = moveResult.state;
-    events.push(...moveResult.events);
-    events.push({ type: 'card_played', player, cardInstanceId, definitionId: def.id });
+    // Followers and locations enter board
+    prepend.push({ type: 'move_card', cardInstanceId, toZone: 'board' });
+  }
 
-    // Queue enters abilities
-    if (def.abilities) {
-      for (let i = 0; i < def.abilities.length; i++) {
-        if (def.abilities[i].timing === 'enters') {
-          prepend.push({ type: 'resolve_ability_at_index', controller: player, sourceCardId: cardInstanceId, abilityIndex: i });
-        }
+  prepend.push({ type: 'card_played', player, cardInstanceId });
+
+  // Location stage counters
+  if (def.type === 'location' && def.stages && def.stages > 0) {
+    prepend.push({ type: 'add_counter', cardInstanceId, counter: 'stage', amount: def.stages });
+  }
+
+  // Queue abilities
+  const abilityTiming = def.type === 'event' ? 'play' : 'enters';
+  if (def.abilities) {
+    for (let i = 0; i < def.abilities.length; i++) {
+      if (def.abilities[i].timing === abilityTiming) {
+        prepend.push({ type: 'resolve_ability_at_index', controller: player, sourceCardId: cardInstanceId, abilityIndex: i });
       }
     }
   }
 
   prepend.push({ type: 'cleanup' });
 
-  return { state: s, events, prepend };
+  return { state, events: [], prepend };
 }
 
 function buildUseAbilityQueue(

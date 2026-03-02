@@ -11,6 +11,7 @@ import {
   exhaustCard,
   gainMythium,
   gainPower,
+  spendMythium,
   gainStanding,
   loseStanding,
   moveCard,
@@ -113,8 +114,12 @@ export function executeStep(state: GameState, step: EngineStep): StepResult {
       return readyCard(state, step.cardInstanceId);
     case 'destroy_card':
       return destroy(state, step.cardInstanceId);
+    case 'spend_mythium':
+      return spendMythium(state, step.player, step.amount);
     case 'gain_mythium':
       return gainMythium(state, step.player, step.amount);
+    case 'card_played':
+      return handleCardPlayed(state, step.player, step.cardInstanceId);
     case 'gain_power':
       return gainPower(state, step.player, step.amount);
     case 'gain_standing':
@@ -848,6 +853,15 @@ function handleRegisterCombatResponse(
     combatResponses: [...state.combatResponses, response],
   };
   return { state: newState, events: [] };
+}
+
+function handleCardPlayed(state: GameState, player: PlayerId, cardInstanceId: string): StepResult {
+  const card = getCard(state, cardInstanceId);
+  const def = card ? getCardDef(card) : null;
+  return {
+    state,
+    events: [{ type: 'card_played', player, cardInstanceId, definitionId: def?.id ?? '' }],
+  };
 }
 
 function revealCards(state: GameState, player: PlayerId, cardDefinitionIds: string[]) {
