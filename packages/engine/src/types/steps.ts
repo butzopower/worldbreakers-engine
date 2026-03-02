@@ -28,6 +28,7 @@ export type EngineStep =
   | { type: 'rally_victory_check' }
   | { type: 'rally_new_round' }
   // Combat
+  | { type: 'combat_start'; attackingPlayer: PlayerId; attackerIds: string[] }
   | { type: 'combat_declare_blockers'; defender: PlayerId; attackerIds: string[] }
   | { type: 'combat_fight'; attackerId: string; blockerId: string }
   | { type: 'check_overwhelm_trigger'; attackerId: string }

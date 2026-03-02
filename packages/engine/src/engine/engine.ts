@@ -7,7 +7,7 @@ import { validateAction } from './validator';
 import { drainQueue, resolveEffectsWithQueue, StepResult } from './step-handlers';
 
 import { ResolveContext } from '../abilities/primitives';
-import { moveCard, exhaustCard, removeCounterFromCard } from '../state/mutate';
+import { moveCard, removeCounterFromCard } from '../state/mutate';
 import { getCard, getHand, getCardDef, canPay, hasKeyword, getPassiveCostReduction } from '../state/query';
 import { getCounter } from '../types/counters';
 import {
@@ -205,38 +205,23 @@ function buildAttackQueue(
   player: PlayerId,
   attackerIds: string[],
 ): { state: GameState; events: GameEvent[]; queue: EngineStep[] } {
-  let s = state;
-  const events: GameEvent[] = [];
+  const defender = opponentOf(player);
+  const queue: EngineStep[] = [];
 
   // Exhaust all attackers
   for (const id of attackerIds) {
-    const result = exhaustCard(s, id);
-    s = result.state;
-    events.push(...result.events);
+    queue.push({ type: 'exhaust_card', cardInstanceId: id });
   }
 
   // Create combat state
-  s = {
-    ...s,
-    combat: {
-      step: 'resolve_attack_abilities',
-      attackingPlayer: player,
-      attackerIds,
-    },
-  };
-  events.push({ type: 'combat_started', attackingPlayer: player, attackerIds });
-
-  const defender = opponentOf(player);
-
-  // Build queue: your_attack triggers, individual attacks triggers, then combat flow
-  const queue: EngineStep[] = [];
+  queue.push({ type: 'combat_start', attackingPlayer: player, attackerIds });
 
   // "Your Attack:" triggers
   queue.push({ type: 'check_triggers', timing: 'your_attack', player });
 
   // "Attacks:" triggers for individual attackers
   for (const id of attackerIds) {
-    const card = getCard(s, id);
+    const card = getCard(state, id);
     if (!card) continue;
     const def = getCardDef(card);
     if (def.abilities) {
@@ -256,7 +241,7 @@ function buildAttackQueue(
     { type: 'advance_turn' },
   );
 
-  return { state: s, events, queue };
+  return { state, events: [], queue };
 }
 
 // --- Choice Resolution ---

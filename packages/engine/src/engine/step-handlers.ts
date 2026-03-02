@@ -78,6 +78,8 @@ export function executeStep(state: GameState, step: EngineStep): StepResult {
       return handleCheckTriggers(state, step.timing, step.player, step.triggeringCardId);
     case 'check_combat_responses':
       return handleCheckCombatResponses(state, step.timing);
+    case 'combat_start':
+      return handleCombatStart(state, step.attackingPlayer, step.attackerIds);
     case 'combat_declare_blockers':
       return handleCombatDeclareBlockers(state, step.defender, step.attackerIds);
     case 'combat_fight':
@@ -531,6 +533,21 @@ function handleCheckCombatResponses(state: GameState, timing: CombatResponseTrig
 }
 
 // --- Combat Step Handlers ---
+
+function handleCombatStart(state: GameState, attackingPlayer: PlayerId, attackerIds: string[]): StepResult {
+  const s: GameState = {
+    ...state,
+    combat: {
+      step: 'resolve_attack_abilities',
+      attackingPlayer,
+      attackerIds,
+    },
+  };
+  return {
+    state: s,
+    events: [{ type: 'combat_started', attackingPlayer, attackerIds }],
+  };
+}
 
 function handleCombatDeclareBlockers(state: GameState, defender: PlayerId, attackerIds: string[]): StepResult {
   const s: GameState = {
