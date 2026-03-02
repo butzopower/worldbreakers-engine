@@ -6,9 +6,6 @@ import { EngineStep } from '../types/steps';
 import { validateAction } from './validator';
 import { drainQueue, resolveEffectsWithQueue, StepResult } from './step-handlers';
 
-import { handleDrawCard } from '../actions/draw-card';
-import { handleBuyStanding } from '../actions/buy-standing';
-
 import { ResolveContext } from '../abilities/primitives';
 import { moveCard, exhaustCard, removeCounterFromCard } from '../state/mutate';
 import { getCard, getHand, getCardDef, canPay, hasKeyword, getPassiveCostReduction } from '../state/query';
@@ -121,29 +118,25 @@ function buildSimpleActionQueue(
   player: PlayerId,
   action: PlayerAction,
 ): { state: GameState; events: GameEvent[]; queue: EngineStep[] } {
-  let s = state;
-  const events: GameEvent[] = [];
+  const queue: EngineStep[] = [];
 
   switch (action.type) {
-    case 'gain_mythium': {
-      return { state: s, events, queue: [{type: 'gain_mythium', player, amount: 1}, { type: 'cleanup' }, { type: 'advance_turn' }] }
-    }
-    case 'draw_card': {
-      const r = handleDrawCard(s, player);
-      s = r.state;
-      events.push(...r.events);
+    case 'gain_mythium':
+      queue.push({ type: 'gain_mythium', player, amount: 1 });
       break;
-    }
-    case 'buy_standing': {
-      if (action.type !== 'buy_standing') break;
-      const r = handleBuyStanding(s, player, action.guild);
-      s = r.state;
-      events.push(...r.events);
+    case 'draw_card':
+      queue.push({ type: 'draw_card', player });
       break;
-    }
+    case 'buy_standing':
+      queue.push(
+        { type: 'spend_mythium', player, amount: 2 },
+        { type: 'gain_standing', player, guild: action.guild, amount: 1 },
+      );
+      break;
   }
 
-  return { state: s, events, queue: [{ type: 'cleanup' }, { type: 'advance_turn' }] };
+  queue.push({ type: 'cleanup' }, { type: 'advance_turn' });
+  return { state, events: [], queue };
 }
 
 export function playCard(
