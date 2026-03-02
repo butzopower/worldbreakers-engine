@@ -120,6 +120,8 @@ export function executeStep(state: GameState, step: EngineStep): StepResult {
       return gainMythium(state, step.player, step.amount);
     case 'card_played':
       return handleCardPlayed(state, step.player, step.cardInstanceId);
+    case 'location_developed':
+      return { state, events: [{ type: 'location_developed', locationInstanceId: step.locationInstanceId, stage: step.stage }] };
     case 'gain_power':
       return gainPower(state, step.player, step.amount);
     case 'gain_standing':

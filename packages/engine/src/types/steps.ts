@@ -41,6 +41,7 @@ export type EngineStep =
   // Log
   | { type: 'reveal_cards', player: PlayerId; cardDefinitionIds: string[] }
   | { type: 'card_played'; player: PlayerId; cardInstanceId: string }
+  | { type: 'location_developed'; locationInstanceId: string; stage: number }
   // Board State
   | { type: 'draw_card'; player: PlayerId }
   | { type: 'move_card', cardInstanceId: string; toZone: Zone }

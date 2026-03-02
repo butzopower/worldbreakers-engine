@@ -1,8 +1,6 @@
 import { PlayerId } from '../types/core';
 import { GameState } from '../types/state';
-import { GameEvent } from '../types/events';
 import { getCard, getCardDef, getLocationStage } from '../state/query';
-import { removeCounterFromCard } from '../state/mutate';
 import { EngineStep } from "../types/steps";
 import { StepResult } from "../engine/step-handlers";
 
@@ -11,28 +9,18 @@ export function handleDevelop(
   player: PlayerId,
   locationInstanceId: string,
 ): StepResult {
-  let s = state;
-  const events: GameEvent[] = [];
-  const prepend: EngineStep[] = [];
-
-  // Remove one stage counter
-  const removeResult = removeCounterFromCard(s, locationInstanceId, 'stage', 1);
-  s = removeResult.state;
-  events.push(...removeResult.events);
-
-  // Determine which stage we just revealed
-  const card = getCard(s, locationInstanceId)!;
+  const card = getCard(state, locationInstanceId)!;
   const def = getCardDef(card);
-  const currentStage = getLocationStage(card);
-  // After removing a counter, the stage number is the one we just developed to
-  // Stage = stages - remaining + 1, but we already removed a counter
-  // so the currentStage already reflects the developed stage
-  const developedStage = currentStage - 1; // The stage we resolve is one before current
 
-  events.push({ type: 'location_developed', locationInstanceId, stage: developedStage });
+  // The developed stage is the current stage (before counter removal)
+  const developedStage = getLocationStage(card);
 
-  // Run cleanup first to handle depletion (location with 0 stage counters)
-  prepend.push({ type: 'cleanup' });
+  const prepend: EngineStep[] = [
+    { type: 'remove_counter', cardInstanceId: locationInstanceId, counter: 'stage', amount: 1 },
+    { type: 'location_developed', locationInstanceId, stage: developedStage },
+    // Run cleanup first to handle depletion (location with 0 stage counters)
+    { type: 'cleanup' },
+  ];
 
   // Then resolve the stage ability (runs after the location may have been depleted)
   if (def.locationStages) {
@@ -50,5 +38,5 @@ export function handleDevelop(
     }
   }
 
-  return { state: s, events, prepend };
+  return { state, events: [], prepend };
 }
