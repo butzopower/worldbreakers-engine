@@ -1,4 +1,11 @@
-import { CombatResponse, CombatResponseTrigger, GameState, LastingEffect } from '../types/state';
+import {
+  CombatResponse,
+  CombatResponseTrigger,
+  GameState,
+  LastingEffect,
+  LastingEffectExpiration,
+  LastingEffectType
+} from '../types/state';
 import { GameEvent } from '../types/events';
 import { EngineStep } from '../types/steps';
 import { PlayerId, PLAYERS, opponentOf } from '../types/core';
@@ -26,7 +33,7 @@ import { ResolveContext, findValidTargets, resolvePrimitive } from '../abilities
 import { getCustomResolver } from '../abilities/system';
 import { getCard } from '../state/query';
 import { getFollowers, getLocations, isHidden, canAttack, canBlock, canBlockAttacker, hasKeyword } from '../state/query';
-import { AbilityDefinition, EffectPrimitive, Mode } from '../types/effects';
+import { AbilityDefinition, AbilityTiming, EffectPrimitive, Mode } from '../types/effects';
 import { handleDevelop } from "../actions/develop";
 import { resolveSingleFight } from '../combat/damage';
 import { generateEffectId } from '../utils/id';
@@ -97,7 +104,8 @@ export function executeStep(state: GameState, step: EngineStep): StepResult {
     case 'combat_end':
       return handleCombatEnd(state);
     case 'develop':
-      return handleDevelop(state, step.player, step.locationId);
+      const prepend = handleDevelop(state, step.player, step.locationId);
+      return { state, events: [], prepend };
     case 'reveal_cards':
       return revealCards(state, step.player, step.cardDefinitionIds);
     case 'draw_card':
@@ -479,7 +487,7 @@ function handleResolveCustomAbility(state: GameState, controller: PlayerId, sour
   return { state, events };
 }
 
-function handleCheckTriggers(state: GameState, timing: import('../types/effects').AbilityTiming, player: PlayerId, triggeringCardId?: string): StepResult {
+function handleCheckTriggers(state: GameState, timing: AbilityTiming, player: PlayerId, triggeringCardId?: string): StepResult {
   const prepend: EngineStep[] = [];
 
   // Scan worldbreaker
@@ -825,13 +833,9 @@ export function resolveEffectsWithQueue(
       return { state: s, events, prepend };
     }
 
-    const result = resolvePrimitive(s, effect, ctx);
-    s = result.state;
-    events.push(...result.events);
-    if (s.pendingChoice || (result.prepend && result.prepend.length > 0)) {
-      // A primitive set a pending choice (e.g. initiate_attack)
+    const prepend = resolvePrimitive(s, effect, ctx);
+    if (prepend.length > 0) {
       const remainingEffects = effects.slice(i + 1);
-      const prepend: EngineStep[] = [...(result.prepend ?? [])];
       if (remainingEffects.length > 0) {
         prepend.push({ type: 'resolve_effects', effects: remainingEffects, ctx: { controller: ctx.controller, sourceCardId: ctx.sourceCardId, triggeringCardId: ctx.triggeringCardId } });
       }
@@ -844,7 +848,7 @@ export function resolveEffectsWithQueue(
 
 function handleGrantLastingEffect(
   state: GameState,
-  step: { effectType: import('../types/state').LastingEffectType; amount: number; targetInstanceIds: string[]; expiresAt: import('../types/state').LastingEffectExpiration },
+  step: { effectType: LastingEffectType; amount: number; targetInstanceIds: string[]; expiresAt: LastingEffectExpiration },
 ): StepResult {
   const lastingEffect: LastingEffect = {
     id: generateEffectId(),

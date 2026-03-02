@@ -2,20 +2,19 @@ import { PlayerId } from '../types/core';
 import { GameState } from '../types/state';
 import { getCard, getCardDef, getLocationStage } from '../state/query';
 import { EngineStep } from "../types/steps";
-import { StepResult } from "../engine/step-handlers";
 
 export function handleDevelop(
   state: GameState,
   player: PlayerId,
   locationInstanceId: string,
-): StepResult {
+): EngineStep[] {
   const card = getCard(state, locationInstanceId)!;
   const def = getCardDef(card);
 
   // The developed stage is the current stage (before counter removal)
   const developedStage = getLocationStage(card);
 
-  const prepend: EngineStep[] = [
+  const steps: EngineStep[] = [
     { type: 'remove_counter', cardInstanceId: locationInstanceId, counter: 'stage', amount: 1 },
     { type: 'location_developed', locationInstanceId, stage: developedStage },
     // Run cleanup first to handle depletion (location with 0 stage counters)
@@ -26,7 +25,7 @@ export function handleDevelop(
   if (def.locationStages) {
     const stageAbility = def.locationStages.find(ls => ls.stage === developedStage);
     if (stageAbility) {
-      prepend.push(
+      steps.push(
         {
           type: 'resolve_ability',
           controller: player,
@@ -38,5 +37,5 @@ export function handleDevelop(
     }
   }
 
-  return { state, events: [], prepend };
+  return steps;
 }

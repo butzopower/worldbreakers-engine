@@ -71,8 +71,8 @@ export function processAction(state: GameState, input: ActionInput): ProcessResu
   }
 
   // Build initial queue from the action
-  const { state: preState, events: preEvents, queue } = buildInitialQueue(state, player, action);
-  const result = drainQueue({ ...preState, stepQueue: queue }, preEvents);
+  const queue = buildInitialQueue(state, player, action);
+  const result = drainQueue({ ...state, stepQueue: queue }, []);
 
   if (result.state.pendingChoice) {
     return { state: result.state, events: result.events, waitingFor: result.state.pendingChoice };
@@ -86,57 +86,38 @@ function buildInitialQueue(
   state: GameState,
   player: PlayerId,
   action: PlayerAction,
-): { state: GameState; events: GameEvent[]; queue: EngineStep[] } {
+): EngineStep[] {
   switch (action.type) {
     case 'gain_mythium':
-      return buildSimpleActionQueue(state, player, action);
+      return advanceTurn([
+        { type: 'gain_mythium', player, amount: 1 },
+      ]);
     case 'draw_card':
-      return buildSimpleActionQueue(state, player, action);
+      return advanceTurn([
+        { type: 'draw_card', player },
+      ]);
     case 'buy_standing':
-      return buildSimpleActionQueue(state, player, action);
+      return advanceTurn([
+        { type: 'spend_mythium', player, amount: 2 },
+        { type: 'gain_standing', player, guild: action.guild, amount: 1 },
+      ]);
     case 'play_card':
       return advanceTurn(playCard(state, player, action.cardInstanceId));
     case 'attack':
-      return buildAttackQueue(state, player, action.attackerIds);
+      return advanceTurn(buildAttackQueue(state, player, action.attackerIds));
     case 'develop':
       return advanceTurn(handleDevelop(state, player, action.locationInstanceId));
     case 'use_ability':
-      return advanceTurn(buildUseAbilityQueue(state, player, action.cardInstanceId, action.abilityIndex));
+      return advanceTurn(buildUseAbilityQueue(player, action.cardInstanceId, action.abilityIndex));
     default:
       throw new Error(`Unhandled action type: ${(action as PlayerAction).type}`);
   }
 }
 
 function advanceTurn(
-  {state, events, prepend}: { state: GameState; events: GameEvent[]; prepend?: EngineStep[] }
-): { state: GameState; events: GameEvent[]; queue: EngineStep[] } {
-  return {state, events, queue: [...(prepend ?? []), { type: 'advance_turn' }]};
-}
-
-function buildSimpleActionQueue(
-  state: GameState,
-  player: PlayerId,
-  action: PlayerAction,
-): { state: GameState; events: GameEvent[]; queue: EngineStep[] } {
-  const queue: EngineStep[] = [];
-
-  switch (action.type) {
-    case 'gain_mythium':
-      queue.push({ type: 'gain_mythium', player, amount: 1 });
-      break;
-    case 'draw_card':
-      queue.push({ type: 'draw_card', player });
-      break;
-    case 'buy_standing':
-      queue.push(
-        { type: 'spend_mythium', player, amount: 2 },
-        { type: 'gain_standing', player, guild: action.guild, amount: 1 },
-      );
-      break;
-  }
-
-  queue.push({ type: 'cleanup' }, { type: 'advance_turn' });
-  return { state, events: [], queue };
+  steps: EngineStep[],
+): EngineStep[] {
+  return [...steps, { type: 'advance_turn' }];
 }
 
 export function playCard(
@@ -144,32 +125,32 @@ export function playCard(
   player: PlayerId,
   cardInstanceId: string,
   opts?: { costReduction?: number },
-): StepResult {
+): EngineStep[] {
   const card = getCard(state, cardInstanceId)!;
   const def = getCardDef(card);
 
-  const prepend: EngineStep[] = [];
+  const steps: EngineStep[] = [];
 
   // Pay mythium cost
   const passiveReduction = getPassiveCostReduction(state, player, def);
   const actualCost = Math.max(0, def.cost - passiveReduction - (opts?.costReduction ?? 0));
   if (actualCost > 0) {
-    prepend.push({ type: 'spend_mythium', player, amount: actualCost });
+    steps.push({ type: 'spend_mythium', player, amount: actualCost });
   }
 
   if (def.type === 'event') {
     // Events go to discard
-    prepend.push({ type: 'move_card', cardInstanceId, toZone: 'discard' });
+    steps.push({ type: 'move_card', cardInstanceId, toZone: 'discard' });
   } else {
     // Followers and locations enter board
-    prepend.push({ type: 'move_card', cardInstanceId, toZone: 'board' });
+    steps.push({ type: 'move_card', cardInstanceId, toZone: 'board' });
   }
 
-  prepend.push({ type: 'card_played', player, cardInstanceId });
+  steps.push({ type: 'card_played', player, cardInstanceId });
 
   // Location stage counters
   if (def.type === 'location' && def.stages && def.stages > 0) {
-    prepend.push({ type: 'add_counter', cardInstanceId, counter: 'stage', amount: def.stages });
+    steps.push({ type: 'add_counter', cardInstanceId, counter: 'stage', amount: def.stages });
   }
 
   // Queue abilities
@@ -177,47 +158,42 @@ export function playCard(
   if (def.abilities) {
     for (let i = 0; i < def.abilities.length; i++) {
       if (def.abilities[i].timing === abilityTiming) {
-        prepend.push({ type: 'resolve_ability_at_index', controller: player, sourceCardId: cardInstanceId, abilityIndex: i });
+        steps.push({ type: 'resolve_ability_at_index', controller: player, sourceCardId: cardInstanceId, abilityIndex: i });
       }
     }
   }
 
-  prepend.push({ type: 'cleanup' });
+  steps.push({ type: 'cleanup' });
 
-  return { state, events: [], prepend };
+  return steps;
 }
 
 function buildUseAbilityQueue(
-  state: GameState,
   player: PlayerId,
   cardInstanceId: string,
   abilityIndex: number,
-): StepResult {
-  const prepend: EngineStep[] = [
-    { type: 'resolve_ability_at_index', controller: player, sourceCardId: cardInstanceId, abilityIndex },
-  ];
-
-  return { state, events: [], prepend };
+): EngineStep[] {
+  return [{ type: 'resolve_ability_at_index', controller: player, sourceCardId: cardInstanceId, abilityIndex }];
 }
 
 function buildAttackQueue(
   state: GameState,
   player: PlayerId,
   attackerIds: string[],
-): { state: GameState; events: GameEvent[]; queue: EngineStep[] } {
+): EngineStep[] {
   const defender = opponentOf(player);
-  const queue: EngineStep[] = [];
+  const steps: EngineStep[] = [];
 
   // Exhaust all attackers
   for (const id of attackerIds) {
-    queue.push({ type: 'exhaust_card', cardInstanceId: id });
+    steps.push({ type: 'exhaust_card', cardInstanceId: id });
   }
 
   // Create combat state
-  queue.push({ type: 'combat_start', attackingPlayer: player, attackerIds });
+  steps.push({ type: 'combat_start', attackingPlayer: player, attackerIds });
 
   // "Your Attack:" triggers
-  queue.push({ type: 'check_triggers', timing: 'your_attack', player });
+  steps.push({ type: 'check_triggers', timing: 'your_attack', player });
 
   // "Attacks:" triggers for individual attackers
   for (const id of attackerIds) {
@@ -227,21 +203,20 @@ function buildAttackQueue(
     if (def.abilities) {
       for (let i = 0; i < def.abilities.length; i++) {
         if (def.abilities[i].timing === 'attacks') {
-          queue.push({ type: 'check_triggers', timing: 'attacks', player, triggeringCardId: id });
+          steps.push({ type: 'check_triggers', timing: 'attacks', player, triggeringCardId: id });
           break; // One check_triggers per card is enough
         }
       }
     }
   }
 
-  queue.push(
+  steps.push(
     { type: 'cleanup' },
     { type: 'combat_declare_blockers', defender, attackerIds },
-    { type: 'combat_end' },
-    { type: 'advance_turn' },
+    { type: 'combat_end' }
   );
 
-  return { state, events: [], queue };
+  return steps;
 }
 
 // --- Choice Resolution ---
@@ -407,13 +382,7 @@ function resolveChooseAttackers(state: GameState, _player: PlayerId, action: Pla
   let s: GameState = { ...state, pendingChoice: null };
   const events: GameEvent[] = [];
 
-  // Build an attack queue inline, but strip advance_turn since the original
-  // action's queue already has one
-  const attackResult = buildAttackQueue(s, choice.playerId, action.attackerIds);
-  s = attackResult.state;
-  events.push(...attackResult.events);
-
-  const queue = attackResult.queue.filter(step => step.type !== 'advance_turn');
+  const queue = buildAttackQueue(s, choice.playerId, action.attackerIds);
   return { state: s, events, prepend: queue };
 }
 
