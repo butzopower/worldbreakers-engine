@@ -23,6 +23,7 @@ export function runCleanup(state: GameState, events: GameEvent[] = []): { state:
       s = result.state;
       newEvents.push(...result.events);
       newEvents.push({ type: 'card_defeated', cardInstanceId: card.instanceId });
+      s = { ...s, defeatedThisRound: [...s.defeatedThisRound, card.instanceId] };
       changed = true;
     }
   }

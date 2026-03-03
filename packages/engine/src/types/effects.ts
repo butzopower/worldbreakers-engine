@@ -32,7 +32,8 @@ export type Condition =
   | { type: 'min_card_count'; filter: CardFilter; count: number }
   | { type: 'attacking_alone' }
   | { type: 'standing_less_than'; guild: StandingGuild; amount: number }
-  | { type: 'any_standing_at_least'; amount: number };
+  | { type: 'any_standing_at_least'; amount: number }
+  | { type: 'follower_defeated_this_round' };
 
 export interface Mode {
   label: string;

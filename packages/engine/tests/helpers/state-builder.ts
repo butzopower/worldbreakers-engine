@@ -35,6 +35,7 @@ export class StateBuilder {
       combatResponses: [],
       rngState: 42,
       winner: null,
+      defeatedThisRound: [],
       stepQueue: null,
     };
   }
@@ -56,6 +57,11 @@ export class StateBuilder {
 
   withActionsTaken(count: number): this {
     this.state.actionsTaken = count;
+    return this;
+  }
+
+  withDefeatedThisRound(instanceIds: string[]): this {
+    this.state.defeatedThisRound = instanceIds;
     return this;
   }
 

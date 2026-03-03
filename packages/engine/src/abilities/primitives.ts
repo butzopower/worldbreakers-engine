@@ -218,6 +218,8 @@ export function resolvePrimitive(
         conditionMet = state.players[ctx.controller].standing[condition.guild] < condition.amount;
       } else if (condition.type === 'any_standing_at_least') {
         conditionMet = STANDING_GUILDS.some(g => state.players[ctx.controller].standing[g] >= condition.amount);
+      } else if (condition.type === 'follower_defeated_this_round') {
+        conditionMet = state.defeatedThisRound.length > 0;
       }
       if (conditionMet) {
         return [

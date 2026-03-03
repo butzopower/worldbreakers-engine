@@ -380,6 +380,7 @@ function handleRallyNewRound(state: GameState): StepResult {
     actionsTaken: 0,
     firstPlayer: newFirstPlayer,
     activePlayer: newFirstPlayer,
+    defeatedThisRound: [],
   };
 
   // Expire end-of-round lasting effects

@@ -87,6 +87,7 @@ export function createGameState(config: GameConfig): GameState {
     combatResponses: [],
     rngState,
     winner: null,
+    defeatedThisRound: [],
     stepQueue: null,
   };
 

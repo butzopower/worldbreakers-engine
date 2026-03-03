@@ -513,6 +513,32 @@ export const followers: CardDefinition[] = [
     description: 'Overwhelm (When this defeats a blocker, gain 1 power.)',
   },
   {
+    id: 'void_apprentice',
+    name: 'Void Apprentice',
+    type: 'follower',
+    guild: 'neutral',
+    cost: 3,
+    strength: 2,
+    health: 2,
+    description: 'Enters: Gain 1 Void Standing. Enters: If a follower was defeated this round → Draw 1 card.',
+    abilities: [
+      {
+        timing: 'enters',
+        effects: [{ type: 'gain_standing', player: 'self', guild: 'void', amount: 1 }],
+        description: 'Gain 1 Void Standing.',
+      },
+      {
+        timing: 'enters',
+        effects: [{
+          type: 'conditional',
+          condition: { type: 'follower_defeated_this_round' },
+          effects: [{ type: 'draw_cards', player: 'self', count: 1 }],
+        }],
+        description: 'If a follower was defeated this round → Draw 1 card.',
+      },
+    ],
+  },
+  {
     id: 'weary_veteran',
     name: 'Weary Veteran',
     type: 'follower',

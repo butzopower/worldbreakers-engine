@@ -89,6 +89,8 @@ export interface GameState {
   winner: PlayerId | 'draw' | null;
   /** Combat responses registered by cards, fire once during combat */
   combatResponses: CombatResponse[];
+  /** Instance IDs of followers defeated this round */
+  defeatedThisRound: string[];
   /** Step queue for the queue-based engine lifecycle */
   stepQueue: EngineStep[] | null;
 }
