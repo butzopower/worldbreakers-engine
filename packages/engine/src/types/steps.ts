@@ -1,6 +1,6 @@
 import { PlayerId, StandingGuild, Zone } from './core';
 import { AbilityDefinition, AbilityTiming, EffectPrimitive, Mode } from './effects';
-import { CombatResponseTrigger, LastingEffectExpiration, LastingEffectType } from "./state";
+import { CombatResponseTrigger, LastingEffectExpiration, LastingEffectType, TriggerOption } from "./state";
 import { ResolveContext } from "../abilities/primitives";
 import { CounterType } from './counters';
 
@@ -17,6 +17,7 @@ export type EngineStep =
   // Cleanup & Triggers
   | { type: 'cleanup' }
   | { type: 'check_triggers'; timing: AbilityTiming; player: PlayerId; triggeringCardId?: string }
+  | { type: 'order_triggers'; player: PlayerId; triggers: TriggerOption[] }
   | { type: 'check_combat_responses'; timing: CombatResponseTrigger }
   // Turn Structure
   | { type: 'advance_turn' }

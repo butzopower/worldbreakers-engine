@@ -1,4 +1,6 @@
 import type { InteractionMode, FilteredGameState, PlayerId, PlayerAction } from '../types';
+import { isVisible } from '../types';
+import { useCardDefinitions } from '../context/CardDefinitions';
 import styles from './InteractionOverlay.module.css';
 
 interface Props {
@@ -114,5 +116,41 @@ export default function InteractionOverlay({ mode, state, playerId, onSubmitActi
           </div>
         </div>
       );
+
+    case 'choose_trigger_order':
+      return <TriggerOrderPanel mode={mode} state={state} onSubmitAction={onSubmitAction} />;
   }
+}
+
+function TriggerOrderPanel({ mode, state, onSubmitAction }: {
+  mode: Extract<InteractionMode, { type: 'choose_trigger_order' }>;
+  state: FilteredGameState;
+  onSubmitAction: (action: PlayerAction) => void;
+}) {
+  const cardDefs = useCardDefinitions();
+
+  function getTriggerLabel(trigger: { sourceCardId: string; abilityIndex: number }) {
+    const card = state.cards.find(c => isVisible(c) && c.instanceId === trigger.sourceCardId);
+    if (!card || !isVisible(card)) return `Ability ${trigger.abilityIndex + 1}`;
+    const def = cardDefs[card.definitionId];
+    if (!def) return card.definitionId;
+    return def.name;
+  }
+
+  return (
+    <div className={styles.panel}>
+      <div className={styles.instructions}>Choose which ability resolves next:</div>
+      <div className={styles.btnRow}>
+        {mode.triggers.map((t, i) => (
+          <button
+            key={i}
+            onClick={() => onSubmitAction({ type: 'choose_trigger', triggerIndex: i })}
+            className={styles.btn}
+          >
+            {getTriggerLabel(t)}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
 }

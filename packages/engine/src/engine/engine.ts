@@ -247,6 +247,8 @@ function resolveChoice(
       return resolveChooseBreachTarget(state, player, action);
     case 'choose_attackers':
       return resolveChooseAttackers(state, player, action);
+    case 'choose_trigger_order':
+      return resolveChooseTriggerOrder(state, player, action);
     default:
       throw new Error(`Unknown choice type: ${(choice as PendingChoice).type}`);
   }
@@ -384,6 +386,28 @@ function resolveChooseAttackers(state: GameState, _player: PlayerId, action: Pla
 
   const queue = buildAttackQueue(s, choice.playerId, action.attackerIds);
   return { state: s, events, prepend: queue };
+}
+
+function resolveChooseTriggerOrder(state: GameState, _player: PlayerId, action: PlayerAction): ChoiceResult {
+  if (action.type !== 'choose_trigger') throw new Error('Expected choose_trigger');
+  const choice = state.pendingChoice!;
+  if (choice.type !== 'choose_trigger_order') throw new Error('Expected choose_trigger_order choice');
+
+  const selected = choice.triggers[action.triggerIndex];
+  const remaining = choice.triggers.filter((_, i) => i !== action.triggerIndex);
+
+  const s: GameState = { ...state, pendingChoice: null };
+
+  const prepend: EngineStep[] = [
+    { type: 'resolve_ability_at_index', controller: choice.playerId, sourceCardId: selected.sourceCardId, abilityIndex: selected.abilityIndex, triggeringCardId: selected.triggeringCardId },
+    { type: 'cleanup' },
+  ];
+
+  if (remaining.length > 0) {
+    prepend.push({ type: 'order_triggers', player: choice.playerId, triggers: remaining });
+  }
+
+  return { state: s, events: [], prepend };
 }
 
 import { handleDevelop } from "../actions/develop";
@@ -544,6 +568,12 @@ function getLegalChoiceActions(state: GameState): ActionInput[] {
       }
       if (attackable.length > 1) {
         actions.push({ player, action: { type: 'choose_attackers', attackerIds: attackable.map(f => f.instanceId) } });
+      }
+      break;
+    }
+    case 'choose_trigger_order': {
+      for (let i = 0; i < choice.triggers.length; i++) {
+        actions.push({ player, action: { type: 'choose_trigger', triggerIndex: i } });
       }
       break;
     }

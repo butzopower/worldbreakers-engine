@@ -86,10 +86,21 @@ describe('Alamut Castle', () => {
       .addCard('airag_maker', 'player1', 'board', { instanceId: 'am1' })
       .build();
 
-    const result = processAction(state, {
+    const attackResult = processAction(state, {
       player: 'player1',
       action: { type: 'attack', attackerIds: ['am1'] },
     });
+
+    // Two your_attack triggers (stone_sentinel + alamut_castle) → choose order
+    expect(attackResult.waitingFor?.type).toBe('choose_trigger_order');
+
+    // Choose alamut_castle trigger first (index 1), then stone_sentinel auto-resolves
+    const triggerResult = processAction(attackResult.state, {
+      player: 'player1',
+      action: { type: 'choose_trigger', triggerIndex: 1 },
+    });
+
+    const result = triggerResult;
 
     // Worldbreaker should be readied
     const wb = result.state.cards.find(c => c.instanceId === 'wb1');
@@ -132,9 +143,17 @@ describe('Alamut Castle', () => {
       .addCard('airag_maker', 'player1', 'board', { instanceId: 'am1' })
       .build();
 
-    const result = processAction(state, {
+    const attackResult = processAction(state, {
       player: 'player1',
       action: { type: 'attack', attackerIds: ['am1'] },
+    });
+
+    // Two your_attack triggers → choose order
+    expect(attackResult.waitingFor?.type).toBe('choose_trigger_order');
+
+    const result = processAction(attackResult.state, {
+      player: 'player1',
+      action: { type: 'choose_trigger', triggerIndex: 1 },
     });
 
     // Worldbreaker should be readied

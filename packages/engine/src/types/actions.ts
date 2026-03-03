@@ -15,7 +15,8 @@ export type PlayerAction =
   | { type: 'damage_location'; locationInstanceId: string }
   | { type: 'skip_breach_damage' }
   | { type: 'choose_mode'; modeIndex: number }
-  | { type: 'choose_attackers'; attackerIds: string[] };
+  | { type: 'choose_attackers'; attackerIds: string[] }
+  | { type: 'choose_trigger'; triggerIndex: number };
 
 export interface ActionInput {
   player: PlayerId;

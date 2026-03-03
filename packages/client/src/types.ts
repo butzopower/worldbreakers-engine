@@ -35,13 +35,20 @@ export interface CombatState {
   attackerIds: string[];
 }
 
+export interface TriggerOption {
+  sourceCardId: string;
+  abilityIndex: number;
+  triggeringCardId?: string;
+}
+
 export type PendingChoice =
   | { type: 'choose_attackers'; playerId: PlayerId }
   | { type: 'choose_blockers'; playerId: PlayerId; attackerIds: string[] }
   | { type: 'choose_target'; playerId: PlayerId; sourceCardId: string; abilityIndex: number; effects: unknown[]; triggeringCardId?: string }
   | { type: 'choose_discard'; playerId: PlayerId; count: number; sourceCardId: string; phase?: string; nextPhase?: string }
   | { type: 'choose_breach_target'; playerId: PlayerId; validLocationIds: string[] }
-  | { type: 'choose_mode'; playerId: PlayerId; sourceCardId: string; modes: { label: string; effects: unknown[] }[] };
+  | { type: 'choose_mode'; playerId: PlayerId; sourceCardId: string; modes: { label: string; effects: unknown[] }[] }
+  | { type: 'choose_trigger_order'; playerId: PlayerId; triggers: TriggerOption[] };
 
 export type LasingEffect = {
   type: string;
@@ -103,4 +110,5 @@ export type InteractionMode =
   | { type: 'choose_target'; validTargets: string[] }
   | { type: 'choose_discard'; count: number; selected: string[] }
   | { type: 'choose_breach_target'; validLocations: string[] }
-  | { type: 'choose_mode'; modes: { label: string }[] };
+  | { type: 'choose_mode'; modes: { label: string }[] }
+  | { type: 'choose_trigger_order'; triggers: TriggerOption[] };

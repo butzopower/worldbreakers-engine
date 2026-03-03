@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import type { InteractionMode } from '../types';
+import type { InteractionMode, TriggerOption } from '../types';
 
 export function useInteractionMode() {
   const [mode, setMode] = useState<InteractionMode>({ type: 'none' });
@@ -59,6 +59,10 @@ export function useInteractionMode() {
     setMode({ type: 'choose_mode', modes });
   }, []);
 
+  const startTriggerSelection = useCallback((triggers: TriggerOption[]) => {
+    setMode({ type: 'choose_trigger_order', triggers });
+  }, []);
+
   return {
     mode,
     reset,
@@ -71,5 +75,6 @@ export function useInteractionMode() {
     toggleDiscard,
     startBreachSelection,
     startModeSelection,
+    startTriggerSelection,
   };
 }

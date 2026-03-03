@@ -45,13 +45,20 @@ export interface CombatState {
 
 export type PendingChoiceChooseTarget = { type: 'choose_target'; playerId: PlayerId; sourceCardId: string; abilityIndex: number; effects: EffectPrimitive[]; filter: CardFilter; triggeringCardId?: string }
 
+export interface TriggerOption {
+  sourceCardId: string;
+  abilityIndex: number;
+  triggeringCardId?: string;
+}
+
 export type PendingChoice =
   | { type: 'choose_blockers'; playerId: PlayerId; attackerIds: string[] }
   | PendingChoiceChooseTarget
   | { type: 'choose_discard'; playerId: PlayerId; count: number; sourceCardId: string }
   | { type: 'choose_breach_target'; playerId: PlayerId; validLocationIds: string[] }
   | { type: 'choose_mode'; playerId: PlayerId; sourceCardId: string; modes: Mode[] }
-  | { type: 'choose_attackers'; playerId: PlayerId };
+  | { type: 'choose_attackers'; playerId: PlayerId }
+  | { type: 'choose_trigger_order'; playerId: PlayerId; triggers: TriggerOption[] };
 
 export interface PlayerState {
   mythium: number;

@@ -13,7 +13,7 @@ export { registerSetCards } from './cards/sets';
 export type { PlayerId, Guild, StandingGuild, Phase, Zone, CombatStep, RallyStep } from './types/core';
 export { opponentOf, PLAYERS, STANDING_GUILDS } from './types/core';
 export type { CardDefinition, CardType, Keyword, LocationStage } from './types/cards';
-export type { GameState, PlayerState, CardInstance, CombatState, LastingEffect, PendingChoice } from './types/state';
+export type { GameState, PlayerState, CardInstance, CombatState, LastingEffect, PendingChoice, TriggerOption } from './types/state';
 export type { PlayerAction, ActionInput } from './types/actions';
 export type { GameEvent } from './types/events';
 export type { EffectPrimitive, AbilityDefinition, AbilityTiming, TargetSelector, PlayerSelector, CardFilter } from './types/effects';

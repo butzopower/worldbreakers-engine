@@ -163,6 +163,15 @@ function validatePendingChoice(state: GameState, player: PlayerId, action: Playe
       }
       return validateAttack(state, player, action.attackerIds);
 
+    case 'choose_trigger_order':
+      if (action.type !== 'choose_trigger') {
+        return { valid: false, reason: 'Must choose a trigger' };
+      }
+      if (action.triggerIndex < 0 || action.triggerIndex >= choice.triggers.length) {
+        return { valid: false, reason: 'Invalid trigger index' };
+      }
+      return { valid: true };
+
     default:
       return { valid: false, reason: 'Unknown choice type' };
   }

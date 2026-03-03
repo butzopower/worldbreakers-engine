@@ -251,6 +251,35 @@ const testCards: CardDefinition[] = [
     }],
   },
 
+  {
+    id: 'soul_reaper',
+    name: 'Soul Reaper',
+    type: 'follower',
+    guild: 'neutral',
+    cost: 2,
+    strength: 1,
+    health: 2,
+    abilities: [{
+      timing: 'follower_defeated',
+      effects: [{ type: 'draw_cards', player: 'controller', count: 1 }],
+      description: 'Follower Defeated: Draw 1 card.',
+    }],
+  },
+  {
+    id: 'rally_herald',
+    name: 'Rally Herald',
+    type: 'follower',
+    guild: 'neutral',
+    cost: 2,
+    strength: 1,
+    health: 2,
+    abilities: [{
+      timing: 'rally',
+      effects: [{ type: 'gain_mythium', player: 'controller', amount: 1 }],
+      description: 'Rally: Gain 1 mythium.',
+    }],
+  },
+
   // Block restriction test cards
   {
     id: 'wound_dodge_attacker',

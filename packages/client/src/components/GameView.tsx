@@ -66,6 +66,10 @@ export default function GameView({ playerId, state, legalActions, events, onRetu
         interaction.startModeSelection(choice.modes);
         break;
       }
+      case 'choose_trigger_order': {
+        interaction.startTriggerSelection(choice.triggers);
+        break;
+      }
     }
   }, [state.pendingChoice?.type, state.version]);
 

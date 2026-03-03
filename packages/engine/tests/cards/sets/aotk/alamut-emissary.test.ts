@@ -50,16 +50,24 @@ describe('Alamut Emissary', () => {
       .addCard('shield_bearer', 'player2', 'board', { instanceId: 'sb1' })
       .build();
 
-    const attackResult = processAction(state, {
+    let result = processAction(state, {
       player: 'player1',
       action: { type: 'attack', attackerIds: ['ae1', 'ae2'] },
     });
 
-    // Should go straight to blockers, no bloodshed target choice
-    expect(attackResult.waitingFor?.type).toBe('choose_blockers');
+    // Multiple attacks triggers require ordering; resolve them (both are no-ops due to attacking_alone)
+    while (result.waitingFor?.type === 'choose_trigger_order') {
+      result = processAction(result.state, {
+        player: 'player1',
+        action: { type: 'choose_trigger', triggerIndex: 0 },
+      });
+    }
+
+    // Should reach blockers, no bloodshed target choice
+    expect(result.waitingFor?.type).toBe('choose_blockers');
 
     // Shield bearer should have no wounds
-    const sb = attackResult.state.cards.find(c => c.instanceId === 'sb1')!;
+    const sb = result.state.cards.find(c => c.instanceId === 'sb1')!;
     expect(getCounter(sb.counters, 'wound')).toBe(0);
   });
 });

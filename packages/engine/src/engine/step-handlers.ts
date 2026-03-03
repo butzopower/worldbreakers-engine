@@ -4,7 +4,8 @@ import {
   GameState,
   LastingEffect,
   LastingEffectExpiration,
-  LastingEffectType
+  LastingEffectType,
+  TriggerOption,
 } from '../types/state';
 import { GameEvent } from '../types/events';
 import { EngineStep } from '../types/steps';
@@ -83,6 +84,8 @@ export function executeStep(state: GameState, step: EngineStep): StepResult {
       return handleResolveCustomAbility(state, step.controller, step.sourceCardId, step.customResolve, step.triggeringCardId);
     case 'check_triggers':
       return handleCheckTriggers(state, step.timing, step.player, step.triggeringCardId);
+    case 'order_triggers':
+      return handleOrderTriggers(state, step.player, step.triggers);
     case 'check_combat_responses':
       return handleCheckCombatResponses(state, step.timing);
     case 'combat_start':
@@ -218,13 +221,16 @@ function handleCleanup(state: GameState): StepResult {
   const defeatedEvents = result.events.filter(e => e.type === 'card_defeated');
   const depletedEvents = result.events.filter(e => e.type === 'location_depleted');
 
+  // Active player's triggers resolve first
+  const playerOrder: PlayerId[] = [state.activePlayer, opponentOf(state.activePlayer)];
+
   for (const e of defeatedEvents) {
-    for (const p of PLAYERS) {
+    for (const p of playerOrder) {
       prepend.push({ type: 'check_triggers', timing: 'follower_defeated', player: p, triggeringCardId: e.cardInstanceId });
     }
   }
   for (const e of depletedEvents) {
-    for (const p of PLAYERS) {
+    for (const p of playerOrder) {
       prepend.push({ type: 'check_triggers', timing: 'location_depleted', player: p, triggeringCardId: e.locationInstanceId });
     }
   }
@@ -246,8 +252,9 @@ function handleAdvanceTurn(state: GameState): StepResult {
     s = { ...s, phase: 'rally' };
     events.push({ type: 'phase_changed', phase: 'rally', round: s.round });
 
+    const playerOrder: PlayerId[] = [s.activePlayer, opponentOf(s.activePlayer)];
     const rallySteps: EngineStep[] = [
-      ...PLAYERS.map(p => ({ type: 'rally_triggers' as const, player: p })),
+      ...playerOrder.map(p => ({ type: 'rally_triggers' as const, player: p })),
       ...PLAYERS.map(p => ({ type: 'rally_ready' as const, player: p })),
       ...PLAYERS.map(p => ({ type: 'rally_mythium' as const, player: p })),
       ...PLAYERS.map(p => ({ type: 'rally_draw' as const, player: p })),
@@ -279,36 +286,14 @@ function handleRallyTriggers(state: GameState, player: PlayerId): StepResult {
     { type: 'rally_step', step: 'rally_abilities', player },
   ];
 
-  // Scan for rally abilities and prepend resolve steps
-  const prepend: EngineStep[] = [];
+  const triggers = collectTriggers(state, 'rally', player);
 
-  const wb = getWorldbreaker(state, player);
-  if (wb) {
-    const wbDef = getCardDef(wb);
-    if (wbDef.abilities) {
-      for (let i = 0; i < wbDef.abilities.length; i++) {
-        if (wbDef.abilities[i].timing === 'rally') {
-          prepend.push({ type: 'resolve_ability_at_index', controller: player, sourceCardId: wb.instanceId, abilityIndex: i });
-        }
-      }
-    }
-  }
+  if (triggers.length === 0) return { state, events };
 
-  const board = getBoard(state, player);
-  for (const card of board) {
-    const def = getCardDef(card);
-    if (!def.abilities) continue;
-    for (let i = 0; i < def.abilities.length; i++) {
-      if (def.abilities[i].timing === 'rally') {
-        prepend.push({ type: 'resolve_ability_at_index', controller: player, sourceCardId: card.instanceId, abilityIndex: i });
-      }
-    }
-  }
-
-  // Add cleanup after rally triggers if any were found
-  if (prepend.length > 0) {
-    prepend.push({ type: 'cleanup' });
-  }
+  const prepend: EngineStep[] = [
+    { type: 'order_triggers', player, triggers },
+    { type: 'cleanup' },
+  ];
 
   return { state, events, prepend };
 }
@@ -487,8 +472,8 @@ function handleResolveCustomAbility(state: GameState, controller: PlayerId, sour
   return { state, events };
 }
 
-function handleCheckTriggers(state: GameState, timing: AbilityTiming, player: PlayerId, triggeringCardId?: string): StepResult {
-  const prepend: EngineStep[] = [];
+function collectTriggers(state: GameState, timing: AbilityTiming, player: PlayerId, triggeringCardId?: string): TriggerOption[] {
+  const triggers: TriggerOption[] = [];
 
   // Scan worldbreaker
   const wb = getWorldbreaker(state, player);
@@ -497,7 +482,7 @@ function handleCheckTriggers(state: GameState, timing: AbilityTiming, player: Pl
     if (wbDef.abilities) {
       for (let i = 0; i < wbDef.abilities.length; i++) {
         if (wbDef.abilities[i].timing === timing) {
-          prepend.push({ type: 'resolve_ability_at_index', controller: player, sourceCardId: wb.instanceId, abilityIndex: i, triggeringCardId });
+          triggers.push({ sourceCardId: wb.instanceId, abilityIndex: i, triggeringCardId });
         }
       }
     }
@@ -510,12 +495,46 @@ function handleCheckTriggers(state: GameState, timing: AbilityTiming, player: Pl
     if (!def.abilities) continue;
     for (let i = 0; i < def.abilities.length; i++) {
       if (def.abilities[i].timing === timing) {
-        prepend.push({ type: 'resolve_ability_at_index', controller: player, sourceCardId: card.instanceId, abilityIndex: i, triggeringCardId });
+        triggers.push({ sourceCardId: card.instanceId, abilityIndex: i, triggeringCardId });
       }
     }
   }
 
-  return { state, events: [], prepend };
+  return triggers;
+}
+
+function handleCheckTriggers(state: GameState, timing: AbilityTiming, player: PlayerId, triggeringCardId?: string): StepResult {
+  const triggers = collectTriggers(state, timing, player, triggeringCardId);
+
+  if (triggers.length === 0) return { state, events: [] };
+
+  return {
+    state,
+    events: [],
+    prepend: [{ type: 'order_triggers', player, triggers }],
+  };
+}
+
+function handleOrderTriggers(state: GameState, player: PlayerId, triggers: TriggerOption[]): StepResult {
+  if (triggers.length === 0) return { state, events: [] };
+
+  if (triggers.length === 1) {
+    const t = triggers[0];
+    return {
+      state,
+      events: [],
+      prepend: [
+        { type: 'resolve_ability_at_index', controller: player, sourceCardId: t.sourceCardId, abilityIndex: t.abilityIndex, triggeringCardId: t.triggeringCardId },
+      ],
+    };
+  }
+
+  // Multiple triggers — present choice to player
+  return setPendingChoice(state, {
+    type: 'choose_trigger_order',
+    playerId: player,
+    triggers,
+  });
 }
 
 function handleCheckCombatResponses(state: GameState, timing: CombatResponseTrigger): StepResult {
