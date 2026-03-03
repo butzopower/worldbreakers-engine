@@ -2,7 +2,7 @@ import { GameState } from '../types/state';
 import { GameEvent } from '../types/events';
 import { getCard, getCardDef, getEffectiveStrength, hasKeyword, hasLethal, isDefeated } from '../state/query';
 import { addCounterToCard, gainPower, MutationResult } from '../state/mutate';
-import { applyBloodshed, applyOverwhelm } from '../abilities/keywords';
+import { applyOverwhelm } from '../abilities/keywords';
 import { getCounter } from '../types/counters';
 
 /**
@@ -55,15 +55,6 @@ export function resolveSingleFight(
       s = result.state
       events.push(...result.events);
     }
-  }
-
-  // Apply bloodshed keyword (extra damage)
-  const refreshedAttacker = getCard(s, attackerId);
-  const refreshedBlocker = getCard(s, blockerId);
-  if (refreshedAttacker && refreshedBlocker) {
-    const bsResult = applyBloodshed(s, refreshedAttacker, refreshedBlocker);
-    s = bsResult.state;
-    events.push(...bsResult.events);
   }
 
   // Check if blocker was defeated for Overwhelm

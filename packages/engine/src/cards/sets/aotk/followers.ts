@@ -74,7 +74,19 @@ export const followers: CardDefinition[] = [
     strength: 2,
     health: 4,
     keywords: ['bloodshed'],
-    bloodshedAmount: 1,
+    abilities: [{
+      timing: 'attacks',
+      effects: [{
+        type: 'conditional',
+        condition: { type: 'attacking_alone' },
+        effects: [{
+          type: 'deal_wounds',
+          target: { kind: 'choose', filter: { type: 'follower', zone: ['board'], owner: 'opponent' }, count: 1 },
+          amount: 1,
+        }],
+      }],
+      description: 'Bloodshed 1',
+    }],
   },
   {
     id: 'alert_warden',

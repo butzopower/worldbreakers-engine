@@ -38,8 +38,6 @@ export interface CardDefinition {
     keyword: Keyword;
     condition: Condition;
   }>;
-  /** Bloodshed damage amount, if keyword is present */
-  bloodshedAmount?: number;
   /** Standing requirement: { guild: count } */
   standingRequirement?: Partial<Record<StandingGuild, number>>;
   abilities?: AbilityDefinition[];

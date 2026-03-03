@@ -5,6 +5,7 @@ import { processAction, getLegalActions } from '../../src/engine/engine.js';
 import { buildState } from '../helpers/state-builder.js';
 import { expectCardInZone, expectPlayerPower, expectCardCounter, expectEvent } from '../helpers/assertions.js';
 import { getCard } from '../../src/state/query.js';
+import { getCounter } from '../../src/types/counters.js';
 
 beforeEach(() => {
   clearRegistry();
@@ -224,7 +225,7 @@ describe('combat - keywords', () => {
     expectPlayerPower(r2.state, 'player1', 1);
   });
 
-  it('bloodshed deals extra wounds', () => {
+  it('bloodshed deals wounds to chosen follower when attacking alone', () => {
     const state = buildState()
       .withActivePlayer('player1')
       .addCard('night_raider', 'player1', 'board', { instanceId: 'nr1' }) // 2/1 bloodshed 1
@@ -238,15 +239,17 @@ describe('combat - keywords', () => {
       action: { type: 'attack', attackerIds: ['nr1'] },
     });
 
+    // Bloodshed triggers as an Attacks: ability — choose target
+    expect(r1.waitingFor?.type).toBe('choose_target');
+
     const r2 = processAction(r1.state, {
-      player: 'player2',
-      action: { type: 'declare_blocker', blockerId: 'sb1', attackerId: 'nr1' },
+      player: 'player1',
+      action: { type: 'choose_target', targetInstanceId: 'sb1' },
     });
 
-    // Night raider deals 2 + 1 bloodshed = 3 wounds to shield bearer (3 health) → defeated
-    expectCardInZone(r2.state, 'sb1', 'discard');
-    // Shield bearer deals 1 wound to night raider (1 health) → defeated
-    expectCardInZone(r2.state, 'nr1', 'discard');
+    // Shield bearer should have 1 wound from bloodshed before blocking even happens
+    const sb = r2.state.cards.find(c => c.instanceId === 'sb1')!;
+    expect(getCounter(sb.counters, 'wound')).toBe(1);
   });
 });
 

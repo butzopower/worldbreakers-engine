@@ -6,6 +6,7 @@ import { processAction } from '../../../../src/engine/engine.js';
 import { buildState } from '../../../helpers/state-builder.js';
 import { expectCardInZone } from '../../../helpers/assertions.js';
 import { hasPlayCost } from '../../../helpers/properties.js';
+import { getCounter } from '../../../../src/types/counters.js';
 
 beforeEach(() => {
   clearRegistry();
@@ -16,10 +17,7 @@ beforeEach(() => {
 describe('Alamut Emissary', () => {
   hasPlayCost('alamut_emissary', 4, { void: 2 });
 
-  it('bloodshed 1 deals 1 extra wound to the blocker', () => {
-    // Emissary (2 str + bloodshed 1) vs shield_bearer (3 health)
-    // Without bloodshed: 2 wounds < 3 health → shield_bearer survives
-    // With bloodshed 1: 2 + 1 = 3 wounds = 3 health → shield_bearer defeated
+  it('bloodshed 1 deals 1 wound to a chosen defender follower when attacking alone', () => {
     const state = buildState()
       .withActivePlayer('player1')
       .addCard('alamut_emissary', 'player1', 'board', { instanceId: 'ae1' })
@@ -31,16 +29,20 @@ describe('Alamut Emissary', () => {
       action: { type: 'attack', attackerIds: ['ae1'] },
     });
 
-    const blockResult = processAction(attackResult.state, {
-      player: 'player2',
-      action: { type: 'declare_blocker', blockerId: 'sb1', attackerId: 'ae1' },
+    // Should be waiting for bloodshed target choice
+    expect(attackResult.waitingFor?.type).toBe('choose_target');
+
+    const chooseResult = processAction(attackResult.state, {
+      player: 'player1',
+      action: { type: 'choose_target', targetInstanceId: 'sb1' },
     });
 
-    expectCardInZone(blockResult.state, 'sb1', 'discard');
+    // Shield bearer should have 1 wound from bloodshed
+    const sb = chooseResult.state.cards.find(c => c.instanceId === 'sb1')!;
+    expect(getCounter(sb.counters, 'wound')).toBe(1);
   });
 
-  it('bloodshed only triggers when attacking alone', () => {
-    // Emissary (4 health) survives 1 wound from shield_bearer (1 str)
+  it('bloodshed does not trigger when attacking with multiple followers', () => {
     const state = buildState()
       .withActivePlayer('player1')
       .addCard('alamut_emissary', 'player1', 'board', { instanceId: 'ae1' })
@@ -53,11 +55,11 @@ describe('Alamut Emissary', () => {
       action: { type: 'attack', attackerIds: ['ae1', 'ae2'] },
     });
 
-    const blockResult = processAction(attackResult.state, {
-      player: 'player2',
-      action: { type: 'declare_blocker', blockerId: 'sb1', attackerId: 'ae1' },
-    });
+    // Should go straight to blockers, no bloodshed target choice
+    expect(attackResult.waitingFor?.type).toBe('choose_blockers');
 
-    expectCardInZone(blockResult.state, 'sb1', 'board');
+    // Shield bearer should have no wounds
+    const sb = attackResult.state.cards.find(c => c.instanceId === 'sb1')!;
+    expect(getCounter(sb.counters, 'wound')).toBe(0);
   });
 });
