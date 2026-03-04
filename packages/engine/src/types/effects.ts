@@ -33,7 +33,8 @@ export type Condition =
   | { type: 'attacking_alone' }
   | { type: 'standing_less_than'; guild: StandingGuild; amount: number }
   | { type: 'any_standing_at_least'; amount: number }
-  | { type: 'follower_defeated_this_round' };
+  | { type: 'follower_defeated_this_round' }
+  | { type: 'is_first_defeat_this_round' };
 
 export interface Mode {
   label: string;

@@ -1,34 +1,22 @@
 import { GameState } from '../types/state';
 import { GameEvent } from '../types/events';
-import { getCardDef, isDefeated, isLocationDepleted } from '../state/query';
+import { getCardDef, isLocationDepleted } from '../state/query';
 import { moveCard, removeLastingEffect } from '../state/mutate';
 
 /**
- * Recursive cleanup loop. After every state-changing operation:
- * 1. Check defeated followers (wounds >= health) → move to discard
- * 2. Check depleted locations (no stage counters) → move to discard
- * 3. Check expired lasting effects → remove
- * If any changes were made, run again.
+ * Cleanup loop for non-follower cards. Handles:
+ * 1. Depleted locations (no stage counters) → move to discard
+ * 2. Expired lasting effects (handled by phase transitions, not here)
+ *
+ * Defeated followers are handled by handleCleanup in step-handlers.ts
+ * which defers their move-to-discard until after triggers resolve.
  */
 export function runCleanup(state: GameState, events: GameEvent[] = []): { state: GameState; events: GameEvent[] } {
   let changed = false;
   let s = state;
   const newEvents: GameEvent[] = [];
 
-  // 1. Defeated followers
-  const boardFollowers = s.cards.filter(c => c.zone === 'board' && getCardDef(c).type === 'follower');
-  for (const card of boardFollowers) {
-    if (isDefeated(card)) {
-      const result = moveCard(s, card.instanceId, 'discard');
-      s = result.state;
-      newEvents.push(...result.events);
-      newEvents.push({ type: 'card_defeated', cardInstanceId: card.instanceId });
-      s = { ...s, defeatedThisRound: [...s.defeatedThisRound, card.instanceId] };
-      changed = true;
-    }
-  }
-
-  // 2. Depleted locations
+  // Depleted locations
   const boardLocations = s.cards.filter(c => c.zone === 'board' && getCardDef(c).type === 'location');
   for (const card of boardLocations) {
     if (isLocationDepleted(card)) {
@@ -39,8 +27,6 @@ export function runCleanup(state: GameState, events: GameEvent[] = []): { state:
       changed = true;
     }
   }
-
-  // 3. No lasting effect expiry here - that's handled by phase transitions
 
   const allEvents = [...events, ...newEvents];
 

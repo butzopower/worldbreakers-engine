@@ -215,32 +215,55 @@ function handleRequestChooseAttackers(state: GameState, player: PlayerId): StepR
 }
 
 function handleCleanup(state: GameState): StepResult {
-  const result = runCleanup(state);
-  // Check for defeated/depleted events and queue trigger checks
+  let s = state;
+  const events: GameEvent[] = [];
   const prepend: EngineStep[] = [];
-  const defeatedEvents = result.events.filter(e => e.type === 'card_defeated');
-  const depletedEvents = result.events.filter(e => e.type === 'location_depleted');
 
   // Active player's triggers resolve first
-  const playerOrder: PlayerId[] = [state.activePlayer, opponentOf(state.activePlayer)];
+  const playerOrder: PlayerId[] = [s.activePlayer, opponentOf(s.activePlayer)];
 
-  for (const e of defeatedEvents) {
+  // 1. Identify newly defeated followers (still on board) — don't move them yet
+  //    Skip followers already in defeatedThisRound (they've been identified in a prior cleanup
+  //    but not yet moved to discard — intermediate cleanups between triggers must not re-process them)
+  const boardFollowers = s.cards.filter(c => c.zone === 'board' && getCardDef(c).type === 'follower');
+  const defeatedFollowers = boardFollowers.filter(c => isDefeated(c) && !s.defeatedThisRound.includes(c.instanceId));
+
+  for (const card of defeatedFollowers) {
+    events.push({ type: 'card_defeated', cardInstanceId: card.instanceId });
+    s = { ...s, defeatedThisRound: [...s.defeatedThisRound, card.instanceId] };
+  }
+
+  // 2. Run location cleanup (runCleanup now only handles locations)
+  const locationResult = runCleanup(s);
+  s = locationResult.state;
+  events.push(...locationResult.events);
+  const depletedEvents = locationResult.events.filter(e => e.type === 'location_depleted');
+
+  // 3. Queue trigger checks for defeated followers (cards still on board)
+  for (const card of defeatedFollowers) {
     for (const p of playerOrder) {
-      prepend.push({ type: 'check_triggers', timing: 'follower_defeated', player: p, triggeringCardId: e.cardInstanceId });
+      prepend.push({ type: 'check_triggers', timing: 'follower_defeated', player: p, triggeringCardId: card.instanceId });
     }
   }
+
+  // 4. Queue move_card to discard for each defeated follower (after triggers)
+  for (const card of defeatedFollowers) {
+    prepend.push({ type: 'move_card', cardInstanceId: card.instanceId, toZone: 'discard' });
+  }
+
+  // 5. Queue trigger checks for depleted locations
   for (const e of depletedEvents) {
     for (const p of playerOrder) {
       prepend.push({ type: 'check_triggers', timing: 'location_depleted', player: p, triggeringCardId: e.locationInstanceId });
     }
   }
 
-  // If there were defeat/deplete triggers, run another cleanup after them
+  // If there were any defeat/deplete events, run another cleanup for cascading
   if (prepend.length > 0) {
     prepend.push({ type: 'cleanup' });
   }
 
-  return { state: result.state, events: result.events, prepend };
+  return { state: s, events, prepend };
 }
 
 function handleAdvanceTurn(state: GameState): StepResult {

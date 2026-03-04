@@ -431,6 +431,27 @@ export const followers: CardDefinition[] = [
     }],
   },
   {
+    id: 'serendipitous_witness',
+    name: 'Serendipitous Witness',
+    type: 'follower',
+    guild: 'void',
+    cost: 3,
+    standingRequirement: { void: 1 },
+    strength: 2,
+    health: 3,
+    description: 'Forced Interrupt: The first time each round a follower is defeated (including THIS) → Gain 1 Mythium.',
+    abilities: [{
+      timing: 'follower_defeated',
+      forced: true,
+      effects: [{
+        type: 'conditional',
+        condition: { type: 'is_first_defeat_this_round' },
+        effects: [{ type: 'gain_mythium', player: 'controller', amount: 1 }],
+      }],
+      description: 'The first time each round a follower is defeated → Gain 1 Mythium.',
+    }],
+  },
+  {
     id: 'skillful_bruiser',
     name: 'Skillful Bruiser',
     type: 'follower',

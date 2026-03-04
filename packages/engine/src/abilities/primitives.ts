@@ -220,6 +220,8 @@ export function resolvePrimitive(
         conditionMet = STANDING_GUILDS.some(g => state.players[ctx.controller].standing[g] >= condition.amount);
       } else if (condition.type === 'follower_defeated_this_round') {
         conditionMet = state.defeatedThisRound.length > 0;
+      } else if (condition.type === 'is_first_defeat_this_round') {
+        conditionMet = ctx.triggeringCardId === state.defeatedThisRound[0];
       }
       if (conditionMet) {
         return [
