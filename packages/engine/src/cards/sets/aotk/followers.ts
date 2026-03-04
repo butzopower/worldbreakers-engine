@@ -139,6 +139,27 @@ export const followers: CardDefinition[] = [
     description: 'Lethal. Breach: Gain 1 Void standing.',
   },
   {
+    id: 'callous_closer',
+    name: 'Callous Closer',
+    type: 'follower',
+    guild: 'void',
+    cost: 5,
+    standingRequirement: { void: 2 },
+    strength: 5,
+    health: 4,
+    description: 'Interrupt: The first time each round a follower is defeated (including Callous Closer) → Draw 1 card.',
+    abilities: [{
+      timing: 'follower_defeated',
+      forced: true,
+      effects: [{
+        type: 'conditional',
+        condition: { type: 'is_first_defeat_this_round' },
+        effects: [{ type: 'draw_cards', player: 'controller', count: 1 }],
+      }],
+      description: 'The first time each round a follower is defeated → Draw 1 card.',
+    }],
+  },
+  {
     id: 'caravan_guard',
     name: 'Caravan Guard',
     type: 'follower',
