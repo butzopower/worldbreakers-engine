@@ -10,7 +10,7 @@ import {
 import { GameEvent } from '../types/events';
 import { EngineStep } from '../types/steps';
 import { PlayerId, PLAYERS, opponentOf } from '../types/core';
-import { runCleanup, expireLastingEffects } from './cleanup';
+import { expireLastingEffects } from './cleanup';
 import {
   addCounterToCard,
   addLastingEffect,
@@ -28,7 +28,7 @@ import {
   setPendingChoice,
   shuffleDeck,
 } from '../state/mutate';
-import { getBoard, getCardDef, getWorldbreaker, isDefeated } from '../state/query';
+import { getBoard, getCardDef, getWorldbreaker, isDefeated, isLocationDepleted } from '../state/query';
 import { getCounter } from '../types/counters';
 import { ResolveContext, findValidTargets, resolvePrimitive } from '../abilities/primitives';
 import { getCustomResolver } from '../abilities/system';
@@ -222,9 +222,9 @@ function handleCleanup(state: GameState): StepResult {
   // Active player's triggers resolve first
   const playerOrder: PlayerId[] = [s.activePlayer, opponentOf(s.activePlayer)];
 
-  // 1. Identify newly defeated followers (still on board) — don't move them yet
-  //    Skip followers already in defeatedThisRound (they've been identified in a prior cleanup
-  //    but not yet moved to discard — intermediate cleanups between triggers must not re-process them)
+  // 1. Identify newly defeated followers (still on board) — don't move them yet.
+  //    Skip followers already in defeatedThisRound (identified in a prior cleanup
+  //    but not yet moved to discard — intermediate cleanups must not re-process them).
   const boardFollowers = s.cards.filter(c => c.zone === 'board' && getCardDef(c).type === 'follower');
   const defeatedFollowers = boardFollowers.filter(c => isDefeated(c) && !s.defeatedThisRound.includes(c.instanceId));
 
@@ -233,32 +233,35 @@ function handleCleanup(state: GameState): StepResult {
     s = { ...s, defeatedThisRound: [...s.defeatedThisRound, card.instanceId] };
   }
 
-  // 2. Run location cleanup (runCleanup now only handles locations)
-  const locationResult = runCleanup(s);
-  s = locationResult.state;
-  events.push(...locationResult.events);
-  const depletedEvents = locationResult.events.filter(e => e.type === 'location_depleted');
+  // 2. Identify depleted locations (still on board)
+  const boardLocations = s.cards.filter(c => c.zone === 'board' && getCardDef(c).type === 'location');
+  const depletedLocations = boardLocations.filter(c => isLocationDepleted(c));
 
-  // 3. Queue trigger checks for defeated followers (cards still on board)
+  for (const card of depletedLocations) {
+    events.push({ type: 'location_depleted', locationInstanceId: card.instanceId });
+  }
+
+  // 3. Queue: triggers → move_card for defeated followers
   for (const card of defeatedFollowers) {
     for (const p of playerOrder) {
       prepend.push({ type: 'check_triggers', timing: 'follower_defeated', player: p, triggeringCardId: card.instanceId });
     }
   }
-
-  // 4. Queue move_card to discard for each defeated follower (after triggers)
   for (const card of defeatedFollowers) {
     prepend.push({ type: 'move_card', cardInstanceId: card.instanceId, toZone: 'discard' });
   }
 
-  // 5. Queue trigger checks for depleted locations
-  for (const e of depletedEvents) {
+  // 4. Queue: triggers → move_card for depleted locations
+  for (const card of depletedLocations) {
     for (const p of playerOrder) {
-      prepend.push({ type: 'check_triggers', timing: 'location_depleted', player: p, triggeringCardId: e.locationInstanceId });
+      prepend.push({ type: 'check_triggers', timing: 'location_depleted', player: p, triggeringCardId: card.instanceId });
     }
   }
+  for (const card of depletedLocations) {
+    prepend.push({ type: 'move_card', cardInstanceId: card.instanceId, toZone: 'discard' });
+  }
 
-  // If there were any defeat/deplete events, run another cleanup for cascading
+  // If anything was found, run another cleanup for cascading effects
   if (prepend.length > 0) {
     prepend.push({ type: 'cleanup' });
   }
