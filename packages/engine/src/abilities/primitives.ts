@@ -1,11 +1,11 @@
 import { PlayerId, opponentOf, STANDING_GUILDS } from '../types/core';
 import { GameState } from '../types/state';
-import { EffectPrimitive, PlayerSelector, TargetSelector, CardFilter, Mode } from '../types/effects';
-import { CardInstance } from '../types/state';
-import { getCard, getCardDef, getFollowers, canPay, canDevelop, canAttack, hasKeyword } from '../state/query';
-import { getCounter } from '../types/counters';
+import { EffectPrimitive, PlayerSelector, TargetSelector, Mode } from '../types/effects';
+import { getCard, getFollowers, canDevelop, canAttack } from '../state/query';
 import { EngineStep } from "../types/steps";
 import { playCard } from "../engine/engine";
+import { isConditionMet } from "./conditions";
+import { matchesFilter } from "./matches-filter";
 
 export interface ResolveContext {
   controller: PlayerId;
@@ -15,7 +15,7 @@ export interface ResolveContext {
   chosenTargets?: string[];
 }
 
-function resolvePlayerSelector(selector: PlayerSelector, ctx: ResolveContext): PlayerId[] {
+export function resolvePlayerSelector(selector: PlayerSelector, ctx: ResolveContext): PlayerId[] {
   switch (selector) {
     case 'self':
     case 'controller':
@@ -27,40 +27,6 @@ function resolvePlayerSelector(selector: PlayerSelector, ctx: ResolveContext): P
     case 'active':
       return [ctx.controller]; // In most contexts this is the controller
   }
-}
-
-function matchesFilter(state: GameState, card: CardInstance, filter: CardFilter, ctx: ResolveContext): boolean {
-  const def = getCardDef(card);
-
-  if (filter.type) {
-    const types = Array.isArray(filter.type) ? filter.type : [filter.type];
-    if (!types.includes(def.type)) return false;
-  }
-  if (filter.guild) {
-    const guilds = Array.isArray(filter.guild) ? filter.guild : [filter.guild];
-    if (!guilds.includes(def.guild)) return false;
-  }
-  if (filter.zone) {
-    const zones = Array.isArray(filter.zone) ? filter.zone : [filter.zone];
-    if (!zones.includes(card.zone)) return false;
-  }
-  if (filter.owner) {
-    const owners = resolvePlayerSelector(filter.owner, ctx);
-    if (!owners.includes(card.owner)) return false;
-  }
-  if (filter.excludeSelf && card.instanceId === ctx.sourceCardId) return false;
-  if (filter.keyword && !hasKeyword(state, card, filter.keyword)) return false;
-  if (filter.notKeyword && hasKeyword(state, card, filter.notKeyword)) return false;
-  if (filter.maxCost !== undefined && def.cost > filter.maxCost) return false;
-  if (filter.cardInstanceIds && !filter.cardInstanceIds.includes(card.instanceId)) return false;
-  if (filter.canPay && !canPay(state, ctx.controller, card, {costReduction: filter.canPay.costReduction})) return false;
-  if (filter.wounded !== undefined) {
-    const wounds = getCounter(card.counters, 'wound');
-    if (filter.wounded && wounds <= 0) return false;
-    if (!filter.wounded && wounds > 0) return false;
-  }
-
-  return true;
 }
 
 function resolveTargets(state: GameState, selector: TargetSelector, ctx: ResolveContext): string[] {
@@ -207,23 +173,8 @@ export function resolvePrimitive(
       return steps;
     }
     case 'conditional': {
-      const {condition, effects: innerEffects} = effect;
-      let conditionMet = false;
-      if (condition.type === 'min_card_count') {
-        const matching = state.cards.filter(c => matchesFilter(state, c, condition.filter, ctx));
-        conditionMet = matching.length >= condition.count;
-      } else if (condition.type === 'attacking_alone') {
-        conditionMet = state.combat !== null && state.combat.attackerIds.length === 1;
-      } else if (condition.type === 'standing_less_than') {
-        conditionMet = state.players[ctx.controller].standing[condition.guild] < condition.amount;
-      } else if (condition.type === 'any_standing_at_least') {
-        conditionMet = STANDING_GUILDS.some(g => state.players[ctx.controller].standing[g] >= condition.amount);
-      } else if (condition.type === 'follower_defeated_this_round') {
-        conditionMet = state.defeatedThisRound.length > 0;
-      } else if (condition.type === 'is_first_defeat_this_round') {
-        conditionMet = ctx.triggeringCardId === state.defeatedThisRound[0];
-      }
-      if (conditionMet) {
+      const { condition, effects: innerEffects } = effect;
+      if (isConditionMet(state, condition, ctx)) {
         return [
           {
             type: 'resolve_effects',
