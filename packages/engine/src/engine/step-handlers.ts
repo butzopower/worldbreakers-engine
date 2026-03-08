@@ -509,7 +509,7 @@ function collectTriggers(state: GameState, timing: AbilityTiming, player: Player
     if (wbDef.abilities) {
       for (let i = 0; i < wbDef.abilities.length; i++) {
         if (wbDef.abilities[i].timing === timing) {
-          triggers.push({ sourceCardId: wb.instanceId, abilityIndex: i, triggeringCardId });
+          triggers.push({ sourceCardId: wb.instanceId, abilityIndex: i, triggeringCardId, forced: wbDef.abilities[i].forced === true });
         }
       }
     }
@@ -522,7 +522,7 @@ function collectTriggers(state: GameState, timing: AbilityTiming, player: Player
     if (!def.abilities) continue;
     for (let i = 0; i < def.abilities.length; i++) {
       if (def.abilities[i].timing === timing) {
-        triggers.push({ sourceCardId: card.instanceId, abilityIndex: i, triggeringCardId });
+        triggers.push({ sourceCardId: card.instanceId, abilityIndex: i, triggeringCardId, forced: def.abilities[i].forced === true });
       }
     }
   }
@@ -545,7 +545,8 @@ function handleCheckTriggers(state: GameState, timing: AbilityTiming, player: Pl
 function handleOrderTriggers(state: GameState, player: PlayerId, triggers: TriggerOption[]): StepResult {
   if (triggers.length === 0) return { state, events: [] };
 
-  if (triggers.length === 1) {
+  // Auto-resolve only when there's exactly one trigger AND it's forced
+  if (triggers.length === 1 && triggers[0].forced) {
     const t = triggers[0];
     return {
       state,
@@ -556,7 +557,7 @@ function handleOrderTriggers(state: GameState, player: PlayerId, triggers: Trigg
     };
   }
 
-  // Multiple triggers — present choice to player
+  // Present choice to player (multiple triggers, or any non-forced triggers)
   return setPendingChoice(state, {
     type: 'choose_trigger_order',
     playerId: player,

@@ -6,6 +6,7 @@ import { processAction } from '../../../../src/engine/engine.js';
 import { buildState } from '../../../helpers/state-builder.js';
 import { hasPlayCost } from '../../../helpers/properties';
 import { expectPlayerMythium } from '../../../helpers/assertions';
+import { autoAccept } from '../../../helpers/auto-accept';
 
 beforeEach(() => {
   clearRegistry();
@@ -26,10 +27,10 @@ describe('Lowly Bard', () => {
       .addCard('lowly_bard', 'player1', 'hand', { instanceId: 'bard1' })
       .build();
 
-    const result = processAction(state, {
+    const result = autoAccept(processAction(state, {
       player: 'player1',
       action: { type: 'play_card', cardInstanceId: 'bard1' },
-    });
+    }));
 
     // Started with 5, paid 2, gained 6 (2+1+0+3)
     expectPlayerMythium(result.state, 'player1', 9);
@@ -42,10 +43,10 @@ describe('Lowly Bard', () => {
       .addCard('lowly_bard', 'player1', 'hand', { instanceId: 'bard1' })
       .build();
 
-    const result = processAction(state, {
+    const result = autoAccept(processAction(state, {
       player: 'player1',
       action: { type: 'play_card', cardInstanceId: 'bard1' },
-    });
+    }));
 
     // Started with 5, paid 2, gained 0
     expectPlayerMythium(result.state, 'player1', 3);
@@ -62,10 +63,10 @@ describe('Lowly Bard', () => {
       .addCard('lowly_bard', 'player1', 'hand', { instanceId: 'bard1' })
       .build();
 
-    const result = processAction(state, {
+    const result = autoAccept(processAction(state, {
       player: 'player1',
       action: { type: 'play_card', cardInstanceId: 'bard1' },
-    });
+    }));
 
     // Started with 10, paid 2, gained 4
     expectPlayerMythium(result.state, 'player1', 12);

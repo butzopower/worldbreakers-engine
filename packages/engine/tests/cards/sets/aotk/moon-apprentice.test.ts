@@ -6,6 +6,7 @@ import { processAction } from '../../../../src/engine/engine';
 import { buildState } from '../../../helpers/state-builder';
 import { expectCardCounter, expectHandSize } from '../../../helpers/assertions';
 import { hasPlayCost } from '../../../helpers/properties';
+import { autoAccept } from '../../../helpers/auto-accept';
 
 beforeEach(() => {
   clearRegistry();
@@ -23,10 +24,10 @@ describe('Moon Apprentice', () => {
       .addCard('moon_apprentice', 'player1', 'hand', { instanceId: 'ma1' })
       .build();
 
-    const result = processAction(state, {
+    const result = autoAccept(processAction(state, {
       player: 'player1',
       action: { type: 'play_card', cardInstanceId: 'ma1' },
-    });
+    }));
 
     expect(result.state.players.player1.standing.moon).toBe(1);
   });
@@ -40,10 +41,12 @@ describe('Moon Apprentice', () => {
       .addCard('militia_scout', 'player1', 'deck', { instanceId: 'deck1' })
       .build();
 
-    const result = processAction(state, {
+    const playResult = processAction(state, {
       player: 'player1',
       action: { type: 'play_card', cardInstanceId: 'ma1' },
     });
+
+    const result = autoAccept(autoAccept(playResult));
 
     // condition met — draws 1 card
     expectHandSize(result.state, 'player1', 1);
@@ -58,10 +61,10 @@ describe('Moon Apprentice', () => {
       .addCard('militia_scout', 'player1', 'deck', { instanceId: 'deck1' })
       .build();
 
-    const result = processAction(state, {
+    const result = autoAccept(processAction(state, {
       player: 'player1',
       action: { type: 'play_card', cardInstanceId: 'ma1' },
-    });
+    }));
 
     // condition not met — draws no card
     expectHandSize(result.state, 'player1', 0);
@@ -76,10 +79,12 @@ describe('Moon Apprentice', () => {
       .addCard('militia_scout', 'player1', 'deck', { instanceId: 'deck1' })
       .build();
 
-    const result = processAction(state, {
+    const playResult = processAction(state, {
       player: 'player1',
       action: { type: 'play_card', cardInstanceId: 'ma1' },
     });
+
+    const result = autoAccept(autoAccept(playResult));
 
     // condition met because we gained 1 moon — draw 1 card
     expectHandSize(result.state, 'player1', 1);

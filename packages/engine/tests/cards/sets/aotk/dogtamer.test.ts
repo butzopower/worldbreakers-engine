@@ -5,6 +5,7 @@ import { clearRegistry } from '../../../../src/cards/registry.js';
 import { processAction, getLegalActions } from '../../../../src/engine/engine.js';
 import { buildState } from '../../../helpers/state-builder.js';
 import { expectPlayerMythium, expectCardInZone } from '../../../helpers/assertions.js';
+import { autoAccept } from '../../../helpers/auto-accept';
 
 beforeEach(() => {
   clearRegistry();
@@ -51,12 +52,13 @@ describe('Dogtamer', () => {
       .addCard('dogtamer', 'player1', 'hand', { instanceId: 'dt1' })
       .build();
 
-    const result = processAction(state, {
+    const result = autoAccept(processAction(state, {
       player: 'player1',
       action: { type: 'play_card', cardInstanceId: 'dt1' },
-    });
+    }));
 
     expectCardInZone(result.state, 'dt1', 'board');
+
     expect(result.state.pendingChoice).not.toBeNull();
     expect(result.state.pendingChoice!.type).toBe('choose_mode');
     if (result.state.pendingChoice!.type === 'choose_mode') {
@@ -74,10 +76,10 @@ describe('Dogtamer', () => {
       .addCard('dogtamer', 'player1', 'hand', { instanceId: 'dt1' })
       .build();
 
-    const playResult = processAction(state, {
+    const playResult = autoAccept(processAction(state, {
       player: 'player1',
       action: { type: 'play_card', cardInstanceId: 'dt1' },
-    });
+    }));
 
     const chooseResult = processAction(playResult.state, {
       player: 'player1',
@@ -99,10 +101,10 @@ describe('Dogtamer', () => {
       .addCard('dogtamer', 'player1', 'hand', { instanceId: 'dt1' })
       .build();
 
-    const playResult = processAction(state, {
+    const playResult = autoAccept(processAction(state, {
       player: 'player1',
       action: { type: 'play_card', cardInstanceId: 'dt1' },
-    });
+    }));
 
     const chooseResult = processAction(playResult.state, {
       player: 'player1',
@@ -125,10 +127,10 @@ describe('Dogtamer', () => {
       .addCard('dogtamer', 'player1', 'hand', { instanceId: 'dt1' })
       .build();
 
-    const playResult = processAction(state, {
+    const playResult = autoAccept(processAction(state, {
       player: 'player1',
       action: { type: 'play_card', cardInstanceId: 'dt1' },
-    });
+    }));
 
     // Both options should still be available with 1 earth standing
     expect(playResult.state.pendingChoice!.type).toBe('choose_mode');

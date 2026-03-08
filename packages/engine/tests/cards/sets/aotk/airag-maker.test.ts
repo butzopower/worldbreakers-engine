@@ -5,6 +5,7 @@ import { clearRegistry } from '../../../../src/cards/registry.js';
 import { processAction, getLegalActions } from '../../../../src/engine/engine.js';
 import { buildState } from '../../../helpers/state-builder.js';
 import { expectPlayerMythium, expectCardInZone } from '../../../helpers/assertions.js';
+import { autoAccept } from "../../../helpers/auto-accept";
 
 beforeEach(() => {
   clearRegistry();
@@ -52,10 +53,10 @@ describe('Airag Maker', () => {
       .addCard('airag_maker', 'player1', 'hand', { instanceId: 'am1' })
       .build();
 
-    const result = processAction(state, {
+    const result = autoAccept(processAction(state, {
       player: 'player1',
       action: { type: 'play_card', cardInstanceId: 'am1' },
-    });
+    }));
 
     expect(result.state.pendingChoice).not.toBeNull();
     expect(result.state.pendingChoice!.type).toBe('choose_mode');
@@ -72,10 +73,10 @@ describe('Airag Maker', () => {
       .addCard('airag_maker', 'player1', 'hand', { instanceId: 'am1' })
       .build();
 
-    const playResult = processAction(state, {
+    const playResult = autoAccept(processAction(state, {
       player: 'player1',
       action: { type: 'play_card', cardInstanceId: 'am1' },
-    });
+    }));
 
     const chooseResult = processAction(playResult.state, {
       player: 'player1',
@@ -94,10 +95,10 @@ describe('Airag Maker', () => {
       .addCard('airag_maker', 'player1', 'hand', { instanceId: 'am1' })
       .build();
 
-    const playResult = processAction(state, {
+    const playResult = autoAccept(processAction(state, {
       player: 'player1',
       action: { type: 'play_card', cardInstanceId: 'am1' },
-    });
+    }));
 
     const chooseResult = processAction(playResult.state, {
       player: 'player1',
@@ -115,10 +116,10 @@ describe('Airag Maker', () => {
       .addCard('airag_maker', 'player1', 'hand', { instanceId: 'am1' })
       .build();
 
-    const playResult = processAction(state, {
+    const playResult = autoAccept(processAction(state, {
       player: 'player1',
       action: { type: 'play_card', cardInstanceId: 'am1' },
-    });
+    }));
 
     const chooseResult = processAction(playResult.state, {
       player: 'player1',
@@ -136,10 +137,10 @@ describe('Airag Maker', () => {
       .addCard('airag_maker', 'player1', 'hand', { instanceId: 'am1' })
       .build();
 
-    const playResult = processAction(state, {
+    const playResult = autoAccept(processAction(state, {
       player: 'player1',
       action: { type: 'play_card', cardInstanceId: 'am1' },
-    });
+    }));
 
     const chooseResult = processAction(playResult.state, {
       player: 'player1',
@@ -157,10 +158,10 @@ describe('Airag Maker', () => {
       .addCard('airag_maker', 'player1', 'hand', { instanceId: 'am1' })
       .build();
 
-    const playResult = processAction(state, {
+    const playResult = autoAccept(processAction(state, {
       player: 'player1',
       action: { type: 'play_card', cardInstanceId: 'am1' },
-    });
+    }));
 
     const legalActions = getLegalActions(playResult.state);
     expect(legalActions).toHaveLength(4);
@@ -176,10 +177,10 @@ describe('Airag Maker', () => {
       .addCard('airag_maker', 'player1', 'hand', { instanceId: 'am1' })
       .build();
 
-    const playResult = processAction(state, {
+    const playResult = autoAccept(processAction(state, {
       player: 'player1',
       action: { type: 'play_card', cardInstanceId: 'am1' },
-    });
+    }));
 
     const chooseResult = processAction(playResult.state, {
       player: 'player1',

@@ -5,6 +5,7 @@ import { clearRegistry } from '../../../../src/cards/registry.js';
 import { processAction } from '../../../../src/engine/engine.js';
 import { buildState } from '../../../helpers/state-builder.js';
 import { hasPlayCost } from '../../../helpers/properties';
+import { autoAccept } from '../../../helpers/auto-accept';
 
 beforeEach(() => {
   clearRegistry();
@@ -23,10 +24,10 @@ describe('Irate Vandal', () => {
       .addCard('watchtower', 'player2', 'board', { instanceId: 'loc1', counters: { stage: 3 } })
       .build();
 
-    let result = processAction(state, {
+    let result = autoAccept(processAction(state, {
       player: 'player1',
       action: { type: 'play_card', cardInstanceId: 'vandal1' },
-    });
+    }));
 
     // Choose the location target
     result = processAction(result.state, {
@@ -46,10 +47,10 @@ describe('Irate Vandal', () => {
       .addCard('covert_exchange', 'player2', 'board', { instanceId: 'hidden1', counters: { stage: 3 } })
       .build();
 
-    let result = processAction(state, {
+    let result = autoAccept(processAction(state, {
       player: 'player1',
       action: { type: 'play_card', cardInstanceId: 'vandal1' },
-    });
+    }));
 
     // Choose the hidden location target
     result = processAction(result.state, {
@@ -68,12 +69,12 @@ describe('Irate Vandal', () => {
       .addCard('irate_vandal', 'player1', 'hand', { instanceId: 'vandal1' })
       .build();
 
-    const result = processAction(state, {
+    const result = autoAccept(processAction(state, {
       player: 'player1',
       action: { type: 'play_card', cardInstanceId: 'vandal1' },
-    });
+    }));
 
-    // No pending choice since there are no locations
+    // No pending choice since there are no locations (ability fizzles)
     expect(result.state.pendingChoice).toBeNull();
     expect(result.state.activePlayer).toBe('player2');
   });

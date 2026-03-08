@@ -6,6 +6,7 @@ import { processAction } from '../../../../src/engine/engine.js';
 import { buildState } from '../../../helpers/state-builder.js';
 import { expectPlayerMythium, expectCardInZone, expectCardCounter } from '../../../helpers/assertions.js';
 import { hasPlayCost } from '../../../helpers/properties.js';
+import { autoAccept } from '../../../helpers/auto-accept';
 
 beforeEach(() => {
   clearRegistry();
@@ -24,12 +25,13 @@ describe('Amu River Armorer', () => {
       .addCard('amu_river_armorer', 'player1', 'hand', { instanceId: 'ara1' })
       .build();
 
-    const result = processAction(state, {
+    const result = autoAccept(processAction(state, {
       player: 'player1',
       action: { type: 'play_card', cardInstanceId: 'ara1' },
-    });
+    }));
 
     expectCardInZone(result.state, 'ara1', 'board');
+
     expect(result.state.pendingChoice).not.toBeNull();
     expect(result.state.pendingChoice!.type).toBe('choose_mode');
   });
@@ -42,10 +44,10 @@ describe('Amu River Armorer', () => {
       .addCard('amu_river_armorer', 'player1', 'hand', { instanceId: 'ara1' })
       .build();
 
-    const playResult = processAction(state, {
+    const playResult = autoAccept(processAction(state, {
       player: 'player1',
       action: { type: 'play_card', cardInstanceId: 'ara1' },
-    });
+    }));
 
     const chooseResult = processAction(playResult.state, {
       player: 'player1',
@@ -67,10 +69,10 @@ describe('Amu River Armorer', () => {
       .addCard('airag_maker', 'player1', 'board', { instanceId: 'am1' })
       .build();
 
-    const playResult = processAction(state, {
+    const playResult = autoAccept(processAction(state, {
       player: 'player1',
       action: { type: 'play_card', cardInstanceId: 'ara1' },
-    });
+    }));
 
     const migrateResult = processAction(playResult.state, {
       player: 'player1',
@@ -90,10 +92,10 @@ describe('Amu River Armorer', () => {
       .addCard('airag_maker', 'player1', 'board', { instanceId: 'am1' })
       .build();
 
-    const playResult = processAction(state, {
+    const playResult = autoAccept(processAction(state, {
       player: 'player1',
       action: { type: 'play_card', cardInstanceId: 'ara1' },
-    });
+    }));
 
     const migrateResult = processAction(playResult.state, {
       player: 'player1',
@@ -113,10 +115,10 @@ describe('Amu River Armorer', () => {
       .addCard('airag_maker', 'player1', 'board', { instanceId: 'am1' })
       .build();
 
-    const playResult = processAction(state, {
+    const playResult = autoAccept(processAction(state, {
       player: 'player1',
       action: { type: 'play_card', cardInstanceId: 'ara1' },
-    });
+    }));
 
     const migrateResult = processAction(playResult.state, {
       player: 'player1',
@@ -142,10 +144,10 @@ describe('Amu River Armorer', () => {
       .addCard('khutuluns_kheshig', 'player2', 'board', { instanceId: 'kk1' })
       .build();
 
-    const playResult = processAction(state, {
+    const playResult = autoAccept(processAction(state, {
       player: 'player1',
       action: { type: 'play_card', cardInstanceId: 'ara1' },
-    });
+    }));
 
     const migrateResult = processAction(playResult.state, {
       player: 'player1',
@@ -168,10 +170,10 @@ describe('Amu River Armorer', () => {
       .addCard('amu_river_armorer', 'player1', 'hand', { instanceId: 'ara1' })
       .build();
 
-    const playResult = processAction(state, {
+    const playResult = autoAccept(processAction(state, {
       player: 'player1',
       action: { type: 'play_card', cardInstanceId: 'ara1' },
-    });
+    }));
 
     const migrateResult = processAction(playResult.state, {
       player: 'player1',

@@ -6,6 +6,7 @@ import { processAction } from '../../../../src/engine/engine.js';
 import { buildState } from '../../../helpers/state-builder.js';
 import { expectCardCounter, expectCardInZone, expectPlayerPower } from '../../../helpers/assertions.js';
 import { hasPlayCost } from '../../../helpers/properties';
+import { autoAccept } from '../../../helpers/auto-accept';
 
 beforeEach(() => {
   clearRegistry();
@@ -25,10 +26,10 @@ describe('The Amu River Encampment', () => {
       .addCard('militia_scout', 'player1', 'board', { instanceId: 'ms1' })
       .build();
 
-    const result = processAction(state, {
+    const result = autoAccept(processAction(state, {
       player: 'player1',
       action: { type: 'play_card', cardInstanceId: 'enc1' },
-    });
+    }));
 
     expect(result.waitingFor?.type).toBe('choose_attackers');
   });

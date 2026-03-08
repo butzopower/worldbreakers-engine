@@ -6,6 +6,7 @@ import { processAction } from '../../../../src/engine/engine.js';
 import { buildState } from '../../../helpers/state-builder.js';
 import { expectCardInZone, expectHandSize, expectPlayerPower } from '../../../helpers/assertions.js';
 import { hasPlayCost } from '../../../helpers/properties';
+import { autoAccept } from '../../../helpers/auto-accept';
 
 beforeEach(() => {
   clearRegistry();
@@ -30,17 +31,17 @@ describe('Alamut Saboteur', () => {
       action: { type: 'attack', attackerIds: ['as1'] },
     });
 
-    const passResult = processAction(attackResult.state, {
+    const triggerResult = autoAccept(processAction(attackResult.state, {
       player: 'player2',
       action: { type: 'pass_block' },
-    });
+    }));
 
-    // Breach triggers — defending player should have a pending discard choice
-    expect(passResult.state.pendingChoice).not.toBeNull();
-    expect(passResult.state.pendingChoice!.type).toBe('choose_discard');
+    // Defending player should have a pending discard choice
+    expect(triggerResult.state.pendingChoice).not.toBeNull();
+    expect(triggerResult.state.pendingChoice!.type).toBe('choose_discard');
 
     // Defender discards their card
-    const discardResult = processAction(passResult.state, {
+    const discardResult = processAction(triggerResult.state, {
       player: 'player2',
       action: { type: 'choose_discard', cardInstanceIds: ['ms1'] },
     });
@@ -61,10 +62,10 @@ describe('Alamut Saboteur', () => {
       action: { type: 'attack', attackerIds: ['as1'] },
     });
 
-    const passResult = processAction(attackResult.state, {
+    const passResult = autoAccept(processAction(attackResult.state, {
       player: 'player2',
       action: { type: 'pass_block' },
-    });
+    }));
 
     // No discard pending since defender has empty hand
     // Breach power is gained (1 attacker = 1 power)
@@ -84,10 +85,10 @@ describe('Alamut Saboteur', () => {
       action: { type: 'attack', attackerIds: ['as1'] },
     });
 
-    const passResult = processAction(attackResult.state, {
+    const passResult = autoAccept(processAction(attackResult.state, {
       player: 'player2',
       action: { type: 'pass_block' },
-    });
+    }));
 
     const discardResult = processAction(passResult.state, {
       player: 'player2',

@@ -5,6 +5,7 @@ import { clearRegistry } from '../../../../src/cards/registry.js';
 import { processAction } from '../../../../src/engine/engine.js';
 import { buildState } from '../../../helpers/state-builder.js';
 import { expectPlayerMythium, expectCardInZone, expectHandSize } from '../../../helpers/assertions.js';
+import { autoAccept, autoAcceptAll } from '../../../helpers/auto-accept';
 
 beforeEach(() => {
   clearRegistry();
@@ -20,10 +21,10 @@ describe('Stars Apprentice', () => {
       .addCard('stars_apprentice', 'player1', 'hand', { instanceId: 'sa1' })
       .build();
 
-    const result = processAction(state, {
+    const result = autoAccept(processAction(state, {
       player: 'player1',
       action: { type: 'play_card', cardInstanceId: 'sa1' },
-    });
+    }));
 
     expectCardInZone(result.state, 'sa1', 'board');
     expect(result.state.players.player1.standing.stars).toBe(1);
@@ -35,14 +36,14 @@ describe('Stars Apprentice', () => {
       .withActivePlayer('player1')
       .withMythium('player1', 5)
       .addCard('stars_apprentice', 'player1', 'hand', { instanceId: 'sa1' })
-      .addCard('watchtower', 'player1', 'board', { instanceId: 'wt1' })
+      .addCard('watchtower', 'player1', 'board', { instanceId: 'wt1', counters: { stage: 3 } })
       .addCard('militia_scout', 'player1', 'deck', { instanceId: 'ms_deck' })
       .build();
 
-    const result = processAction(state, {
+    const result = autoAcceptAll(processAction(state, {
       player: 'player1',
       action: { type: 'play_card', cardInstanceId: 'sa1' },
-    });
+    }));
 
     // Drew 1 card from the location condition
     expectCardInZone(result.state, 'ms_deck', 'hand');
@@ -56,10 +57,10 @@ describe('Stars Apprentice', () => {
       .addCard('militia_scout', 'player1', 'deck', { instanceId: 'ms_deck' })
       .build();
 
-    const result = processAction(state, {
+    const result = autoAccept(processAction(state, {
       player: 'player1',
       action: { type: 'play_card', cardInstanceId: 'sa1' },
-    });
+    }));
 
     // No location → no draw
     expectCardInZone(result.state, 'ms_deck', 'deck');
@@ -74,10 +75,10 @@ describe('Stars Apprentice', () => {
       .addCard('militia_scout', 'player1', 'deck', { instanceId: 'ms_deck' })
       .build();
 
-    const result = processAction(state, {
+    const result = autoAccept(processAction(state, {
       player: 'player1',
       action: { type: 'play_card', cardInstanceId: 'sa1' },
-    });
+    }));
 
     // Opponent's location doesn't count
     expectCardInZone(result.state, 'ms_deck', 'deck');
@@ -91,10 +92,10 @@ describe('Stars Apprentice', () => {
       .addCard('stars_apprentice', 'player1', 'hand', { instanceId: 'sa1' })
       .build();
 
-    const result = processAction(state, {
+    const result = autoAccept(processAction(state, {
       player: 'player1',
       action: { type: 'play_card', cardInstanceId: 'sa1' },
-    });
+    }));
 
     expect(result.state.players.player1.standing.stars).toBe(2);
   });

@@ -39,6 +39,7 @@ export interface TriggerOption {
   sourceCardId: string;
   abilityIndex: number;
   triggeringCardId?: string;
+  forced: boolean;
 }
 
 export type PendingChoice =

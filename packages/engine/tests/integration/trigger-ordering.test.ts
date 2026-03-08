@@ -218,6 +218,163 @@ describe('trigger ordering', () => {
     });
   });
 
+  describe('non-forced (optional) triggers', () => {
+    it('single non-forced trigger prompts choose_trigger_order', () => {
+      const state = buildState()
+        .withActivePlayer('player1')
+        .addCard('optional_watcher', 'player1', 'board', { instanceId: 'ow1' })
+        .addCard('execution_order', 'player1', 'hand', { instanceId: 'eo1' })
+        .addCard('militia_scout', 'player2', 'board', { instanceId: 'ms1' })
+        .build();
+
+      const playResult = processAction(state, {
+        player: 'player1',
+        action: { type: 'play_card', cardInstanceId: 'eo1' },
+      });
+
+      const targetResult = processAction(playResult.state, {
+        player: 'player1',
+        action: { type: 'choose_target', targetInstanceId: 'ms1' },
+      });
+
+      // Non-forced trigger should prompt — not auto-resolve
+      expect(targetResult.waitingFor?.type).toBe('choose_trigger_order');
+    });
+
+    it('player can resolve a non-forced trigger via choose_trigger', () => {
+      const state = buildState()
+        .withActivePlayer('player1')
+        .addCard('optional_watcher', 'player1', 'board', { instanceId: 'ow1' })
+        .addCard('execution_order', 'player1', 'hand', { instanceId: 'eo1' })
+        .addCard('militia_scout', 'player2', 'board', { instanceId: 'ms1' })
+        .build();
+
+      const playResult = processAction(state, {
+        player: 'player1',
+        action: { type: 'play_card', cardInstanceId: 'eo1' },
+      });
+
+      const mythiumBefore = playResult.state.players['player1'].mythium;
+
+      const targetResult = processAction(playResult.state, {
+        player: 'player1',
+        action: { type: 'choose_target', targetInstanceId: 'ms1' },
+      });
+
+      const result = processAction(targetResult.state, {
+        player: 'player1',
+        action: { type: 'choose_trigger', triggerIndex: 0 },
+      });
+
+      expect(result.state.players['player1'].mythium).toBe(mythiumBefore + 1);
+    });
+
+    it('player can skip a non-forced trigger via skip_trigger', () => {
+      const state = buildState()
+        .withActivePlayer('player1')
+        .addCard('optional_watcher', 'player1', 'board', { instanceId: 'ow1' })
+        .addCard('execution_order', 'player1', 'hand', { instanceId: 'eo1' })
+        .addCard('militia_scout', 'player2', 'board', { instanceId: 'ms1' })
+        .build();
+
+      const playResult = processAction(state, {
+        player: 'player1',
+        action: { type: 'play_card', cardInstanceId: 'eo1' },
+      });
+
+      const mythiumBefore = playResult.state.players['player1'].mythium;
+
+      const targetResult = processAction(playResult.state, {
+        player: 'player1',
+        action: { type: 'choose_target', targetInstanceId: 'ms1' },
+      });
+
+      const result = processAction(targetResult.state, {
+        player: 'player1',
+        action: { type: 'skip_trigger', triggerIndex: 0 },
+      });
+
+      // Mythium should NOT have changed — trigger was skipped
+      expect(result.state.players['player1'].mythium).toBe(mythiumBefore);
+    });
+
+    it('player cannot skip a forced trigger', () => {
+      const state = buildState()
+        .withActivePlayer('player1')
+        .addCard('death_watcher', 'player1', 'board', { instanceId: 'dw1' })
+        .addCard('soul_reaper', 'player1', 'board', { instanceId: 'sr1' })
+        .addCard('execution_order', 'player1', 'hand', { instanceId: 'eo1' })
+        .addCard('militia_scout', 'player2', 'board', { instanceId: 'ms1' })
+        .build();
+
+      const playResult = processAction(state, {
+        player: 'player1',
+        action: { type: 'play_card', cardInstanceId: 'eo1' },
+      });
+
+      const targetResult = processAction(playResult.state, {
+        player: 'player1',
+        action: { type: 'choose_target', targetInstanceId: 'ms1' },
+      });
+
+      // Both triggers are forced — skip_trigger should be rejected
+      expect(() => processAction(targetResult.state, {
+        player: 'player1',
+        action: { type: 'skip_trigger', triggerIndex: 0 },
+      })).toThrow();
+    });
+
+    it('mixed forced + non-forced: can skip non-forced, forced must resolve', () => {
+      const state = buildState()
+        .withActivePlayer('player1')
+        .addCard('death_watcher', 'player1', 'board', { instanceId: 'dw1' })
+        .addCard('optional_watcher', 'player1', 'board', { instanceId: 'ow1' })
+        .addCard('execution_order', 'player1', 'hand', { instanceId: 'eo1' })
+        .addCard('militia_scout', 'player2', 'board', { instanceId: 'ms1' })
+        .build();
+
+      const playResult = processAction(state, {
+        player: 'player1',
+        action: { type: 'play_card', cardInstanceId: 'eo1' },
+      });
+
+      const mythiumBefore = playResult.state.players['player1'].mythium;
+
+      const targetResult = processAction(playResult.state, {
+        player: 'player1',
+        action: { type: 'choose_target', targetInstanceId: 'ms1' },
+      });
+
+      // Should have 2 triggers: death_watcher (forced) and optional_watcher (non-forced)
+      expect(targetResult.waitingFor?.type).toBe('choose_trigger_order');
+
+      const legal = getLegalActions(targetResult.state);
+      const skipActions = legal.filter(a => a.action.type === 'skip_trigger');
+      const chooseActions = legal.filter(a => a.action.type === 'choose_trigger');
+
+      // Can choose either trigger
+      expect(chooseActions.length).toBe(2);
+      // Can only skip the non-forced one
+      expect(skipActions.length).toBe(1);
+
+      // Find the optional_watcher trigger index
+      const triggers = targetResult.waitingFor?.type === 'choose_trigger_order'
+        ? targetResult.waitingFor.triggers : [];
+      const optionalIndex = triggers.findIndex(t => t.sourceCardId === 'ow1');
+
+      // Skip the optional trigger
+      const afterSkip = processAction(targetResult.state, {
+        player: 'player1',
+        action: { type: 'skip_trigger', triggerIndex: optionalIndex },
+      });
+
+      // The forced trigger (death_watcher) should auto-resolve now
+      expect(afterSkip.waitingFor?.type).not.toBe('choose_trigger_order');
+      // death_watcher gives +1 mythium (forced, must resolve)
+      expect(afterSkip.state.players['player1'].mythium).toBe(mythiumBefore + 1);
+    });
+  });
+
   describe('validation', () => {
     it('rejects invalid trigger index', () => {
       const state = buildState()

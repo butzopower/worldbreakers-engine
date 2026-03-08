@@ -5,6 +5,7 @@ import { clearRegistry } from '../../../../src/cards/registry.js';
 import { processAction } from '../../../../src/engine/engine.js';
 import { buildState } from '../../../helpers/state-builder.js';
 import { hasPlayCost } from '../../../helpers/properties';
+import { autoAccept } from '../../../helpers/auto-accept';
 
 beforeEach(() => {
   clearRegistry();
@@ -22,10 +23,10 @@ describe('Swift Messenger', () => {
       .addCard('swift_messenger', 'player1', 'hand', { instanceId: 'sm1' })
       .build();
 
-    const result = processAction(state, {
+    const result = autoAccept(processAction(state, {
       player: 'player1',
       action: { type: 'play_card', cardInstanceId: 'sm1' },
-    });
+    }));
 
     expect(result.state.pendingChoice).not.toBeNull();
     expect(result.state.pendingChoice!.type).toBe('choose_mode');
@@ -41,10 +42,10 @@ describe('Swift Messenger', () => {
       .addCard('swift_messenger', 'player1', 'hand', { instanceId: 'sm1' })
       .build();
 
-    const playResult = processAction(state, {
+    const playResult = autoAccept(processAction(state, {
       player: 'player1',
       action: { type: 'play_card', cardInstanceId: 'sm1' },
-    });
+    }));
 
     const chooseResult = processAction(playResult.state, {
       player: 'player1',

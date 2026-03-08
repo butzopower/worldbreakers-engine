@@ -11,6 +11,7 @@ const testCards: CardDefinition[] = [
     cost: 0,
     abilities: [{
       timing: 'your_attack',
+      forced: true,
       effects: [{ type: 'buff_attackers', counter: 'strength_buff', amount: 1 }],
       description: 'Your Attack: Your attackers get +1 strength this combat.',
     }],
@@ -23,6 +24,7 @@ const testCards: CardDefinition[] = [
     cost: 0,
     abilities: [{
       timing: 'your_attack',
+      forced: true,
       effects: [{ type: 'draw_cards', player: 'self', count: 1 }],
       description: 'Your Attack: Draw 1 card.',
     }],
@@ -61,6 +63,7 @@ const testCards: CardDefinition[] = [
     keywords: ['bloodshed'],
     abilities: [{
       timing: 'attacks',
+      forced: true,
       effects: [{
         type: 'conditional',
         condition: { type: 'attacking_alone' },
@@ -110,6 +113,7 @@ const testCards: CardDefinition[] = [
     standingRequirement: { earth: 2 },
     abilities: [{
       timing: 'enters',
+      forced: true,
       effects: [{ type: 'deal_wounds', target: { kind: 'choose', filter: { type: 'follower', zone: ['board'] }, count: 1 }, amount: 1 }],
       description: 'Enters: Deal 1 wound to target follower.',
     }],
@@ -210,8 +214,23 @@ const testCards: CardDefinition[] = [
     health: 2,
     abilities: [{
       timing: 'follower_defeated',
+      forced: true,
       effects: [{ type: 'gain_mythium', player: 'controller', amount: 1 }],
-      description: 'Follower Defeated: Gain 1 mythium.',
+      description: 'Forced Response — Follower Defeated: Gain 1 mythium.',
+    }],
+  },
+  {
+    id: 'optional_watcher',
+    name: 'Optional Watcher',
+    type: 'follower',
+    guild: 'neutral',
+    cost: 2,
+    strength: 1,
+    health: 2,
+    abilities: [{
+      timing: 'follower_defeated',
+      effects: [{ type: 'gain_mythium', player: 'controller', amount: 1 }],
+      description: 'Response — Follower Defeated: Gain 1 mythium.',
     }],
   },
   {
@@ -224,8 +243,9 @@ const testCards: CardDefinition[] = [
     health: 2,
     abilities: [{
       timing: 'location_depleted',
+      forced: true,
       effects: [{ type: 'draw_cards', player: 'controller', count: 1 }],
-      description: 'Location Depleted: Draw 1 card.',
+      description: 'Forced Response — Location Depleted: Draw 1 card.',
     }],
   },
 
@@ -240,6 +260,7 @@ const testCards: CardDefinition[] = [
     keywords: ['overwhelm'],
     abilities: [{
       timing: 'overwhelms',
+      forced: true,
       effects: [{
         type: 'choose_one',
         modes: [
@@ -261,8 +282,9 @@ const testCards: CardDefinition[] = [
     health: 2,
     abilities: [{
       timing: 'follower_defeated',
+      forced: true,
       effects: [{ type: 'draw_cards', player: 'controller', count: 1 }],
-      description: 'Follower Defeated: Draw 1 card.',
+      description: 'Forced Response — Follower Defeated: Draw 1 card.',
     }],
   },
   {
@@ -275,8 +297,9 @@ const testCards: CardDefinition[] = [
     health: 2,
     abilities: [{
       timing: 'rally',
+      forced: true,
       effects: [{ type: 'gain_mythium', player: 'controller', amount: 1 }],
-      description: 'Rally: Gain 1 mythium.',
+      description: 'Forced Response — Rally: Gain 1 mythium.',
     }],
   },
 

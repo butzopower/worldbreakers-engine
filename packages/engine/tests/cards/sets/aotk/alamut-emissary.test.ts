@@ -6,6 +6,7 @@ import { processAction } from '../../../../src/engine/engine.js';
 import { buildState } from '../../../helpers/state-builder.js';
 import { expectCardInZone } from '../../../helpers/assertions.js';
 import { hasPlayCost } from '../../../helpers/properties.js';
+import { autoAccept } from '../../../helpers/auto-accept';
 import { getCounter } from '../../../../src/types/counters.js';
 
 beforeEach(() => {
@@ -24,15 +25,15 @@ describe('Alamut Emissary', () => {
       .addCard('shield_bearer', 'player2', 'board', { instanceId: 'sb1' })
       .build();
 
-    const attackResult = processAction(state, {
+    const result = autoAccept(processAction(state, {
       player: 'player1',
       action: { type: 'attack', attackerIds: ['ae1'] },
-    });
+    }));
 
     // Should be waiting for bloodshed target choice
-    expect(attackResult.waitingFor?.type).toBe('choose_target');
+    expect(result.waitingFor?.type).toBe('choose_target');
 
-    const chooseResult = processAction(attackResult.state, {
+    const chooseResult = processAction(result.state, {
       player: 'player1',
       action: { type: 'choose_target', targetInstanceId: 'sb1' },
     });
@@ -56,11 +57,8 @@ describe('Alamut Emissary', () => {
     });
 
     // Multiple attacks triggers require ordering; resolve them (both are no-ops due to attacking_alone)
-    while (result.waitingFor?.type === 'choose_trigger_order') {
-      result = processAction(result.state, {
-        player: 'player1',
-        action: { type: 'choose_trigger', triggerIndex: 0 },
-      });
+    while (result.state.pendingChoice?.type === 'choose_trigger_order') {
+      result = autoAccept(result);
     }
 
     // Should reach blockers, no bloodshed target choice

@@ -5,6 +5,7 @@ import { clearRegistry } from '../../../../src/cards/registry.js';
 import { processAction, getLegalActions } from '../../../../src/engine/engine.js';
 import { buildState } from '../../../helpers/state-builder.js';
 import { expectPlayerMythium, expectCardInZone } from '../../../helpers/assertions.js';
+import { autoAccept } from '../../../helpers/auto-accept';
 
 beforeEach(() => {
   clearRegistry();
@@ -23,12 +24,12 @@ describe('Khutulun, the True Daughter', () => {
       .addCard('stars_apprentice', 'player2', 'board', { instanceId: 'blk2' }) // 2/2
       .build();
 
-    const attackResult = processAction(state, {
+    const triggerResult = autoAccept(processAction(state, {
       player: 'player1',
       action: { type: 'attack', attackerIds: ['atk1', 'atk2'] },
-    });
+    }));
 
-    const increaseStrengthResult = processAction(attackResult.state, {
+    const increaseStrengthResult = processAction(triggerResult.state, {
       player: 'player1',
       action: { type: 'choose_target', targetInstanceId: 'atk1' },
     });

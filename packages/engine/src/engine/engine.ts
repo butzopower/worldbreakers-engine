@@ -1,4 +1,4 @@
-import { GameState, PendingChoice } from '../types/state';
+import { GameState, PendingChoice, TriggerOption } from '../types/state';
 import { ActionInput, PlayerAction } from '../types/actions';
 import { GameEvent } from '../types/events';
 import { PlayerId, STANDING_GUILDS, opponentOf } from '../types/core';
@@ -154,11 +154,30 @@ export function playCard(
   }
 
   // Queue abilities
-  const abilityTiming = def.type === 'event' ? 'play' : 'enters';
-  if (def.abilities) {
-    for (let i = 0; i < def.abilities.length; i++) {
-      if (def.abilities[i].timing === abilityTiming) {
-        steps.push({ type: 'resolve_ability_at_index', controller: player, sourceCardId: cardInstanceId, abilityIndex: i });
+  if (def.type === 'event') {
+    // Play abilities always resolve (no opt-out)
+    if (def.abilities) {
+      for (let i = 0; i < def.abilities.length; i++) {
+        if (def.abilities[i].timing === 'play') {
+          steps.push({ type: 'resolve_ability_at_index', controller: player, sourceCardId: cardInstanceId, abilityIndex: i });
+        }
+      }
+    }
+  } else {
+    // Enters abilities go through the trigger system (optional unless forced)
+    if (def.abilities) {
+      const entersTriggers: TriggerOption[] = [];
+      for (let i = 0; i < def.abilities.length; i++) {
+        if (def.abilities[i].timing === 'enters') {
+          entersTriggers.push({
+            sourceCardId: cardInstanceId,
+            abilityIndex: i,
+            forced: def.abilities[i].forced === true,
+          });
+        }
+      }
+      if (entersTriggers.length > 0) {
+        steps.push({ type: 'order_triggers', player, triggers: entersTriggers });
       }
     }
   }
@@ -389,9 +408,19 @@ function resolveChooseAttackers(state: GameState, _player: PlayerId, action: Pla
 }
 
 function resolveChooseTriggerOrder(state: GameState, _player: PlayerId, action: PlayerAction): ChoiceResult {
-  if (action.type !== 'choose_trigger') throw new Error('Expected choose_trigger');
+  if (action.type !== 'choose_trigger' && action.type !== 'skip_trigger') throw new Error('Expected choose_trigger or skip_trigger');
   const choice = state.pendingChoice!;
   if (choice.type !== 'choose_trigger_order') throw new Error('Expected choose_trigger_order choice');
+
+  if (action.type === 'skip_trigger') {
+    const remaining = choice.triggers.filter((_, i) => i !== action.triggerIndex);
+    const s: GameState = { ...state, pendingChoice: null };
+    const prepend: EngineStep[] = [];
+    if (remaining.length > 0) {
+      prepend.push({ type: 'order_triggers', player: choice.playerId, triggers: remaining });
+    }
+    return { state: s, events: [], prepend };
+  }
 
   const selected = choice.triggers[action.triggerIndex];
   const remaining = choice.triggers.filter((_, i) => i !== action.triggerIndex);
@@ -574,6 +603,9 @@ function getLegalChoiceActions(state: GameState): ActionInput[] {
     case 'choose_trigger_order': {
       for (let i = 0; i < choice.triggers.length; i++) {
         actions.push({ player, action: { type: 'choose_trigger', triggerIndex: i } });
+        if (!choice.triggers[i].forced) {
+          actions.push({ player, action: { type: 'skip_trigger', triggerIndex: i } });
+        }
       }
       break;
     }

@@ -164,11 +164,23 @@ function validatePendingChoice(state: GameState, player: PlayerId, action: Playe
       return validateAttack(state, player, action.attackerIds);
 
     case 'choose_trigger_order':
-      if (action.type !== 'choose_trigger') {
-        return { valid: false, reason: 'Must choose a trigger' };
+      if (action.type !== 'choose_trigger' && action.type !== 'skip_trigger') {
+        return { valid: false, reason: 'Must choose or skip a trigger' };
       }
-      if (action.triggerIndex < 0 || action.triggerIndex >= choice.triggers.length) {
-        return { valid: false, reason: 'Invalid trigger index' };
+      if (action.type === 'choose_trigger') {
+        if (action.triggerIndex < 0 || action.triggerIndex >= choice.triggers.length) {
+          return { valid: false, reason: 'Invalid trigger index' };
+        }
+        return { valid: true };
+      }
+      if (action.type === 'skip_trigger') {
+        if (action.triggerIndex < 0 || action.triggerIndex >= choice.triggers.length) {
+          return { valid: false, reason: 'Invalid trigger index' };
+        }
+        if (choice.triggers[action.triggerIndex].forced) {
+          return { valid: false, reason: 'Cannot skip a forced trigger' };
+        }
+        return { valid: true };
       }
       return { valid: true };
 

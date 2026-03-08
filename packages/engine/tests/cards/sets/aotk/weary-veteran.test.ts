@@ -6,6 +6,7 @@ import { processAction } from '../../../../src/engine/engine';
 import { buildState } from '../../../helpers/state-builder';
 import { expectCardCounter } from '../../../helpers/assertions';
 import { hasPlayCost } from '../../../helpers/properties';
+import { autoAccept } from '../../../helpers/auto-accept';
 
 beforeEach(() => {
   clearRegistry();
@@ -24,10 +25,10 @@ describe('Weary Veteran', () => {
       .addCard('weary_veteran', 'player1', 'hand', { instanceId: 'wv1' })
       .build();
 
-    const result = processAction(state, {
+    const result = autoAccept(processAction(state, {
       player: 'player1',
       action: { type: 'play_card', cardInstanceId: 'wv1' },
-    });
+    }));
 
     expectCardCounter(result.state, 'wv1', 'plus_one_plus_one', 1);
   });
@@ -41,10 +42,10 @@ describe('Weary Veteran', () => {
       .addCard('weary_veteran', 'player1', 'hand', { instanceId: 'wv1' })
       .build();
 
-    const result = processAction(state, {
+    const result = autoAccept(processAction(state, {
       player: 'player1',
       action: { type: 'play_card', cardInstanceId: 'wv1' },
-    });
+    }));
 
     expectCardCounter(result.state, 'wv1', 'plus_one_plus_one', 0);
   });
@@ -57,10 +58,10 @@ describe('Weary Veteran', () => {
       .addCard('weary_veteran', 'player1', 'hand', { instanceId: 'wv1' })
       .build();
 
-    const result = processAction(state, {
+    const result = autoAccept(processAction(state, {
       player: 'player1',
       action: { type: 'play_card', cardInstanceId: 'wv1' },
-    });
+    }));
 
     expectCardCounter(result.state, 'wv1', 'plus_one_plus_one', 1);
   });

@@ -6,6 +6,7 @@ import { processAction } from '../../../../src/engine/engine.js';
 import { buildState } from '../../../helpers/state-builder.js';
 import { expectCardInZone } from '../../../helpers/assertions.js';
 import { hasPlayCost } from '../../../helpers/properties.js';
+import { autoAccept } from '../../../helpers/auto-accept';
 
 beforeEach(() => {
   clearRegistry();
@@ -113,10 +114,10 @@ describe('Baleful Viper', () => {
       });
 
       // Pass block (no defenders)
-      const passResult = processAction(attackResult.state, {
+      const passResult = autoAccept(processAction(attackResult.state, {
         player: 'player2',
         action: { type: 'pass_block' },
-      });
+      }));
 
       expect(passResult.state.players.player1.standing.void).toBe(2);
     });

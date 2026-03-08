@@ -5,6 +5,7 @@ import { clearRegistry } from '../../../../src/cards/registry.js';
 import { processAction } from '../../../../src/engine/engine.js';
 import { buildState } from '../../../helpers/state-builder.js';
 import { expectPlayerMythium, expectHandSize, expectCardInZone } from '../../../helpers/assertions.js';
+import { autoAccept } from '../../../helpers/auto-accept';
 
 beforeEach(() => {
   clearRegistry();
@@ -20,13 +21,13 @@ describe('Earth Apprentice', () => {
       .addCard('earth_apprentice', 'player1', 'hand', { instanceId: 'ea1' })
       .build();
 
-    const result = processAction(state, {
+    const playResult = processAction(state, {
       player: 'player1',
       action: { type: 'play_card', cardInstanceId: 'ea1' },
     });
 
-    expectPlayerMythium(result.state, 'player1', 2);
-    expectCardInZone(result.state, 'ea1', 'board');
+    expectPlayerMythium(playResult.state, 'player1', 2);
+    expectCardInZone(playResult.state, 'ea1', 'board');
   });
 
   it('gains 1 earth standing on enter', () => {
@@ -36,10 +37,10 @@ describe('Earth Apprentice', () => {
       .addCard('earth_apprentice', 'player1', 'hand', { instanceId: 'ea1' })
       .build();
 
-    const result = processAction(state, {
+    const result = autoAccept(processAction(state, {
       player: 'player1',
       action: { type: 'play_card', cardInstanceId: 'ea1' },
-    });
+    }));
 
     expect(result.state.players.player1.standing.earth).toBe(1);
   });
@@ -53,10 +54,10 @@ describe('Earth Apprentice', () => {
       .addCard('militia_scout', 'player1', 'deck', { instanceId: 'deck1' })
       .build();
 
-    const result = processAction(state, {
+    const result = autoAccept(processAction(state, {
       player: 'player1',
       action: { type: 'play_card', cardInstanceId: 'ea1' },
-    });
+    }));
 
     // Only 1 other follower on board, condition not met
     expectHandSize(result.state, 'player1', 0);
@@ -72,10 +73,12 @@ describe('Earth Apprentice', () => {
       .addCard('militia_scout', 'player1', 'deck', { instanceId: 'deck1' })
       .build();
 
-    const result = processAction(state, {
+    const playResult = processAction(state, {
       player: 'player1',
       action: { type: 'play_card', cardInstanceId: 'ea1' },
     });
+
+    const result = autoAccept(autoAccept(playResult));
 
     // 2 other followers on board, condition met — draws 1 card
     expectHandSize(result.state, 'player1', 1);
@@ -91,10 +94,12 @@ describe('Earth Apprentice', () => {
       .addCard('militia_scout', 'player1', 'deck', { instanceId: 'deck1' })
       .build();
 
-    const result = processAction(state, {
+    const playResult = processAction(state, {
       player: 'player1',
       action: { type: 'play_card', cardInstanceId: 'ea1' },
     });
+
+    const result = autoAccept(autoAccept(playResult));
 
     // Both abilities resolve
     expect(result.state.players.player1.standing.earth).toBe(1);
@@ -112,10 +117,10 @@ describe('Earth Apprentice', () => {
       .addCard('militia_scout', 'player1', 'deck', { instanceId: 'deck1' })
       .build();
 
-    const result = processAction(state, {
+    const result = autoAccept(processAction(state, {
       player: 'player1',
       action: { type: 'play_card', cardInstanceId: 'ea1' },
-    });
+    }));
 
     // Opponent's followers don't count
     expectHandSize(result.state, 'player1', 0);

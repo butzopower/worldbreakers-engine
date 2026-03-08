@@ -1,4 +1,4 @@
-import { describe, it, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { registerSetCards } from '../../../../src/cards/sets';
 import { registerTestCards } from '../../../../src/cards/test-cards';
 import { clearRegistry } from '../../../../src/cards/registry.js';
@@ -6,6 +6,7 @@ import { processAction } from '../../../../src/engine/engine.js';
 import { buildState } from '../../../helpers/state-builder.js';
 import { expectPlayerMythium } from '../../../helpers/assertions.js';
 import { hasPlayCost } from "../../../helpers/properties";
+import { autoAccept } from '../../../helpers/auto-accept';
 
 beforeEach(() => {
   clearRegistry();
@@ -24,11 +25,11 @@ describe('Astute Tactician', () => {
       .addCard('astute_tactician', 'player1', 'board', { instanceId: 'at1' })
       .build();
 
-    const { state: postAttackState } = processAction(state, {
+    const result = autoAccept(processAction(state, {
       player: 'player1',
       action: { type: 'attack', attackerIds: ['at1'] },
-    });
+    }));
 
-    expectPlayerMythium(postAttackState, 'player1', initialMythium + 2);
+    expectPlayerMythium(result.state, 'player1', initialMythium + 2);
   })
 });

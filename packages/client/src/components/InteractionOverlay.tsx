@@ -137,18 +137,32 @@ function TriggerOrderPanel({ mode, state, onSubmitAction }: {
     return def.name;
   }
 
+  const hasOptional = mode.triggers.some(t => !t.forced);
+
   return (
     <div className={styles.panel}>
       <div className={styles.instructions}>Choose which ability resolves next:</div>
-      <div className={styles.btnRow}>
+      <div className={styles.triggerList}>
         {mode.triggers.map((t, i) => (
-          <button
-            key={i}
-            onClick={() => onSubmitAction({ type: 'choose_trigger', triggerIndex: i })}
-            className={styles.btn}
-          >
-            {getTriggerLabel(t)}
-          </button>
+          <div key={i} className={styles.triggerRow}>
+            <button
+              onClick={() => onSubmitAction({ type: 'choose_trigger', triggerIndex: i })}
+              className={styles.btn}
+            >
+              {getTriggerLabel(t)}
+            </button>
+            {!t.forced && (
+              <button
+                onClick={() => onSubmitAction({ type: 'skip_trigger', triggerIndex: i })}
+                className={styles.btnCancel}
+              >
+                Skip
+              </button>
+            )}
+            {t.forced && hasOptional && (
+              <span className={styles.forcedLabel}>Forced</span>
+            )}
+          </div>
         ))}
       </div>
     </div>

@@ -6,6 +6,7 @@ import { processAction } from '../../../../src/engine/engine.js';
 import { buildState } from '../../../helpers/state-builder.js';
 import { expectCardInZone, expectCardCounter } from '../../../helpers/assertions.js';
 import { hasPlayCost } from '../../../helpers/properties';
+import { autoAccept } from '../../../helpers/auto-accept';
 
 beforeEach(() => {
   clearRegistry();
@@ -25,10 +26,10 @@ describe('Poised Duelist', () => {
       .addCard('militia_scout', 'player1', 'board', { instanceId: 'ms1' })
       .build();
 
-    const result = processAction(state, {
+    const result = autoAccept(processAction(state, {
       player: 'player1',
       action: { type: 'play_card', cardInstanceId: 'pd1' },
-    });
+    }));
 
     expectCardInZone(result.state, 'pd1', 'board');
     expectCardCounter(result.state, 'pd1', 'plus_one_plus_one', 0);
@@ -44,10 +45,10 @@ describe('Poised Duelist', () => {
       .addCard('militia_scout', 'player1', 'board', { instanceId: 'ms2' })
       .build();
 
-    const result = processAction(state, {
+    const result = autoAccept(processAction(state, {
       player: 'player1',
       action: { type: 'play_card', cardInstanceId: 'pd1' },
-    });
+    }));
 
     expectCardCounter(result.state, 'pd1', 'plus_one_plus_one', 1);
   });
@@ -62,10 +63,10 @@ describe('Poised Duelist', () => {
       .addCard('militia_scout', 'player2', 'board', { instanceId: 'ms2' })
       .build();
 
-    const result = processAction(state, {
+    const result = autoAccept(processAction(state, {
       player: 'player1',
       action: { type: 'play_card', cardInstanceId: 'pd1' },
-    });
+    }));
 
     expectCardCounter(result.state, 'pd1', 'plus_one_plus_one', 0);
   });

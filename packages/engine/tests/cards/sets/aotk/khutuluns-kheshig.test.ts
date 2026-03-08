@@ -6,6 +6,7 @@ import { processAction } from '../../../../src/engine/engine.js';
 import { buildState } from '../../../helpers/state-builder.js';
 import { expectCardCounter, expectPlayerPower } from '../../../helpers/assertions.js';
 import { hasPlayCost } from '../../../helpers/properties.js';
+import { autoAccept } from '../../../helpers/auto-accept';
 
 beforeEach(() => {
   clearRegistry();
@@ -25,12 +26,12 @@ describe("Khutulun's Kheshig", () => {
         .addCard('void_oracle', 'player2', 'worldbreaker', { instanceId: 'wb2' })
         .build();
 
-      const { state: s } = processAction(state, {
+      const result = autoAccept(processAction(state, {
         player: 'player1',
         action: { type: 'attack', attackerIds: ['kk1'] },
-      });
+      }));
 
-      expectCardCounter(s, 'kk1', 'plus_one_plus_one', 1);
+      expectCardCounter(result.state, 'kk1', 'plus_one_plus_one', 1);
     });
 
     it('counters accumulate across multiple attacks', () => {
@@ -45,12 +46,12 @@ describe("Khutulun's Kheshig", () => {
         .addCard('void_oracle', 'player2', 'worldbreaker', { instanceId: 'wb2' })
         .build();
 
-      const { state: s } = processAction(state, {
+      const result = autoAccept(processAction(state, {
         player: 'player1',
         action: { type: 'attack', attackerIds: ['kk1'] },
-      });
+      }));
 
-      expectCardCounter(s, 'kk1', 'plus_one_plus_one', 2);
+      expectCardCounter(result.state, 'kk1', 'plus_one_plus_one', 2);
     });
   });
 });

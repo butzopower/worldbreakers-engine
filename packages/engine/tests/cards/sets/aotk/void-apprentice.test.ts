@@ -6,6 +6,7 @@ import { processAction } from '../../../../src/engine/engine.js';
 import { buildState } from '../../../helpers/state-builder.js';
 import { expectHandSize, expectCardInZone } from '../../../helpers/assertions.js';
 import { hasPlayCost } from '../../../helpers/properties.js';
+import { autoAccept } from '../../../helpers/auto-accept';
 
 beforeEach(() => {
   clearRegistry();
@@ -23,10 +24,10 @@ describe('Void Apprentice', () => {
       .addCard('void_apprentice', 'player1', 'hand', { instanceId: 'va1' })
       .build();
 
-    const result = processAction(state, {
+    const result = autoAccept(processAction(state, {
       player: 'player1',
       action: { type: 'play_card', cardInstanceId: 'va1' },
-    });
+    }));
 
     expect(result.state.players.player1.standing.void).toBe(1);
     expectCardInZone(result.state, 'va1', 'board');
@@ -40,10 +41,10 @@ describe('Void Apprentice', () => {
       .addCard('militia_scout', 'player1', 'deck', { instanceId: 'deck1' })
       .build();
 
-    const result = processAction(state, {
+    const result = autoAccept(processAction(state, {
       player: 'player1',
       action: { type: 'play_card', cardInstanceId: 'va1' },
-    });
+    }));
 
     expectHandSize(result.state, 'player1', 0);
   });
@@ -57,10 +58,12 @@ describe('Void Apprentice', () => {
       .addCard('militia_scout', 'player1', 'deck', { instanceId: 'deck1' })
       .build();
 
-    const result = processAction(state, {
+    const playResult = processAction(state, {
       player: 'player1',
       action: { type: 'play_card', cardInstanceId: 'va1' },
     });
+
+    const result = autoAccept(autoAccept(playResult));
 
     expectHandSize(result.state, 'player1', 1);
   });
@@ -74,10 +77,12 @@ describe('Void Apprentice', () => {
       .addCard('militia_scout', 'player1', 'deck', { instanceId: 'deck1' })
       .build();
 
-    const result = processAction(state, {
+    const playResult = processAction(state, {
       player: 'player1',
       action: { type: 'play_card', cardInstanceId: 'va1' },
     });
+
+    const result = autoAccept(autoAccept(playResult));
 
     expect(result.state.players.player1.standing.void).toBe(1);
     expectHandSize(result.state, 'player1', 1);

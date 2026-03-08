@@ -6,6 +6,7 @@ import { processAction } from '../../../../src/engine/engine.js';
 import { buildState } from '../../../helpers/state-builder.js';
 import { expectCardInZone } from '../../../helpers/assertions.js';
 import { hasPlayCost } from '../../../helpers/properties';
+import { autoAccept } from '../../../helpers/auto-accept';
 
 beforeEach(() => {
   clearRegistry();
@@ -24,10 +25,10 @@ describe('Mongol Quartermaster', () => {
       .addCard('mongol_quartermaster', 'player1', 'hand', { instanceId: 'mq1' })
       .build();
 
-    const playResult = processAction(state, {
+    const playResult = autoAccept(processAction(state, {
       player: 'player1',
       action: { type: 'play_card', cardInstanceId: 'mq1' },
-    });
+    }));
 
     const result = processAction(playResult.state, {
       player: 'player1',
@@ -48,10 +49,10 @@ describe('Mongol Quartermaster', () => {
       .addCard('militia_scout', 'player1', 'hand', { instanceId: 'ms1' })
       .build();
 
-    const playResult = processAction(state, {
+    const playResult = autoAccept(processAction(state, {
       player: 'player1',
       action: { type: 'play_card', cardInstanceId: 'mq1' },
-    });
+    }));
 
     const migrateResult = processAction(playResult.state, {
       player: 'player1',

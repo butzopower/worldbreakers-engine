@@ -5,6 +5,7 @@ import { clearRegistry } from '../../../../src/cards/registry.js';
 import { processAction, getLegalActions } from '../../../../src/engine/engine.js';
 import { buildState } from '../../../helpers/state-builder.js';
 import { expectPlayerMythium, expectCardInZone } from '../../../helpers/assertions.js';
+import { autoAccept } from '../../../helpers/auto-accept';
 
 beforeEach(() => {
   clearRegistry();
@@ -21,10 +22,10 @@ describe('Yam Operator', () => {
       .addCard('mythium_fund', 'player1', 'hand', { instanceId: 'mf1' })
       .build();
 
-    const result = processAction(state, {
+    const result = autoAccept(processAction(state, {
       player: 'player1',
       action: { type: 'play_card', cardInstanceId: 'yo1' },
-    });
+    }));
 
     expectCardInZone(result.state, 'yo1', 'board');
     expect(result.state.pendingChoice).not.toBeNull();
@@ -40,10 +41,10 @@ describe('Yam Operator', () => {
       .addCard('mythium_fund', 'player1', 'hand', { instanceId: 'mf1' })
       .build();
 
-    const playResult = processAction(state, {
+    const playResult = autoAccept(processAction(state, {
       player: 'player1',
       action: { type: 'play_card', cardInstanceId: 'yo1' },
-    });
+    }));
 
     const chooseResult = processAction(playResult.state, {
       player: 'player1',
@@ -62,10 +63,10 @@ describe('Yam Operator', () => {
       .addCard('yam_operator', 'player1', 'hand', { instanceId: 'yo1' })
       .build();
 
-    const result = processAction(state, {
+    const result = autoAccept(processAction(state, {
       player: 'player1',
       action: { type: 'play_card', cardInstanceId: 'yo1' },
-    });
+    }));
 
     expect(result.state.pendingChoice).toBeNull();
     expectCardInZone(result.state, 'yo1', 'board');
@@ -81,10 +82,10 @@ describe('Yam Operator', () => {
       .addCard('mythium_fund', 'player1', 'hand', { instanceId: 'mf1' })
       .build();
 
-    const result = processAction(state, {
+    const result = autoAccept(processAction(state, {
       player: 'player1',
       action: { type: 'play_card', cardInstanceId: 'yo1' },
-    });
+    }));
 
     // Can't afford mythium_fund (needs 4 after reduction, only 1 left) → fizzles
     expect(result.state.pendingChoice).toBeNull();
@@ -99,10 +100,10 @@ describe('Yam Operator', () => {
       .addCard('militia_scout', 'player1', 'hand', { instanceId: 'ms1' })
       .build();
 
-    const result = processAction(state, {
+    const result = autoAccept(processAction(state, {
       player: 'player1',
       action: { type: 'play_card', cardInstanceId: 'yo1' },
-    });
+    }));
 
     // militia_scout is a follower, not an event → fizzles
     expect(result.state.pendingChoice).toBeNull();
@@ -118,10 +119,10 @@ describe('Yam Operator', () => {
       .addCard('amazing_arithmetic', 'player1', 'hand', { instanceId: 'aa1' })
       .build();
 
-    const playResult = processAction(state, {
+    const playResult = autoAccept(processAction(state, {
       player: 'player1',
       action: { type: 'play_card', cardInstanceId: 'yo1' },
-    });
+    }));
 
     expect(playResult.state.pendingChoice).not.toBeNull();
 

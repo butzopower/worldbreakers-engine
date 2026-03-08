@@ -6,6 +6,7 @@ import { processAction } from '../../../../src/engine/engine.js';
 import { buildState } from '../../../helpers/state-builder.js';
 import { expectHandSize } from '../../../helpers/assertions.js';
 import { hasPlayCost } from '../../../helpers/properties';
+import { autoAccept } from '../../../helpers/auto-accept';
 
 beforeEach(() => {
   clearRegistry();
@@ -24,10 +25,10 @@ describe('Eagle Huntress', () => {
       .addCard('eagle_huntress', 'player1', 'hand', { instanceId: 'eh1' })
       .build();
 
-    const playResult = processAction(state, {
+    const playResult = autoAccept(processAction(state, {
       player: 'player1',
       action: { type: 'play_card', cardInstanceId: 'eh1' },
-    });
+    }));
 
     const result = processAction(playResult.state, {
       player: 'player1',
@@ -47,10 +48,10 @@ describe('Eagle Huntress', () => {
       .addCard('militia_scout', 'player1', 'deck', { instanceId: 'deck2' })
       .build();
 
-    const playResult = processAction(state, {
+    const playResult = autoAccept(processAction(state, {
       player: 'player1',
       action: { type: 'play_card', cardInstanceId: 'eh1' },
-    });
+    }));
 
     const result = processAction(playResult.state, {
       player: 'player1',
