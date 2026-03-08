@@ -247,6 +247,18 @@ export function resolvePrimitive(
         {type: 'lose_standing', player, guild: effect.guild, amount: effect.amount}
       ));
     }
+    case 'lose_mythium': {
+      const players = resolvePlayerSelector(effect.player, ctx);
+      return players.map(player => (
+        {type: 'lose_mythium', player, amount: effect.amount}
+      ));
+    }
+    case 'lose_power': {
+      const players = resolvePlayerSelector(effect.player, ctx);
+      return players.map(player => (
+        {type: 'lose_power', player, amount: effect.amount}
+      ));
+    }
     case 'grant_lasting_effect': {
       const targets = resolveTargets(state, effect.target, ctx);
       if (targets.length > 0) {

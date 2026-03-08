@@ -19,6 +19,8 @@ import {
   exhaustCard,
   gainMythium,
   gainPower,
+  loseMythium,
+  losePower,
   spendMythium,
   gainStanding,
   loseStanding,
@@ -131,12 +133,16 @@ export function executeStep(state: GameState, step: EngineStep): StepResult {
       return spendMythium(state, step.player, step.amount);
     case 'gain_mythium':
       return gainMythium(state, step.player, step.amount);
+    case 'lose_mythium':
+      return loseMythium(state, step.player, step.amount);
     case 'card_played':
       return handleCardPlayed(state, step.player, step.cardInstanceId);
     case 'location_developed':
       return { state, events: [{ type: 'location_developed', locationInstanceId: step.locationInstanceId, stage: step.stage }] };
     case 'gain_power':
       return gainPower(state, step.player, step.amount);
+    case 'lose_power':
+      return losePower(state, step.player, step.amount);
     case 'gain_standing':
       return gainStanding(state, step.player, step.guild, step.amount);
     case 'lose_standing':

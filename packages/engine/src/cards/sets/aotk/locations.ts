@@ -284,6 +284,53 @@ export const locations: CardDefinition[] = [
     description: 'I: Draw 2 cards and gain 2 mythium. II: Gain 1 power and 1 standing with any guild. III: Gain 1 power.',
   },
   {
+    id: 'the_uncanny_valley',
+    name: 'The Uncanny Valley',
+    type: 'location',
+    guild: 'stars',
+    cost: 5,
+    standingRequirement: { stars: 3 },
+    stages: 3,
+    locationStages: [
+      {
+        stage: 1,
+        ability: {
+          timing: 'enters',
+          effects: [
+            { type: 'gain_mythium', player: 'self', amount: 1 },
+            { type: 'gain_power', player: 'self', amount: 1 },
+            { type: 'lose_mythium', player: 'opponent', amount: 1 },
+          ],
+          description: 'Gain 1 mythium and 1 power. An opponent loses 1 mythium.',
+        },
+      },
+      {
+        stage: 2,
+        ability: {
+          timing: 'enters',
+          effects: [
+            { type: 'draw_cards', player: 'self', count: 1 },
+            { type: 'gain_power', player: 'self', amount: 1 },
+            { type: 'discard', player: 'opponent', count: 1 },
+          ],
+          description: 'Draw 1 card and gain 1 power. An opponent discards a card.',
+        },
+      },
+      {
+        stage: 3,
+        ability: {
+          timing: 'enters',
+          effects: [
+            { type: 'gain_power', player: 'self', amount: 1 },
+            { type: 'lose_power', player: 'opponent', amount: 1 },
+          ],
+          description: 'Gain 1 power. An opponent loses 1 power.',
+        },
+      },
+    ],
+    description: 'I: Gain 1 mythium and 1 power. An opponent loses 1 mythium. II: Draw 1 card and gain 1 power. An opponent discards a card. III: Gain 1 power. An opponent loses 1 power.',
+  },
+  {
     id: 'the_humble_underpass',
     name: 'The Humble Underpass',
     type: 'location',

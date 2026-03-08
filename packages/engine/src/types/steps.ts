@@ -55,7 +55,9 @@ export type EngineStep =
   | { type: 'destroy_card'; cardInstanceId: string }
   | { type: 'spend_mythium'; player: PlayerId; amount: number }
   | { type: 'gain_mythium'; player: PlayerId; amount: number }
+  | { type: 'lose_mythium'; player: PlayerId; amount: number }
   | { type: 'gain_power'; player: PlayerId; amount: number }
+  | { type: 'lose_power'; player: PlayerId; amount: number }
   | { type: 'gain_standing'; player: PlayerId; guild: StandingGuild; amount: number }
   | { type: 'lose_standing'; player: PlayerId; guild: StandingGuild; amount: number }
   | { type: 'grant_lasting_effect'; effectType: LastingEffectType; amount: number; targetInstanceIds: string[]; expiresAt: LastingEffectExpiration }

@@ -205,6 +205,27 @@ export function spendMythium(state: GameState, player: PlayerId, amount: number)
   };
 }
 
+export function loseMythium(state: GameState, player: PlayerId, amount: number): MutationResult {
+  if (amount <= 0) return { state, events: [] };
+  const current = state.players[player].mythium;
+  const actual = Math.min(amount, current);
+  if (actual <= 0) return { state, events: [] };
+  const newState = bump({
+    ...state,
+    players: {
+      ...state.players,
+      [player]: {
+        ...state.players[player],
+        mythium: current - actual,
+      },
+    },
+  });
+  return {
+    state: newState,
+    events: [{ type: 'mythium_spent', player, amount: actual }],
+  };
+}
+
 export function gainPower(state: GameState, player: PlayerId, amount: number): MutationResult {
   if (amount <= 0) return { state, events: [] };
   const newState = bump({
@@ -220,6 +241,27 @@ export function gainPower(state: GameState, player: PlayerId, amount: number): M
   return {
     state: newState,
     events: [{ type: 'power_gained', player, amount }],
+  };
+}
+
+export function losePower(state: GameState, player: PlayerId, amount: number): MutationResult {
+  if (amount <= 0) return { state, events: [] };
+  const current = state.players[player].power;
+  const actual = Math.min(amount, current);
+  if (actual <= 0) return { state, events: [] };
+  const newState = bump({
+    ...state,
+    players: {
+      ...state.players,
+      [player]: {
+        ...state.players[player],
+        power: current - actual,
+      },
+    },
+  });
+  return {
+    state: newState,
+    events: [{ type: 'power_lost', player, amount: actual }],
   };
 }
 

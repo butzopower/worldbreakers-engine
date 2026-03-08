@@ -62,6 +62,8 @@ export type EffectPrimitive =
   | { type: 'migrate'; effects: EffectPrimitive[] }
   | { type: 'grant_lasting_effect'; target: TargetSelector; effect: LastingEffectType; amount?: number; expiresAt: LastingEffectExpiration }
   | { type: 'destroy'; target: TargetSelector }
+  | { type: 'lose_mythium'; player: PlayerSelector; amount: number }
+  | { type: 'lose_power'; player: PlayerSelector; amount: number }
   | { type: 'register_combat_response'; trigger: CombatResponseTrigger; effects: EffectPrimitive[] };
 
 export type AbilityTiming =
