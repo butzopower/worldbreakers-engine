@@ -90,6 +90,49 @@ export const locations: CardDefinition[] = [
     description: 'Hidden (Your opponent cannot damage this location.) I: Gain 4 mythium. II: Draw 2 cards. III: Draw 1 card and gain 2 mythium.',
   },
   {
+    id: 'silkworm_terrarium',
+    name: 'Silkworm Terrarium',
+    type: 'location',
+    guild: 'stars',
+    cost: 2,
+    stages: 2,
+    standingRequirement: { stars: 1 },
+    keywords: ['hidden'],
+    abilities: [
+      {
+        timing: 'enters',
+        effects: [{
+          type: 'conditional',
+          condition: { type: 'min_card_count', filter: { zone: ['hand'], owner: 'controller' }, count: 1 },
+          effects: [
+            { type: 'discard', player: 'self', count: 1 },
+            { type: 'develop', target: { kind: 'choose', filter: { type: 'location', zone: ['board'], owner: 'controller' }, count: 1 } },
+          ],
+        }],
+        description: 'Enters: Discard a card → Develop a location you control.',
+      },
+    ],
+    locationStages: [
+      {
+        stage: 1,
+        ability: {
+          timing: 'enters',
+          effects: [{ type: 'gain_power', player: 'self', amount: 1 }],
+          description: 'Gain 1 power.',
+        },
+      },
+      {
+        stage: 2,
+        ability: {
+          timing: 'enters',
+          effects: [{ type: 'gain_power', player: 'self', amount: 1 }],
+          description: 'Gain 1 power.',
+        },
+      },
+    ],
+    description: 'Hidden. Enters: Discard a card → Develop a location you control. I: Gain 1 power. II: Gain 1 power.',
+  },
+  {
     id: 'the_amu_river_encampment',
     name: 'The Amu River Encampment',
     type: 'location',
