@@ -1,4 +1,4 @@
-import { processAction, ProcessResult } from "../../src";
+import { processAction, getLegalActions, ProcessResult } from "../../src";
 import { expect } from "vitest";
 
 // automatically accepts the first optional triggered ability
@@ -17,6 +17,20 @@ export function autoAcceptAll(input: ProcessResult) {
 
   while ((result.state.pendingChoice?.type ?? '') === 'choose_trigger_order') {
     result = autoAccept(result);
+  }
+
+  return result;
+}
+
+export function goToNextRound(input: ProcessResult): ProcessResult {
+  let result = input;
+  const startRound = result.state.round;
+
+  while (result.state.round === startRound) {
+    result = processAction(result.state, {
+      player: result.state.activePlayer,
+      action: { type: 'gain_mythium' },
+    });
   }
 
   return result;

@@ -99,6 +99,7 @@ export function canAttack(state: GameState, card: CardInstance): boolean {
   if (getCardDef(card).type !== 'follower') return false;
   if (hasKeyword(state, card, 'stationary')) return false;
   if (getCounter(card.counters, 'stun') > 0) return false;
+  if (state.lastingEffects.some(e => e.type === 'no_attacks')) return false;
   return true;
 }
 
