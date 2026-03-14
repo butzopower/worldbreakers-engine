@@ -47,6 +47,7 @@ export type EngineStep =
   // Board State
   | { type: 'draw_card'; player: PlayerId }
   | { type: 'move_card', cardInstanceId: string; toZone: Zone }
+  | { type: 'move_card_to_deck_bottom', cardInstanceId: string }
   | { type: 'shuffle_deck', player: PlayerId }
   | { type: 'add_counter'; cardInstanceId: string; counter: CounterType; amount: number }
   | { type: 'remove_counter'; cardInstanceId: string; counter: CounterType; amount: number }

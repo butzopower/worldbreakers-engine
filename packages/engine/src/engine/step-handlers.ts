@@ -25,6 +25,7 @@ import {
   gainStanding,
   loseStanding,
   moveCard,
+  moveCardToDeckBottom,
   readyCard,
   removeCounterFromCard,
   setPendingChoice,
@@ -117,6 +118,8 @@ export function executeStep(state: GameState, step: EngineStep): StepResult {
       return drawCard(state, step.player);
     case 'move_card':
       return moveCard(state, step.cardInstanceId, step.toZone);
+    case 'move_card_to_deck_bottom':
+      return moveCardToDeckBottom(state, step.cardInstanceId);
     case 'shuffle_deck':
       return shuffleDeck(state, step.player);
     case 'add_counter':
@@ -505,6 +508,15 @@ function handleResolveCustomAbility(state: GameState, controller: PlayerId, sour
   return { state, events };
 }
 
+function requiresExhaust(ability: AbilityDefinition): boolean {
+  return ability.effects?.some(e => e.type === 'exhausts') ?? false;
+}
+
+function canActivateAbility(card: { exhausted: boolean }, ability: AbilityDefinition): boolean {
+  if (requiresExhaust(ability) && card.exhausted) return false;
+  return true;
+}
+
 function collectTriggers(state: GameState, timing: AbilityTiming, player: PlayerId, triggeringCardId?: string): TriggerOption[] {
   const triggers: TriggerOption[] = [];
 
@@ -514,7 +526,7 @@ function collectTriggers(state: GameState, timing: AbilityTiming, player: Player
     const wbDef = getCardDef(wb);
     if (wbDef.abilities) {
       for (let i = 0; i < wbDef.abilities.length; i++) {
-        if (wbDef.abilities[i].timing === timing) {
+        if (wbDef.abilities[i].timing === timing && canActivateAbility(wb, wbDef.abilities[i])) {
           triggers.push({ sourceCardId: wb.instanceId, abilityIndex: i, triggeringCardId, forced: wbDef.abilities[i].forced === true });
         }
       }
@@ -527,7 +539,7 @@ function collectTriggers(state: GameState, timing: AbilityTiming, player: Player
     const def = getCardDef(card);
     if (!def.abilities) continue;
     for (let i = 0; i < def.abilities.length; i++) {
-      if (def.abilities[i].timing === timing) {
+      if (def.abilities[i].timing === timing && canActivateAbility(card, def.abilities[i])) {
         triggers.push({ sourceCardId: card.instanceId, abilityIndex: i, triggeringCardId, forced: def.abilities[i].forced === true });
       }
     }

@@ -263,6 +263,27 @@ export function resolvePrimitive(
         return [{type: 'request_choose_mode', player: controller, sourceCardId: ctx.sourceCardId, modes}];
       }
     }
+    case 'exhausts': {
+      return [
+        { type: 'exhaust_card', cardInstanceId: ctx.sourceCardId },
+        {
+          type: 'resolve_effects',
+          effects: effect.effects,
+          ctx: { controller: ctx.controller, sourceCardId: ctx.sourceCardId, triggeringCardId: ctx.triggeringCardId },
+        },
+      ];
+    }
+    case 'custom_resolve': {
+      return [
+        {
+          type: 'resolve_custom_ability',
+          controller: ctx.controller,
+          sourceCardId: ctx.sourceCardId,
+          customResolve: effect.customResolve,
+          triggeringCardId: ctx.triggeringCardId,
+        },
+      ];
+    }
   }
 
   return [];

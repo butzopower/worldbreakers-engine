@@ -64,7 +64,9 @@ export type EffectPrimitive =
   | { type: 'destroy'; target: TargetSelector }
   | { type: 'lose_mythium'; player: PlayerSelector; amount: number }
   | { type: 'lose_power'; player: PlayerSelector; amount: number }
-  | { type: 'register_combat_response'; trigger: CombatResponseTrigger; effects: EffectPrimitive[] };
+  | { type: 'register_combat_response'; trigger: CombatResponseTrigger; effects: EffectPrimitive[] }
+  | { type: 'exhausts'; effects: EffectPrimitive[] }
+  | { type: 'custom_resolve'; customResolve: string };
 
 export type AbilityTiming =
   | 'enters'
@@ -79,6 +81,7 @@ export type AbilityTiming =
   | 'response'
   | 'follower_defeated'
   | 'location_depleted'
+  | 'location_played'
   | 'overwhelms';
 
 export interface AbilityDefinition {

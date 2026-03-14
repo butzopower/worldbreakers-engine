@@ -153,6 +153,11 @@ export function playCard(
     steps.push({ type: 'add_counter', cardInstanceId, counter: 'stage', amount: def.stages });
   }
 
+  // Location played triggers (e.g. worldbreaker responses)
+  if (def.type === 'location') {
+    steps.push({ type: 'check_triggers', timing: 'location_played', player, triggeringCardId: cardInstanceId });
+  }
+
   // Queue abilities
   if (def.type === 'event') {
     // Play abilities always resolve (no opt-out)

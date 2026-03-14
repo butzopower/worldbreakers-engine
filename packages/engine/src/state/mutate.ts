@@ -73,6 +73,39 @@ export function moveCard(
   };
 }
 
+export function moveCardToDeckBottom(
+  state: GameState,
+  instanceId: string,
+): MutationResult {
+  const card = state.cards.find(c => c.instanceId === instanceId);
+  if (!card) return { state, events: [] };
+
+  const fromZone = card.zone;
+  const newCard: CardInstance = {
+    ...card,
+    zone: 'deck',
+    exhausted: false,
+    counters: {},
+  };
+
+  // Remove the card and append at the end (bottom of deck)
+  const otherCards = state.cards.filter(c => c.instanceId !== instanceId);
+  const newState = bump({
+    ...state,
+    cards: [...otherCards, newCard],
+  });
+
+  let finalState = newState;
+  if (fromZone === 'hand') {
+    finalState = adjustHandSize(finalState, card.owner, -1);
+  }
+
+  return {
+    state: finalState,
+    events: [{ type: 'card_moved', cardInstanceId: instanceId, from: fromZone, to: 'deck' }],
+  };
+}
+
 function adjustHandSize(state: GameState, player: PlayerId, delta: number): GameState {
   return {
     ...state,
