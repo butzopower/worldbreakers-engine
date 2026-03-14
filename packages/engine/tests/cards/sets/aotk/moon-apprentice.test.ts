@@ -6,7 +6,7 @@ import { processAction } from '../../../../src/engine/engine';
 import { buildState } from '../../../helpers/state-builder';
 import { expectCardCounter, expectHandSize } from '../../../helpers/assertions';
 import { hasPlayCost } from '../../../helpers/properties';
-import { autoAccept } from '../../../helpers/auto-accept';
+import { autoAccept } from '../../../helpers/game';
 
 beforeEach(() => {
   clearRegistry();

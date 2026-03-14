@@ -6,7 +6,7 @@ import { processAction } from '../../../../src/engine/engine.js';
 import { buildState } from '../../../helpers/state-builder.js';
 import { expectHandSize, expectCardInZone } from '../../../helpers/assertions.js';
 import { hasPlayCost } from '../../../helpers/properties.js';
-import { autoAccept } from '../../../helpers/auto-accept';
+import { autoAccept } from '../../../helpers/game';
 
 beforeEach(() => {
   clearRegistry();

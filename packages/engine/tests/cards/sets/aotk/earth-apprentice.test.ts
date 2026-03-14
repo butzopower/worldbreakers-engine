@@ -5,7 +5,7 @@ import { clearRegistry } from '../../../../src/cards/registry.js';
 import { processAction } from '../../../../src/engine/engine.js';
 import { buildState } from '../../../helpers/state-builder.js';
 import { expectPlayerMythium, expectHandSize, expectCardInZone } from '../../../helpers/assertions.js';
-import { autoAccept } from '../../../helpers/auto-accept';
+import { autoAccept } from '../../../helpers/game';
 
 beforeEach(() => {
   clearRegistry();

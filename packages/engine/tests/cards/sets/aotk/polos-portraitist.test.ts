@@ -5,7 +5,7 @@ import { clearRegistry } from '../../../../src/cards/registry.js';
 import { processAction, getLegalActions } from '../../../../src/engine/engine.js';
 import { buildState } from '../../../helpers/state-builder.js';
 import { expectCardInZone } from '../../../helpers/assertions.js';
-import { goToNextRound } from '../../../helpers/auto-accept.js';
+import { goToNextRound } from '../../../helpers/game.js';
 
 beforeEach(() => {
   clearRegistry();
