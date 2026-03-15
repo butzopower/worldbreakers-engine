@@ -58,7 +58,7 @@ export type PendingChoice =
   | { type: 'choose_discard'; playerId: PlayerId; count: number; sourceCardId: string }
   | { type: 'choose_breach_target'; playerId: PlayerId; validLocationIds: string[] }
   | { type: 'choose_mode'; playerId: PlayerId; sourceCardId: string; modes: Mode[] }
-  | { type: 'choose_attackers'; playerId: PlayerId }
+  | { type: 'choose_attackers'; playerId: PlayerId; maxAttackers?: number }
   | { type: 'choose_trigger_order'; playerId: PlayerId; triggers: TriggerOption[] };
 
 export interface PlayerState {

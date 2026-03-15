@@ -597,10 +597,11 @@ function getLegalChoiceActions(state: GameState): ActionInput[] {
     }
     case 'choose_attackers': {
       const attackable = getFollowers(state, player).filter(f => canAttack(state, f));
+      const max = choice.maxAttackers;
       for (const f of attackable) {
         actions.push({ player, action: { type: 'choose_attackers', attackerIds: [f.instanceId] } });
       }
-      if (attackable.length > 1) {
+      if (attackable.length > 1 && (!max || attackable.length <= max)) {
         actions.push({ player, action: { type: 'choose_attackers', attackerIds: attackable.map(f => f.instanceId) } });
       }
       break;

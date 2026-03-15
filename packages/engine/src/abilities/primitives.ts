@@ -188,7 +188,7 @@ export function resolvePrimitive(
     case 'initiate_attack': {
       const attackable = getFollowers(state, ctx.controller).filter(f => canAttack(state, f));
       if (attackable.length > 0) {
-        return [{type: 'request_choose_attackers', player: ctx.controller}];
+        return [{type: 'request_choose_attackers', player: ctx.controller, maxAttackers: effect.maxAttackers}];
       }
       return [];
     }

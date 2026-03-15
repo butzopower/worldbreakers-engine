@@ -60,7 +60,7 @@ export function executeStep(state: GameState, step: EngineStep): StepResult {
     case 'request_choose_discard':
       return handleRequestChooseDiscard(state, step.player, step.sourceCardId, step.count)
     case 'request_choose_attackers':
-      return handleRequestChooseAttackers(state, step.player)
+      return handleRequestChooseAttackers(state, step.player, step.maxAttackers)
     case 'cleanup':
       return handleCleanup(state);
     case 'advance_turn':
@@ -214,12 +214,13 @@ function handleRequestChooseDiscard(state: GameState, player: PlayerId, sourceCa
   });
 }
 
-function handleRequestChooseAttackers(state: GameState, player: PlayerId): StepResult {
+function handleRequestChooseAttackers(state: GameState, player: PlayerId, maxAttackers?: number): StepResult {
   const attackable = getFollowers(state, player).filter(f => canAttack(state, f));
   if (attackable.length === 0) return { state, events: [] };
   return setPendingChoice(state, {
     type: 'choose_attackers',
     playerId: player,
+    maxAttackers,
   });
 }
 

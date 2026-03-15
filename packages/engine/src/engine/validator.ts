@@ -161,6 +161,9 @@ function validatePendingChoice(state: GameState, player: PlayerId, action: Playe
       if (action.type !== 'choose_attackers') {
         return { valid: false, reason: 'Must choose attackers' };
       }
+      if (choice.maxAttackers && action.attackerIds.length > choice.maxAttackers) {
+        return { valid: false, reason: `Can only attack with up to ${choice.maxAttackers} follower(s)` };
+      }
       return validateAttack(state, player, action.attackerIds);
 
     case 'choose_trigger_order':

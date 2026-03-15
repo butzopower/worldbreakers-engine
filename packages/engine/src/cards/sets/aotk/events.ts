@@ -24,6 +24,28 @@ export const events: CardDefinition[] = [
     }]
   },
   {
+    id: 'hide_in_plain_sight',
+    name: 'Hide in Plain Sight',
+    type: 'event',
+    guild: 'void',
+    cost: 2,
+    standingRequirement: { void: 3 },
+    description: 'Attack with one follower. It cannot be blocked this combat.',
+    abilities: [{
+      timing: 'play',
+      effects: [
+        {
+          type: 'grant_lasting_effect',
+          target: { kind: 'choose', filter: { type: 'follower', zone: ['board'], owner: 'controller' }, count: 1 },
+          effect: 'unblockable',
+          expiresAt: 'end_of_combat',
+        },
+        { type: 'initiate_attack', maxAttackers: 1 },
+      ],
+      description: 'Attack with one follower. It cannot be blocked this combat.',
+    }],
+  },
+  {
     id: 'lay_siege',
     name: 'Lay Siege',
     type: 'event',

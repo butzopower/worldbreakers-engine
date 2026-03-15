@@ -57,7 +57,7 @@ export type EffectPrimitive =
   | { type: 'play_card'; target: TargetSelector; costReduction?: number }
   | { type: 'conditional'; condition: Condition; effects: EffectPrimitive[] }
   | { type: 'develop'; target: TargetSelector }
-  | { type: 'initiate_attack' }
+  | { type: 'initiate_attack'; maxAttackers?: number }
   | { type: 'lose_standing'; player: PlayerSelector; guild: StandingGuild; amount: number }
   | { type: 'migrate'; effects: EffectPrimitive[] }
   | { type: 'grant_lasting_effect'; target: TargetSelector; effect: LastingEffectType; amount?: number; expiresAt: LastingEffectExpiration }
