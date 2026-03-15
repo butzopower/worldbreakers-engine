@@ -73,6 +73,20 @@ export const events: CardDefinition[] = [
     }],
   },
   {
+    id: 'proof_of_the_grotto',
+    name: 'Proof of the Grotto',
+    type: 'event',
+    guild: 'stars',
+    cost: 1,
+    standingRequirement: { stars: 1 },
+    description: 'Play a card, paying 1 mythium less for each standing you have across all guilds.',
+    abilities: [{
+      timing: 'play',
+      customResolve: 'proof_of_the_grotto',
+      description: 'Play a card, paying 1 mythium less for each standing you have across all guilds.',
+    }],
+  },
+  {
     id: 'raid_the_mines',
     name: 'Raid the Mines',
     type: 'event',
@@ -328,6 +342,32 @@ export const eventResolvers: {key: string, resolver: CustomResolverFn}[] = [
       }
 
       return steps;
+    }
+  },
+  {
+    key: 'proof_of_the_grotto',
+    resolver: (
+      state: GameState,
+      ctx: ResolveContext,
+    ): EngineStep[] => {
+      const player = ctx.controller;
+      const totalStanding = STANDING_GUILDS.reduce(
+        (sum, guild) => sum + state.players[player].standing[guild], 0
+      );
+
+      return [{
+        type: 'resolve_effects',
+        effects: [{
+          type: 'play_card',
+          target: {
+            kind: 'choose',
+            filter: { zone: ['hand'], owner: 'controller', canPay: { costReduction: totalStanding } },
+            count: 1,
+          },
+          costReduction: totalStanding,
+        }],
+        ctx,
+      }];
     }
   }
 ]
