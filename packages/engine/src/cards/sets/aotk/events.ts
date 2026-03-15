@@ -73,6 +73,20 @@ export const events: CardDefinition[] = [
     }],
   },
   {
+    id: 'pacify',
+    name: 'Pacify',
+    type: 'event',
+    guild: 'stars',
+    cost: 3,
+    standingRequirement: { stars: 1 },
+    description: 'Put a stationary counter on a follower. (Followers with stationary can\'t attack.)',
+    abilities: [{
+      timing: 'play',
+      effects: [{ type: 'add_counter', target: { kind: 'choose', filter: { type: 'follower', zone: ['board'] }, count: 1 }, counter: 'stationary', amount: 1 }],
+      description: 'Put a stationary counter on a follower.',
+    }],
+  },
+  {
     id: 'proof_of_the_grotto',
     name: 'Proof of the Grotto',
     type: 'event',

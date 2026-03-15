@@ -27,7 +27,7 @@ function getActiveBadges(card: VisibleCard, cardDef: ClientCardDefinition): Badg
     badges.push({ label: 'TAP', color: '#e94560', bg: '#4a1020' });
   }
 
-  if (cardDef.keywords?.includes('stationary')) {
+  if (cardDef.keywords?.includes('stationary') || (card.counters['stationary'] ?? 0) > 0) {
     badges.push({ label: 'STATIONARY', color: '#999', bg: '#2a2a2a' });
   }
 
