@@ -544,6 +544,17 @@ export const followers: CardDefinition[] = [
     keywords: ['overwhelm'],
   },
   {
+    id: 'solemn_guardian',
+    name: 'Solemn Guardian',
+    type: 'follower',
+    guild: 'stars',
+    cost: 3,
+    strength: 1,
+    health: 6,
+    standingRequirement: { stars: 1 },
+    description: '',
+  },
+  {
     id: 'sparring_braggart',
     name: 'Sparring Braggart',
     type: 'follower',

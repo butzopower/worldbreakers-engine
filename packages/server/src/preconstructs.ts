@@ -51,7 +51,7 @@ export const atokStars: DeckConfig = {
     'heedless_investor',
     // 'mothkeeper',
     // 'sly_sentinel',
-    // 'solemn_guardian',
+    'solemn_guardian',
     'generous_dealer',
     'auspicious_smuggler',
     'suave_sycophant',
