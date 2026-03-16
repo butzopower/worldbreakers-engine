@@ -12,6 +12,7 @@ function defaultPlayerState(): PlayerState {
     handSize: 0,
     bonusActions: 0,
     pendingBonusActions: 0,
+    powerGainedThisRound: false,
   };
 }
 

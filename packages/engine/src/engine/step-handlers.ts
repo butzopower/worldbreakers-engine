@@ -149,7 +149,7 @@ export function executeStep(state: GameState, step: EngineStep): StepResult {
     case 'location_developed':
       return { state, events: [{ type: 'location_developed', locationInstanceId: step.locationInstanceId, stage: step.stage }] };
     case 'gain_power':
-      return gainPower(state, step.player, step.amount);
+      return handleGainPower(state, step.player, step.amount);
     case 'lose_power':
       return losePower(state, step.player, step.amount);
     case 'gain_standing':
@@ -507,8 +507,8 @@ function handleRallyNewRound(state: GameState): StepResult {
     activePlayer: newFirstPlayer,
     defeatedThisRound: [],
     players: {
-      player1: { ...state.players.player1, bonusActions: 0, pendingBonusActions: 0 },
-      player2: { ...state.players.player2, bonusActions: 0, pendingBonusActions: 0 },
+      player1: { ...state.players.player1, bonusActions: 0, pendingBonusActions: 0, powerGainedThisRound: false },
+      player2: { ...state.players.player2, bonusActions: 0, pendingBonusActions: 0, powerGainedThisRound: false },
     },
   };
 
@@ -521,6 +521,28 @@ function handleRallyNewRound(state: GameState): StepResult {
   events.push({ type: 'turn_changed', activePlayer: s.activePlayer });
 
   return { state: s, events };
+}
+
+function handleGainPower(state: GameState, player: PlayerId, amount: number): StepResult {
+  const result = gainPower(state, player, amount);
+  const wasFirst = !state.players[player].powerGainedThisRound && result.events.length > 0;
+  if (!wasFirst) return result;
+
+  const s: GameState = {
+    ...result.state,
+    players: {
+      ...result.state.players,
+      [player]: {
+        ...result.state.players[player],
+        powerGainedThisRound: true,
+      },
+    },
+  };
+  return {
+    state: s,
+    events: result.events,
+    prepend: [{ type: 'check_triggers', timing: 'first_power_gain_this_round', player }],
+  };
 }
 
 function handleGrantBonusAction(state: GameState, player: PlayerId): StepResult {

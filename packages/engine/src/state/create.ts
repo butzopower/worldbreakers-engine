@@ -30,6 +30,7 @@ function createPlayerState(guild: Guild): PlayerState {
     handSize: 0,
     bonusActions: 0,
     pendingBonusActions: 0,
+    powerGainedThisRound: false,
   };
 }
 

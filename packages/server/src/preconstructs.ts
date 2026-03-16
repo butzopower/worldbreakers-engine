@@ -49,7 +49,7 @@ export const atokStars: DeckConfig = {
     'frantic_getaway',
     // 'throes_of_fancy',
     'heedless_investor',
-    // 'mothkeeper',
+    'mothkeeper',
     // 'sly_sentinel',
     'solemn_guardian',
     'generous_dealer',

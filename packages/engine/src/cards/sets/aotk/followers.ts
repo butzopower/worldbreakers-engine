@@ -444,6 +444,23 @@ export const followers: CardDefinition[] = [
     ],
   },
   {
+    id: 'mothkeeper',
+    name: 'Mothkeeper',
+    type: 'follower',
+    guild: 'stars',
+    cost: 2,
+    strength: 1,
+    health: 3,
+    standingRequirement: { stars: 1 },
+    keywords: ['stationary'],
+    abilities: [{
+      timing: 'first_power_gain_this_round',
+      effects: [{ type: 'gain_mythium', player: 'self', amount: 2 }],
+      description: 'Response: The first time each round you gain power → Gain 2 mythium.',
+    }],
+    description: 'Stationary (This cannot attack.) Response: The first time each round you gain power → Gain 2 mythium.',
+  },
+  {
     id: 'mongol_quartermaster',
     name: 'Mongol Quartermaster',
     type: 'follower',

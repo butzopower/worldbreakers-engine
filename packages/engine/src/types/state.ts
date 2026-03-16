@@ -70,6 +70,7 @@ export interface PlayerState {
   handSize: number;
   bonusActions: number;
   pendingBonusActions: number;
+  powerGainedThisRound: boolean;
 }
 
 export interface GameState {
