@@ -43,7 +43,7 @@ export const atokStars: DeckConfig = {
     'polos_portraitist',
     // 'exploitative_extraction',
     'proof_of_the_grotto',
-    // 'inspirational_vision',
+    'inspirational_vision',
     'straight_to_the_source',
     'pacify',
     'frantic_getaway',

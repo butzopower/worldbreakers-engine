@@ -46,6 +46,25 @@ export const events: CardDefinition[] = [
     }],
   },
   {
+    id: 'inspirational_vision',
+    name: 'Inspirational Vision',
+    type: 'event',
+    guild: 'stars',
+    cost: 2,
+    standingRequirement: { stars: 1 },
+    description: 'Choose follower or location. Reveal cards from the top of your deck until you reveal a card of that type. Either draw that card or play it, paying 2 less. Shuffle your deck.',
+    abilities: [{
+        timing: 'play',
+        effects: [{
+            type: 'choose_one',
+            modes: [
+              { label: 'Follower', effects: [{ type: 'custom_resolve', customResolve: 'inspirational_vision_follower' }] },
+              { label: 'Location', effects: [{ type: 'custom_resolve', customResolve: 'inspirational_vision_location' }] },
+            ],
+          }]
+      }],
+  },
+  {
     id: 'lay_siege',
     name: 'Lay Siege',
     type: 'event',
@@ -399,6 +418,16 @@ export const eventResolvers: {key: string, resolver: CustomResolverFn}[] = [
     }
   },
   {
+    key: 'inspirational_vision_follower',
+    resolver: (state: GameState, ctx: ResolveContext): EngineStep[] =>
+      inspirationalVisionSearch(state, ctx, 'follower'),
+  },
+  {
+    key: 'inspirational_vision_location',
+    resolver: (state: GameState, ctx: ResolveContext): EngineStep[] =>
+      inspirationalVisionSearch(state, ctx, 'location'),
+  },
+  {
     key: 'proof_of_the_grotto',
     resolver: (
       state: GameState,
@@ -424,4 +453,72 @@ export const eventResolvers: {key: string, resolver: CustomResolverFn}[] = [
       }];
     }
   }
-]
+];
+
+function inspirationalVisionSearch(
+  state: GameState,
+  ctx: ResolveContext,
+  searchType: 'follower' | 'location',
+): EngineStep[] {
+  const player = ctx.controller;
+  const deck = getDeck(state, player);
+
+  if (deck.length === 0) {
+    return [{ type: 'shuffle_deck', player }];
+  }
+
+  const cardsToReveal: CardInstance[] = [];
+  let foundCard: CardInstance | undefined;
+
+  for (const card of deck) {
+    cardsToReveal.push(card);
+    if (getCardDef(card).type === searchType) {
+      foundCard = card;
+      break;
+    }
+  }
+
+  const steps: EngineStep[] = [
+    {
+      type: 'reveal_cards',
+      player,
+      cardDefinitionIds: cardsToReveal.map(c => c.definitionId),
+    },
+  ];
+
+  if (foundCard) {
+    steps.push({
+      type: 'move_card',
+      cardInstanceId: foundCard.instanceId,
+      toZone: 'hand',
+    });
+    steps.push({ type: 'shuffle_deck', player });
+    steps.push({
+      type: 'request_choose_mode',
+      player,
+      sourceCardId: ctx.sourceCardId,
+      modes: [
+        {
+          label: 'Draw it',
+          effects: [],
+        },
+        {
+          label: 'Play it (2 less)',
+          effects: [{
+            type: 'play_card',
+            target: {
+              kind: 'choose',
+              filter: { cardInstanceIds: [foundCard.instanceId], canPay: { costReduction: 2 } },
+              count: 1,
+            },
+            costReduction: 2,
+          }],
+        },
+      ],
+    });
+  } else {
+    steps.push({ type: 'shuffle_deck', player });
+  }
+
+  return steps;
+}
