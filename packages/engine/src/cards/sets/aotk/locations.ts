@@ -406,4 +406,52 @@ export const locations: CardDefinition[] = [
     ],
     description: 'I: Gain 2 mythium and 1 power. II: Gain 2 mythium and 1 standing with any guild.',
   },
+  {
+    id: 'weaving_workshop',
+    name: 'Weaving Workshop',
+    type: 'location',
+    guild: 'stars',
+    cost: 4,
+    standingRequirement: { stars: 2 },
+    stages: 2,
+    abilities: [{
+      timing: 'enters',
+      effects: [{
+        type: 'play_card',
+        target: {
+          kind: 'choose',
+          filter: { type: 'location', zone: ['hand'], owner: 'controller', excludeSelf: true, canPay: { costReduction: 2 } },
+          count: 1,
+        },
+        costReduction: 2,
+      }],
+      description: 'You may play another location card, paying 2 less.',
+    }],
+    locationStages: [
+      {
+        stage: 1,
+        ability: {
+          timing: 'enters',
+          effects: [
+            { type: 'gain_mythium', player: 'self', amount: 2 },
+            { type: 'gain_power', player: 'self', amount: 1 },
+            { type: 'develop', target: { kind: 'choose', filter: { type: 'location', zone: ['board'], owner: 'controller', excludeSelf: true }, count: 1 } },
+          ],
+          description: 'Gain 2 mythium and 1 power. Develop another location you control.',
+        },
+      },
+      {
+        stage: 2,
+        ability: {
+          timing: 'enters',
+          effects: [
+            { type: 'gain_power', player: 'self', amount: 1 },
+            { type: 'develop', target: { kind: 'choose', filter: { type: 'location', zone: ['board'], owner: 'controller', excludeSelf: true }, count: 1 } },
+          ],
+          description: 'Gain 1 power. Develop another location you control.',
+        },
+      },
+    ],
+    description: 'Enters: You may play another location card, paying 2 less. I: Gain 2 mythium and 1 power. Develop another location you control. II: Gain 1 power. Develop another location you control.',
+  },
 ];

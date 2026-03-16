@@ -59,7 +59,7 @@ export const atokStars: DeckConfig = {
     // 'illicit_bazaar',
     // 'mesmerizing_maze',
     'covert_exchange',
-    // 'weaving_workshop',
+    'weaving_workshop',
     'the_uncanny_valley',
     'surprising_development',
     'caravan_guard',
