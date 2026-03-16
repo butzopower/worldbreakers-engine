@@ -187,6 +187,24 @@ function validatePendingChoice(state: GameState, player: PlayerId, action: Playe
       }
       return { valid: true };
 
+    case 'choose_cost_discount':
+      if (action.type !== 'choose_cost_discount_targets') {
+        return { valid: false, reason: 'Must choose cost discount targets' };
+      }
+      // Empty selection is always valid (skip discount)
+      if (action.targetInstanceIds.length === 0) return { valid: true };
+      // Check max targets
+      if (action.targetInstanceIds.length > (choice.costDiscount.maxTargets ?? 1)) {
+        return { valid: false, reason: 'Too many targets selected' };
+      }
+      // Check all targets are valid
+      for (const id of action.targetInstanceIds) {
+        if (!choice.validTargetIds.includes(id)) {
+          return { valid: false, reason: `Invalid discount target: ${id}` };
+        }
+      }
+      return { valid: true };
+
     default:
       return { valid: false, reason: 'Unknown choice type' };
   }

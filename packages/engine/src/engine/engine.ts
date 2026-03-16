@@ -124,10 +124,21 @@ export function playCard(
   state: GameState,
   player: PlayerId,
   cardInstanceId: string,
-  opts?: { costReduction?: number },
+  opts?: { costReduction?: number; skipCostDiscount?: boolean },
 ): EngineStep[] {
   const card = getCard(state, cardInstanceId)!;
   const def = getCardDef(card);
+
+  // If card has a cost discount and we haven't resolved it yet, queue the discount choice
+  if (def.costDiscount && !opts?.skipCostDiscount) {
+    return [{
+      type: 'request_cost_discount',
+      player,
+      cardInstanceId,
+      costDiscount: def.costDiscount,
+      externalCostReduction: opts?.costReduction ?? 0,
+    }];
+  }
 
   const steps: EngineStep[] = [];
 
@@ -273,6 +284,8 @@ function resolveChoice(
       return resolveChooseAttackers(state, player, action);
     case 'choose_trigger_order':
       return resolveChooseTriggerOrder(state, player, action);
+    case 'choose_cost_discount':
+      return resolveChooseCostDiscount(state, player, action);
     default:
       throw new Error(`Unknown choice type: ${(choice as PendingChoice).type}`);
   }
@@ -444,6 +457,53 @@ function resolveChooseTriggerOrder(state: GameState, _player: PlayerId, action: 
   return { state: s, events: [], prepend };
 }
 
+function resolveChooseCostDiscount(state: GameState, _player: PlayerId, action: PlayerAction): ChoiceResult {
+  if (action.type !== 'choose_cost_discount_targets') throw new Error('Expected choose_cost_discount_targets');
+  const choice = state.pendingChoice!;
+  if (choice.type !== 'choose_cost_discount') throw new Error('Expected choose_cost_discount choice');
+
+  let s: GameState = { ...state, pendingChoice: null };
+  const events: GameEvent[] = [];
+  const prepend: EngineStep[] = [];
+
+  const { costDiscount, externalCostReduction, cardInstanceId } = choice;
+  const selectedTargets = action.targetInstanceIds;
+
+  // Execute discount target effects
+  for (const targetId of selectedTargets) {
+    if (costDiscount.targetEffect.type === 'remove_counter') {
+      const result = removeCounterFromCard(s, targetId, costDiscount.targetEffect.counter, costDiscount.targetEffect.amount);
+      s = result.state;
+      events.push(...result.events);
+    } else if (costDiscount.targetEffect.type === 'reveal') {
+      const card = getCard(s, targetId);
+      if (card) {
+        events.push({ type: 'reveal', player: choice.playerId, cardDefinitionIds: [card.definitionId] });
+      }
+    }
+  }
+
+  // Calculate earned discount
+  const earnedDiscount = costDiscount.perTarget
+    ? costDiscount.costReduction * selectedTargets.length
+    : selectedTargets.length > 0 ? costDiscount.costReduction : 0;
+
+  // Build the play card steps with the total cost reduction
+  const totalReduction = externalCostReduction + earnedDiscount;
+  const playSteps = playCard(s, choice.playerId, cardInstanceId, {
+    costReduction: totalReduction,
+    skipCostDiscount: true,
+  });
+  prepend.push(...playSteps);
+
+  // If discount wounded a location, check for cleanup
+  if (selectedTargets.length > 0 && costDiscount.targetEffect.type === 'remove_counter') {
+    prepend.push({ type: 'cleanup' });
+  }
+
+  return { state: s, events, prepend };
+}
+
 import { handleDevelop } from "../actions/develop";
 
 /**
@@ -611,6 +671,24 @@ function getLegalChoiceActions(state: GameState): ActionInput[] {
         actions.push({ player, action: { type: 'choose_trigger', triggerIndex: i } });
         if (!choice.triggers[i].forced) {
           actions.push({ player, action: { type: 'skip_trigger', triggerIndex: i } });
+        }
+      }
+      break;
+    }
+    case 'choose_cost_discount': {
+      // Can always skip discount (select 0 targets)
+      actions.push({ player, action: { type: 'choose_cost_discount_targets', targetInstanceIds: [] } });
+      // Individual target options
+      for (const targetId of choice.validTargetIds) {
+        actions.push({ player, action: { type: 'choose_cost_discount_targets', targetInstanceIds: [targetId] } });
+      }
+      // Multi-target options (up to maxTargets)
+      const maxTargets = choice.costDiscount.maxTargets ?? 1;
+      if (maxTargets > 1 && choice.validTargetIds.length > 1) {
+        const count = Math.min(choice.validTargetIds.length, maxTargets);
+        if (count >= 2) {
+          // Offer selecting all valid targets up to max
+          actions.push({ player, action: { type: 'choose_cost_discount_targets', targetInstanceIds: choice.validTargetIds.slice(0, count) } });
         }
       }
       break;

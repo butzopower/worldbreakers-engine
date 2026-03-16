@@ -1,5 +1,5 @@
 import { Guild, StandingGuild } from './core';
-import { AbilityDefinition, Condition } from './effects';
+import { AbilityDefinition, CardFilter, Condition } from './effects';
 
 export type CardType = 'worldbreaker' | 'follower' | 'event' | 'location';
 
@@ -17,6 +17,23 @@ export type Keyword =
   | 'hidden'
   | 'overwhelm'
   | 'lethal';
+
+export type CostDiscountTargetEffect =
+  | { type: 'remove_counter'; counter: 'stage'; amount: number }
+  | { type: 'reveal' };
+
+export interface CostDiscount {
+  /** Filter to find valid targets for the discount */
+  filter: CardFilter;
+  /** Mythium reduction amount */
+  costReduction: number;
+  /** If true, reduction is per target selected (vs flat) */
+  perTarget?: boolean;
+  /** Max targets to select */
+  maxTargets?: number;
+  /** What happens to each selected target */
+  targetEffect: CostDiscountTargetEffect;
+}
 
 export interface LocationStage {
   stage: number;
@@ -47,4 +64,6 @@ export interface CardDefinition {
   blockRestrictions?: BlockRestriction[];
   /** Optional card description shown on hover in the UI */
   description?: string;
+  /** Optional cost discount: player can take an action before paying to reduce cost */
+  costDiscount?: CostDiscount;
 }

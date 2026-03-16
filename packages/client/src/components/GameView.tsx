@@ -70,6 +70,13 @@ export default function GameView({ playerId, state, legalActions, events, onRetu
         interaction.startTriggerSelection(choice.triggers);
         break;
       }
+      case 'choose_cost_discount': {
+        interaction.startCostDiscountSelection(
+          choice.validTargetIds,
+          choice.costDiscount.maxTargets ?? 1,
+        );
+        break;
+      }
     }
   }, [state.pendingChoice?.type, state.version]);
 
@@ -114,6 +121,12 @@ export default function GameView({ playerId, state, legalActions, events, onRetu
       case 'choose_breach_target': {
         if (mode.validLocations.includes(card.instanceId)) {
           submitAction({ type: 'damage_location', locationInstanceId: card.instanceId });
+        }
+        break;
+      }
+      case 'choose_cost_discount': {
+        if (mode.validTargets.includes(card.instanceId)) {
+          interaction.toggleCostDiscountTarget(card.instanceId);
         }
         break;
       }

@@ -26,13 +26,17 @@ export default function Hand({ cards, interactionMode, legalActions, onCardClick
             interactionMode.selected.includes(card.instanceId);
           const isTargetChoice = interactionMode.type === 'choose_target' &&
             interactionMode.validTargets.includes(card.instanceId);
+          const isCostDiscountTarget = interactionMode.type === 'choose_cost_discount' &&
+            interactionMode.validTargets.includes(card.instanceId);
+          const isCostDiscountSelected = interactionMode.type === 'choose_cost_discount' &&
+            interactionMode.selected.includes(card.instanceId);
 
           return (
             <FollowerCard
               key={card.instanceId}
               card={card}
-              highlighted={(canPlay && interactionMode.type === 'none') || isTargetChoice}
-              selected={isDiscardTarget}
+              highlighted={(canPlay && interactionMode.type === 'none') || isTargetChoice || isCostDiscountTarget}
+              selected={isDiscardTarget || isCostDiscountSelected}
               onClick={() => onCardClick(card)}
               compact
             />

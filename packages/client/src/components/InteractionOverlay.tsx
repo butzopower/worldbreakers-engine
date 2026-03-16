@@ -119,6 +119,24 @@ export default function InteractionOverlay({ mode, state, playerId, onSubmitActi
 
     case 'choose_trigger_order':
       return <TriggerOrderPanel mode={mode} state={state} onSubmitAction={onSubmitAction} />;
+
+    case 'choose_cost_discount':
+      return (
+        <div className={styles.panel}>
+          <div className={styles.instructions}>
+            Select targets for cost discount (optional). Click highlighted cards to toggle.
+            {mode.selected.length > 0 && ` (${mode.selected.length}/${mode.maxTargets} selected)`}
+          </div>
+          <button
+            onClick={() => {
+              onSubmitAction({ type: 'choose_cost_discount_targets', targetInstanceIds: mode.selected });
+            }}
+            className={styles.btn}
+          >
+            {mode.selected.length > 0 ? 'Confirm Discount' : 'Skip Discount'}
+          </button>
+        </div>
+      );
   }
 }
 

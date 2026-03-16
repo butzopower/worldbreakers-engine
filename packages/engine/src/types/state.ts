@@ -1,4 +1,5 @@
 import { PlayerId, StandingGuild, Phase, Zone, CombatStep } from './core';
+import { CostDiscount } from './cards';
 import { CounterMap } from './counters';
 import { CardFilter, EffectPrimitive, Mode } from './effects';
 import { EngineStep } from './steps';
@@ -59,7 +60,8 @@ export type PendingChoice =
   | { type: 'choose_breach_target'; playerId: PlayerId; validLocationIds: string[] }
   | { type: 'choose_mode'; playerId: PlayerId; sourceCardId: string; modes: Mode[] }
   | { type: 'choose_attackers'; playerId: PlayerId; maxAttackers?: number }
-  | { type: 'choose_trigger_order'; playerId: PlayerId; triggers: TriggerOption[] };
+  | { type: 'choose_trigger_order'; playerId: PlayerId; triggers: TriggerOption[] }
+  | { type: 'choose_cost_discount'; playerId: PlayerId; cardInstanceId: string; costDiscount: CostDiscount; externalCostReduction: number; validTargetIds: string[] };
 
 export interface PlayerState {
   mythium: number;

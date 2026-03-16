@@ -1,6 +1,7 @@
 import { PlayerId, StandingGuild, Zone } from '../types/core';
 import { CardInstance, GameState } from '../types/state';
-import { CardDefinition, Keyword } from '../types/cards';
+import { CardDefinition, CostDiscount, Keyword } from '../types/cards';
+import { CardFilter } from '../types/effects';
 import { getCounter } from '../types/counters';
 import { getCardDefinition } from '../cards/registry';
 
@@ -203,13 +204,53 @@ export function getPassiveCostReduction(state: GameState, player: PlayerId, def:
   return reduction;
 }
 
+export function countDiscountTargets(state: GameState, player: PlayerId, filter: CardFilter, excludeCardId?: string): number {
+  return state.cards.filter(c => {
+    if (c.instanceId === excludeCardId) return false;
+    const def = getCardDef(c);
+    if (filter.type) {
+      const types = Array.isArray(filter.type) ? filter.type : [filter.type];
+      if (!types.includes(def.type)) return false;
+    }
+    if (filter.zone) {
+      const zones = Array.isArray(filter.zone) ? filter.zone : [filter.zone];
+      if (!zones.includes(c.zone)) return false;
+    }
+    if (filter.owner === 'controller' && c.owner !== player) return false;
+    if (filter.owner === 'opponent' && c.owner === player) return false;
+    return true;
+  }).length;
+}
+
+export function getMaxCostDiscount(state: GameState, player: PlayerId, costDiscount: CostDiscount, excludeCardId?: string): number {
+  const maxTargets = costDiscount.maxTargets ?? 1;
+  const validCount = countDiscountTargets(state, player, costDiscount.filter, excludeCardId);
+  if (validCount === 0) return 0;
+  const targetCount = Math.min(validCount, maxTargets);
+  return costDiscount.perTarget
+    ? costDiscount.costReduction * targetCount
+    : costDiscount.costReduction;
+}
+
 export function canPlayCard(state: GameState, player: PlayerId, card: CardInstance): boolean {
   if (card.zone !== 'hand') return false;
   if (card.owner !== player) return false;
 
   const def = getCardDef(card);
   const passiveReduction = getPassiveCostReduction(state, player, def);
-  return canPay(state, player, card, { costReduction: passiveReduction });
+
+  // Can afford at full price
+  if (canPay(state, player, card, { costReduction: passiveReduction })) return true;
+
+  // Can afford with max cost discount
+  if (def.costDiscount) {
+    const maxDiscount = getMaxCostDiscount(state, player, def.costDiscount, card.instanceId);
+    if (maxDiscount > 0) {
+      return canPay(state, player, card, { costReduction: passiveReduction + maxDiscount });
+    }
+  }
+
+  return false;
 }
 
 export function canDevelop(state: GameState, player: PlayerId, card: CardInstance): boolean {

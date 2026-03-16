@@ -63,6 +63,22 @@ export function useInteractionMode() {
     setMode({ type: 'choose_trigger_order', triggers });
   }, []);
 
+  const startCostDiscountSelection = useCallback((validTargets: string[], maxTargets: number) => {
+    setMode({ type: 'choose_cost_discount', validTargets, maxTargets, selected: [] });
+  }, []);
+
+  const toggleCostDiscountTarget = useCallback((instanceId: string) => {
+    setMode(prev => {
+      if (prev.type !== 'choose_cost_discount') return prev;
+      const selected = prev.selected.includes(instanceId)
+        ? prev.selected.filter(id => id !== instanceId)
+        : prev.selected.length < prev.maxTargets
+          ? [...prev.selected, instanceId]
+          : prev.selected;
+      return { ...prev, selected };
+    });
+  }, []);
+
   return {
     mode,
     reset,
@@ -76,5 +92,7 @@ export function useInteractionMode() {
     startBreachSelection,
     startModeSelection,
     startTriggerSelection,
+    startCostDiscountSelection,
+    toggleCostDiscountTarget,
   };
 }

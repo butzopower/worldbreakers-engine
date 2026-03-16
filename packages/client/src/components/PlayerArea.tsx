@@ -66,6 +66,10 @@ export default function PlayerArea({ state, playerId, interactionMode, onCardCli
                 interactionMode.selectedBlockerId === card.instanceId;
               const isTargetable = interactionMode.type === 'choose_target' &&
                 interactionMode.validTargets.includes(card.instanceId);
+              const isCostDiscountTarget = interactionMode.type === 'choose_cost_discount' &&
+                interactionMode.validTargets.includes(card.instanceId);
+              const isCostDiscountSelected = interactionMode.type === 'choose_cost_discount' &&
+                interactionMode.selected.includes(card.instanceId);
 
               const canUse = legalActions.some(
                 a => a.type === 'use_ability' && a.cardInstanceId === card.instanceId
@@ -75,8 +79,8 @@ export default function PlayerArea({ state, playerId, interactionMode, onCardCli
                 <div key={card.instanceId} className={styles.cardWrapper}>
                   <FollowerCard
                     card={card}
-                    selected={isSelectedAttacker || isAssignedBlocker}
-                    highlighted={isTargetable}
+                    selected={isSelectedAttacker || isAssignedBlocker || isCostDiscountSelected}
+                    highlighted={isTargetable || isCostDiscountTarget}
                     onClick={() => onCardClick(card)}
                     lastingEffects={state.lastingEffects}
                   />
@@ -109,13 +113,15 @@ export default function PlayerArea({ state, playerId, interactionMode, onCardCli
               );
               const isBreachTarget = interactionMode.type === 'choose_breach_target' &&
                 interactionMode.validLocations.includes(card.instanceId);
+              const isLocCostDiscountTarget = interactionMode.type === 'choose_cost_discount' &&
+                interactionMode.validTargets.includes(card.instanceId);
 
               return (
                 <LocationCard
                   key={card.instanceId}
                   card={card}
                   canDevelop={canDev && interactionMode.type === 'none'}
-                  highlighted={isBreachTarget}
+                  highlighted={isBreachTarget || isLocCostDiscountTarget}
                   onClick={() => onCardClick(card)}
                   onDevelop={() => {
                     socket.emit('submit_action', {

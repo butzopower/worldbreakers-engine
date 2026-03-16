@@ -31,7 +31,7 @@ import {
   setPendingChoice,
   shuffleDeck,
 } from '../state/mutate';
-import { getBoard, getCardDef, getWorldbreaker, isDefeated, isLocationDepleted } from '../state/query';
+import { getBoard, getCardDef, getWorldbreaker, isDefeated, isLocationDepleted, countDiscountTargets } from '../state/query';
 import { getCounter } from '../types/counters';
 import { ResolveContext, findValidTargets, resolvePrimitive } from '../abilities/primitives';
 import { getCustomResolver } from '../abilities/system';
@@ -39,6 +39,8 @@ import { getCard } from '../state/query';
 import { getFollowers, getLocations, isHidden, canAttack, canBlock, canBlockAttacker, hasKeyword } from '../state/query';
 import { AbilityDefinition, AbilityTiming, EffectPrimitive, Mode } from '../types/effects';
 import { handleDevelop } from "../actions/develop";
+import { playCard } from './engine';
+import { CostDiscount } from '../types/cards';
 import { resolveSingleFight } from '../combat/damage';
 import { generateEffectId } from '../utils/id';
 
@@ -61,6 +63,8 @@ export function executeStep(state: GameState, step: EngineStep): StepResult {
       return handleRequestChooseDiscard(state, step.player, step.sourceCardId, step.count)
     case 'request_choose_attackers':
       return handleRequestChooseAttackers(state, step.player, step.maxAttackers)
+    case 'request_cost_discount':
+      return handleRequestCostDiscount(state, step)
     case 'cleanup':
       return handleCleanup(state);
     case 'advance_turn':
@@ -221,6 +225,50 @@ function handleRequestChooseAttackers(state: GameState, player: PlayerId, maxAtt
     type: 'choose_attackers',
     playerId: player,
     maxAttackers,
+  });
+}
+
+function handleRequestCostDiscount(
+  state: GameState,
+  step: { player: PlayerId; cardInstanceId: string; costDiscount: CostDiscount; externalCostReduction: number },
+): StepResult {
+  const { player, cardInstanceId, costDiscount, externalCostReduction } = step;
+  const filter = costDiscount.filter;
+
+  // Find valid targets
+  const validTargetIds = state.cards
+    .filter(c => {
+      const def = getCardDef(c);
+      if (filter.type) {
+        const types = Array.isArray(filter.type) ? filter.type : [filter.type];
+        if (!types.includes(def.type)) return false;
+      }
+      if (filter.zone) {
+        const zones = Array.isArray(filter.zone) ? filter.zone : [filter.zone];
+        if (!zones.includes(c.zone)) return false;
+      }
+      if (filter.owner === 'controller' && c.owner !== player) return false;
+      if (filter.owner === 'opponent' && c.owner === player) return false;
+      return true;
+    })
+    .map(c => c.instanceId);
+
+  if (validTargetIds.length === 0) {
+    // No valid targets — play at full price (skipping discount)
+    const playSteps = playCard(state, player, cardInstanceId, {
+      costReduction: externalCostReduction,
+      skipCostDiscount: true,
+    });
+    return { state, events: [], prepend: playSteps };
+  }
+
+  return setPendingChoice(state, {
+    type: 'choose_cost_discount',
+    playerId: player,
+    cardInstanceId,
+    costDiscount,
+    externalCostReduction,
+    validTargetIds,
   });
 }
 

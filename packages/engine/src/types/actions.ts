@@ -17,7 +17,8 @@ export type PlayerAction =
   | { type: 'choose_mode'; modeIndex: number }
   | { type: 'choose_attackers'; attackerIds: string[] }
   | { type: 'choose_trigger'; triggerIndex: number }
-  | { type: 'skip_trigger'; triggerIndex: number };
+  | { type: 'skip_trigger'; triggerIndex: number }
+  | { type: 'choose_cost_discount_targets'; targetInstanceIds: string[] };
 
 export interface ActionInput {
   player: PlayerId;

@@ -3,12 +3,14 @@ import { AbilityDefinition, AbilityTiming, EffectPrimitive, Mode } from './effec
 import { CombatResponseTrigger, LastingEffectExpiration, LastingEffectType, TriggerOption } from "./state";
 import { ResolveContext } from "../abilities/primitives";
 import { CounterType } from './counters';
+import { CostDiscount } from './cards';
 
 export type EngineStep =
   // Player Input
   | { type: 'request_choose_mode', player: PlayerId; sourceCardId: string; modes: Mode[] }
   | { type: 'request_choose_discard', player: PlayerId; sourceCardId: string; count: number }
   | { type: 'request_choose_attackers', player: PlayerId; maxAttackers?: number }
+  | { type: 'request_cost_discount'; player: PlayerId; cardInstanceId: string; costDiscount: CostDiscount; externalCostReduction: number }
   // Effect Resolution
   | { type: 'resolve_effects'; effects: EffectPrimitive[]; ctx: ResolveContext }
   | { type: 'resolve_ability_at_index'; controller: PlayerId; sourceCardId: string; abilityIndex: number; triggeringCardId?: string }
