@@ -315,6 +315,27 @@ export const followers: CardDefinition[] = [
     passiveEffects: [{ type: 'cost_reduction', cardTypes: ['event', 'location'], amount: 1 }],
   },
   {
+    id: 'heedless_investor',
+    name: 'Heedless Investor',
+    type: 'follower',
+    guild: 'stars',
+    cost: 1,
+    standingRequirement: { stars: 1 },
+    strength: 1,
+    health: 2,
+    description: 'Enters: If you control a location, gain 3 mythium. Otherwise, gain 1 standing with any guild.',
+    abilities: [{
+      timing: 'enters',
+      effects: [{
+        type: 'conditional',
+        condition: { type: 'min_card_count', filter: { type: 'location', zone: ['board'], owner: 'controller' }, count: 1 },
+        effects: [{ type: 'gain_mythium', player: 'self', amount: 3 }],
+        else: [{ type: 'gain_standing', player: 'self', guild: 'choose', amount: 1 }],
+      }],
+      description: 'If you control a location, gain 3 mythium. Otherwise, gain 1 standing with any guild.',
+    }],
+  },
+  {
     id: 'irate_vandal',
     name: 'Irate Vandal',
     type: 'follower',

@@ -55,7 +55,7 @@ export type EffectPrimitive =
   | { type: 'buff_attackers'; counter: 'strength_buff'; amount: number }
   | { type: 'choose_one'; modes: Mode[] }
   | { type: 'play_card'; target: TargetSelector; costReduction?: number }
-  | { type: 'conditional'; condition: Condition; effects: EffectPrimitive[] }
+  | { type: 'conditional'; condition: Condition; effects: EffectPrimitive[]; else?: EffectPrimitive[] }
   | { type: 'develop'; target: TargetSelector }
   | { type: 'initiate_attack'; maxAttackers?: number }
   | { type: 'lose_standing'; player: PlayerSelector; guild: StandingGuild; amount: number }

@@ -17,6 +17,7 @@ Engine is imported by server as a workspace dependency. Client does NOT import e
 - `getLegalActions(state)` returns every valid action for the current state.
 - `PendingChoice` represents the engine waiting for player input (target selection, blocker assignment, discard, breach).
 - `StandingGuild` (`earth | moon | void | stars`) is used for standing records and buy/gain standing. `Guild` adds `neutral` — cards can be neutral guild but you can't have neutral standing.
+- Triggered abilities can be `forced: true` or optional (default). A single forced trigger auto-resolves. Any other case (multiple triggers, or a single non-forced trigger) presents a `choose_trigger_order` pending choice, allowing the player to choose order or skip optional triggers. In tests, use `autoAccept` helper or handle the `choose_trigger` / `skip_trigger` action when testing cards with non-forced triggers.
 
 ## Commands
 

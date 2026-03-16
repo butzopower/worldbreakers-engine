@@ -48,7 +48,7 @@ export const atokStars: DeckConfig = {
     'pacify',
     'frantic_getaway',
     // 'throes_of_fancy',
-    // 'heedless_investor',
+    'heedless_investor',
     // 'mothkeeper',
     // 'sly_sentinel',
     // 'solemn_guardian',

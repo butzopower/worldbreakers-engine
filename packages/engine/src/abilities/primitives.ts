@@ -174,14 +174,12 @@ export function resolvePrimitive(
     }
     case 'conditional': {
       const { condition, effects: innerEffects } = effect;
+      const resolveCtx = {controller: ctx.controller, sourceCardId: ctx.sourceCardId, triggeringCardId: ctx.triggeringCardId};
       if (isConditionMet(state, condition, ctx)) {
-        return [
-          {
-            type: 'resolve_effects',
-            effects: innerEffects,
-            ctx: {controller: ctx.controller, sourceCardId: ctx.sourceCardId, triggeringCardId: ctx.triggeringCardId},
-          }
-        ]
+        return [{ type: 'resolve_effects', effects: innerEffects, ctx: resolveCtx }];
+      }
+      if (effect.else) {
+        return [{ type: 'resolve_effects', effects: effect.else, ctx: resolveCtx }];
       }
       return [];
     }
