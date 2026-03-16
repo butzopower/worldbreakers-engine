@@ -615,6 +615,22 @@ export const followers: CardDefinition[] = [
     description: 'Overwhelm (When this defeats a blocker, gain 1 power.)',
   },
   {
+    id: 'the_blind_sculptor',
+    name: 'The Blind Sculptor',
+    type: 'follower',
+    guild: 'stars',
+    cost: 4,
+    strength: 4,
+    health: 4,
+    standingRequirement: { stars: 3 },
+    abilities: [{
+      timing: 'rally',
+      effects: [{ type: 'develop', target: { kind: 'choose', filter: { type: 'location', zone: ['board'], owner: 'controller' }, count: 1 } }],
+      description: 'Rally: Develop a location you control.',
+    }],
+    description: 'Rally: Develop a location you control.',
+  },
+  {
     id: 'void_apprentice',
     name: 'Void Apprentice',
     type: 'follower',
