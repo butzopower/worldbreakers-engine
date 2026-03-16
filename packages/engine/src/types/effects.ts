@@ -67,7 +67,8 @@ export type EffectPrimitive =
   | { type: 'register_combat_response'; trigger: CombatResponseTrigger; effects: EffectPrimitive[] }
   | { type: 'exhausts'; effects: EffectPrimitive[] }
   | { type: 'custom_resolve'; customResolve: string }
-  | { type: 'grant_bonus_action'; player: PlayerSelector };
+  | { type: 'grant_bonus_action'; player: PlayerSelector }
+  | { type: 'remove_from_combat'; target: TargetSelector };
 
 export type AbilityTiming =
   | 'enters'

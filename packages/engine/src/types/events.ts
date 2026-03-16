@@ -33,4 +33,5 @@ export type GameEvent =
   | { type: 'game_over'; winner: PlayerId | 'draw' }
   | { type: 'lasting_effect_created'; effectId: string; description: string }
   | { type: 'lasting_effect_expired'; effectId: string }
-  | { type: 'reveal'; player: PlayerId; cardDefinitionIds: string[] };
+  | { type: 'reveal'; player: PlayerId; cardDefinitionIds: string[] }
+  | { type: 'removed_from_combat'; cardInstanceId: string };

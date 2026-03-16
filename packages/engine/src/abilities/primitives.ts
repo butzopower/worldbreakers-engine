@@ -286,6 +286,10 @@ export function resolvePrimitive(
       const players = resolvePlayerSelector(effect.player, ctx);
       return players.map(player => ({ type: 'grant_bonus_action' as const, player }));
     }
+    case 'remove_from_combat': {
+      const targets = resolveTargets(state, effect.target, ctx);
+      return targets.map(cardInstanceId => ({ type: 'remove_from_combat' as const, cardInstanceId }));
+    }
   }
 
   return [];

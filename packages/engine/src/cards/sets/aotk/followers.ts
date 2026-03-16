@@ -561,6 +561,23 @@ export const followers: CardDefinition[] = [
     keywords: ['overwhelm'],
   },
   {
+    id: 'sly_sentinel',
+    name: 'Sly Sentinel',
+    type: 'follower',
+    guild: 'stars',
+    cost: 3,
+    strength: 2,
+    health: 3,
+    standingRequirement: { stars: 1 },
+    keywords: ['stationary'],
+    abilities: [{
+      timing: 'blocks',
+      customResolve: 'sly_sentinel_blocks',
+      description: 'Blocks: Remove from combat an attacking follower other than the follower Sly Sentinel is blocking.',
+    }],
+    description: 'Stationary (This cannot attack.) Blocks: Remove from combat an attacking follower other than the follower Sly Sentinel is blocking.',
+  },
+  {
     id: 'solemn_guardian',
     name: 'Solemn Guardian',
     type: 'follower',
@@ -744,6 +761,23 @@ export const followerResolvers: { key: string; resolver: CustomResolverFn }[] = 
       const total = STANDING_GUILDS.reduce((sum, guild) => sum + standing[guild], 0);
       if (total <= 0) return [];
       return [{ type: 'gain_mythium', player: ctx.controller, amount: total}];
+    },
+  },
+  {
+    key: 'sly_sentinel_blocks',
+    resolver: (state: GameState, ctx: ResolveContext) => {
+      if (!state.combat) return [];
+      // Other attackers in combat (excluding the one being blocked)
+      const otherAttackerIds = state.combat.attackerIds.filter(id => id !== ctx.triggeringCardId);
+      if (otherAttackerIds.length === 0) return [];
+      return [{
+        type: 'resolve_effects',
+        effects: [{
+          type: 'remove_from_combat',
+          target: { kind: 'choose', filter: { type: 'follower', zone: ['board'], cardInstanceIds: otherAttackerIds }, count: 1 },
+        }],
+        ctx: { controller: ctx.controller, sourceCardId: ctx.sourceCardId, triggeringCardId: ctx.triggeringCardId },
+      }];
     },
   },
 ];

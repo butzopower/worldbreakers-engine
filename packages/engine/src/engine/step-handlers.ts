@@ -162,6 +162,8 @@ export function executeStep(state: GameState, step: EngineStep): StepResult {
       return handleRegisterCombatResponse(state, step);
     case 'grant_bonus_action':
       return handleGrantBonusAction(state, step.player);
+    case 'remove_from_combat':
+      return handleRemoveFromCombat(state, step.cardInstanceId);
   }
 }
 
@@ -543,6 +545,16 @@ function handleGainPower(state: GameState, player: PlayerId, amount: number): St
     events: result.events,
     prepend: [{ type: 'check_triggers', timing: 'first_power_gain_this_round', player }],
   };
+}
+
+function handleRemoveFromCombat(state: GameState, cardInstanceId: string): StepResult {
+  if (!state.combat) return { state, events: [] };
+  const newAttackerIds = state.combat.attackerIds.filter(id => id !== cardInstanceId);
+  const s: GameState = {
+    ...state,
+    combat: { ...state.combat, attackerIds: newAttackerIds },
+  };
+  return { state: s, events: [{ type: 'removed_from_combat', cardInstanceId }] };
 }
 
 function handleGrantBonusAction(state: GameState, player: PlayerId): StepResult {
