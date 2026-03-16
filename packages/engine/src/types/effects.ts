@@ -66,7 +66,8 @@ export type EffectPrimitive =
   | { type: 'lose_power'; player: PlayerSelector; amount: number }
   | { type: 'register_combat_response'; trigger: CombatResponseTrigger; effects: EffectPrimitive[] }
   | { type: 'exhausts'; effects: EffectPrimitive[] }
-  | { type: 'custom_resolve'; customResolve: string };
+  | { type: 'custom_resolve'; customResolve: string }
+  | { type: 'grant_bonus_action'; player: PlayerSelector };
 
 export type AbilityTiming =
   | 'enters'

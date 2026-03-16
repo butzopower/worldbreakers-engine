@@ -28,6 +28,8 @@ function createPlayerState(guild: Guild): PlayerState {
     power: 0,
     standing: standing,
     handSize: 0,
+    bonusActions: 0,
+    pendingBonusActions: 0,
   };
 }
 

@@ -282,6 +282,10 @@ export function resolvePrimitive(
         },
       ];
     }
+    case 'grant_bonus_action': {
+      const players = resolvePlayerSelector(effect.player, ctx);
+      return players.map(player => ({ type: 'grant_bonus_action' as const, player }));
+    }
   }
 
   return [];

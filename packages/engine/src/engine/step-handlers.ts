@@ -158,6 +158,8 @@ export function executeStep(state: GameState, step: EngineStep): StepResult {
       return handleGrantLastingEffect(state, step);
     case 'register_combat_response':
       return handleRegisterCombatResponse(state, step);
+    case 'grant_bonus_action':
+      return handleGrantBonusAction(state, step.player);
   }
 }
 
@@ -349,10 +351,45 @@ function handleAdvanceTurn(state: GameState): StepResult {
     return { state: s, events, prepend: rallySteps };
   }
 
+  // Check if current player has bonus actions to consume
+  const currentPlayer = s.activePlayer;
+  const currentPlayerState = s.players[currentPlayer];
+  if (currentPlayerState.bonusActions > 0) {
+    // Consume a bonus action: undo the actionsTaken increment, stay on same player
+    s = {
+      ...s,
+      actionsTaken: s.actionsTaken - 1,
+      players: {
+        ...s.players,
+        [currentPlayer]: {
+          ...currentPlayerState,
+          bonusActions: currentPlayerState.bonusActions - 1,
+        },
+      },
+    };
+    return { state: s, events };
+  }
+
   // Alternate active player
   const nextPlayer = s.activePlayer === s.firstPlayer
     ? opponentOf(s.firstPlayer)
     : s.firstPlayer;
+
+  // Convert pending bonus actions for the next player
+  const nextPlayerState = s.players[nextPlayer];
+  if (nextPlayerState.pendingBonusActions > 0) {
+    s = {
+      ...s,
+      players: {
+        ...s.players,
+        [nextPlayer]: {
+          ...nextPlayerState,
+          bonusActions: nextPlayerState.bonusActions + nextPlayerState.pendingBonusActions,
+          pendingBonusActions: 0,
+        },
+      },
+    };
+  }
 
   s = { ...s, activePlayer: nextPlayer };
   events.push({ type: 'turn_changed', activePlayer: nextPlayer });
@@ -467,6 +504,10 @@ function handleRallyNewRound(state: GameState): StepResult {
     firstPlayer: newFirstPlayer,
     activePlayer: newFirstPlayer,
     defeatedThisRound: [],
+    players: {
+      player1: { ...state.players.player1, bonusActions: 0, pendingBonusActions: 0 },
+      player2: { ...state.players.player2, bonusActions: 0, pendingBonusActions: 0 },
+    },
   };
 
   // Expire end-of-round lasting effects
@@ -478,6 +519,23 @@ function handleRallyNewRound(state: GameState): StepResult {
   events.push({ type: 'turn_changed', activePlayer: s.activePlayer });
 
   return { state: s, events };
+}
+
+function handleGrantBonusAction(state: GameState, player: PlayerId): StepResult {
+  const playerState = state.players[player];
+  return {
+    state: {
+      ...state,
+      players: {
+        ...state.players,
+        [player]: {
+          ...playerState,
+          pendingBonusActions: playerState.pendingBonusActions + 1,
+        },
+      },
+    },
+    events: [],
+  };
 }
 
 // --- Effect/Ability Resolution Steps ---

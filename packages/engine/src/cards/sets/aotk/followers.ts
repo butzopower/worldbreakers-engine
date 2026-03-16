@@ -65,6 +65,22 @@ export const followers: CardDefinition[] = [
     description: 'Attacks: Gain 2 Mythium.',
   },
   {
+    id: 'auspicious_smuggler',
+    name: 'Auspicious Smuggler',
+    type: 'follower',
+    guild: 'stars',
+    cost: 3,
+    standingRequirement: { stars: 2 },
+    strength: 1,
+    health: 3,
+    description: 'Enters: Take an additional action on your next turn this round.',
+    abilities: [{
+      timing: 'enters',
+      effects: [{ type: 'grant_bonus_action', player: 'self' }],
+      description: 'Take an additional action on your next turn this round.',
+    }],
+  },
+  {
     id: 'alamut_emissary',
     name: 'Alamut Emissary',
     type: 'follower',

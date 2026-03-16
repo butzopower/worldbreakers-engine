@@ -65,4 +65,5 @@ export type EngineStep =
   | { type: 'lose_standing'; player: PlayerId; guild: StandingGuild; amount: number }
   | { type: 'grant_lasting_effect'; effectType: LastingEffectType; amount: number; targetInstanceIds: string[]; expiresAt: LastingEffectExpiration }
   | { type: 'register_combat_response'; trigger: CombatResponseTrigger; effects: EffectPrimitive[]; controller: PlayerId; sourceCardId: string }
+  | { type: 'grant_bonus_action'; player: PlayerId }
   ;

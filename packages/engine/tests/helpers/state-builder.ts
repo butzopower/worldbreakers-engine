@@ -10,6 +10,8 @@ function defaultPlayerState(): PlayerState {
     power: 0,
     standing: { earth: 0, moon: 0, void: 0, stars: 0 },
     handSize: 0,
+    bonusActions: 0,
+    pendingBonusActions: 0,
   };
 }
 

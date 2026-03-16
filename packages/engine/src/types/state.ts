@@ -68,6 +68,8 @@ export interface PlayerState {
   power: number;
   standing: Record<StandingGuild, number>;
   handSize: number;
+  bonusActions: number;
+  pendingBonusActions: number;
 }
 
 export interface GameState {
