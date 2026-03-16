@@ -56,7 +56,7 @@ export const atokStars: DeckConfig = {
     'auspicious_smuggler',
     // 'suave_sycophant',
     // 'the_blind_sculptor',
-    // 'illicit_bazaar',
+    'illicit_bazaar',
     'mesmerizing_maze',
     'covert_exchange',
     'weaving_workshop',

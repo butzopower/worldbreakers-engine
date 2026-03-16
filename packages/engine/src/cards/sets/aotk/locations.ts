@@ -90,6 +90,46 @@ export const locations: CardDefinition[] = [
     description: 'Hidden (Your opponent cannot damage this location.) I: Gain 4 mythium. II: Draw 2 cards. III: Draw 1 card and gain 2 mythium.',
   },
   {
+    id: 'illicit_bazaar',
+    name: 'Illicit Bazaar',
+    type: 'location',
+    guild: 'stars',
+    cost: 0,
+    standingRequirement: { stars: 1 },
+    stages: 3,
+    keywords: ['hidden'],
+    locationStages: [
+      {
+        stage: 1,
+        ability: {
+          timing: 'enters',
+          effects: [
+            { type: 'gain_mythium', player: 'self', amount: 2 },
+            { type: 'gain_standing', player: 'self', guild: 'choose', amount: 1 },
+          ],
+          description: 'Gain 2 mythium and 1 standing with any guild.',
+        },
+      },
+      {
+        stage: 2,
+        ability: {
+          timing: 'enters',
+          effects: [{ type: 'gain_mythium', player: 'self', amount: 2 }],
+          description: 'Gain 2 mythium.',
+        },
+      },
+      {
+        stage: 3,
+        ability: {
+          timing: 'enters',
+          effects: [{ type: 'gain_mythium', player: 'self', amount: 2 }],
+          description: 'Gain 2 mythium.',
+        },
+      },
+    ],
+    description: 'Hidden (Your opponent cannot damage this location.) I: Gain 2 mythium and 1 standing with any guild. II: Gain 2 mythium. III: Gain 2 mythium.',
+  },
+  {
     id: 'mesmerizing_maze',
     name: 'Mesmerizing Maze',
     type: 'location',
