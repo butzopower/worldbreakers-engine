@@ -389,7 +389,9 @@ function handleRallyReady(state: GameState, player: PlayerId): StepResult {
   ];
 
   const board = getBoard(s, player);
-  for (const card of board) {
+  const worldbreaker = getWorldbreaker(s, player);
+  const cardsToReady = worldbreaker ? [...board, worldbreaker] : board;
+  for (const card of cardsToReady) {
     const stunCount = getCounter(card.counters, 'stun');
     if (stunCount > 0) {
       const removeResult = removeCounterFromCard(s, card.instanceId, 'stun', 1);

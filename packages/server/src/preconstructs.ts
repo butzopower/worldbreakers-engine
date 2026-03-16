@@ -35,3 +35,39 @@ export const atokEarth: DeckConfig = {
     'the_humble_underpass'
   ],
 }
+
+export const atokStars: DeckConfig = {
+  worldbreakerId: 'marco_polo_robed_in_silk',
+  cardIds: [
+    'silkworm_terrarium',
+    'polos_portraitist',
+    // 'exploitative_extraction',
+    'proof_of_the_grotto',
+    // 'inspirational_vision',
+    'straight_to_the_source',
+    'pacify',
+    'frantic_getaway',
+    // 'throes_of_fancy',
+    // 'heedless_investor',
+    // 'mothkeeper',
+    // 'sly_sentinel',
+    // 'solemn_guardian',
+    'generous_dealer',
+    // 'auspicious_smuggler',
+    // 'suave_sycophant',
+    // 'the_blind_sculptor',
+    // 'illicit_bazaar',
+    // 'mesmerizing_maze',
+    'covert_exchange',
+    // 'weaving_workshop',
+    'the_uncanny_valley',
+    'surprising_development',
+    'caravan_guard',
+    'lowly_bard',
+    'stars_apprentice',
+    'the_humble_underpass',
+    'the_submerged_brilliance',
+    'the_den_of_sabers',
+    'the_pit_of_despair',
+  ]
+}

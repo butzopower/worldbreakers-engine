@@ -4,9 +4,10 @@ import {
   type GameEvent, type PendingChoice, type DeckConfig,
 } from '@worldbreakers/engine';
 import type { FilteredGameState, FilteredCard, HiddenCard } from './types';
-import { atokEarth } from "./preconstructs";
+import { atokEarth, atokStars } from "./preconstructs";
 
 const DEFAULT_DECK = atokEarth;
+const DEFAULT_DECK_2 = atokStars;
 
 // Ensure test cards are registered
 let cardsRegistered = false;
@@ -38,7 +39,7 @@ export class GameSession {
     this.playerSocketIds.player1 = player1SocketId;
     this.state = createGameState({
       player1Deck: player1Deck ?? DEFAULT_DECK,
-      player2Deck: player2Deck ?? DEFAULT_DECK,
+      player2Deck: player2Deck ?? DEFAULT_DECK_2,
       seed: Date.now(),
     });
   }
