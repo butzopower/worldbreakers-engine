@@ -90,6 +90,40 @@ export const locations: CardDefinition[] = [
     description: 'Hidden (Your opponent cannot damage this location.) I: Gain 4 mythium. II: Draw 2 cards. III: Draw 1 card and gain 2 mythium.',
   },
   {
+    id: 'mesmerizing_maze',
+    name: 'Mesmerizing Maze',
+    type: 'location',
+    guild: 'stars',
+    cost: 3,
+    standingRequirement: { stars: 1 },
+    stages: 2,
+    locationStages: [
+      {
+        stage: 1,
+        ability: {
+          timing: 'enters',
+          effects: [
+            { type: 'gain_standing', player: 'self', guild: 'stars', amount: 1 },
+            { type: 'gain_power', player: 'self', amount: 1 },
+          ],
+          description: 'Gain 1 stars standing and 1 power.',
+        },
+      },
+      {
+        stage: 2,
+        ability: {
+          timing: 'enters',
+          effects: [
+            { type: 'gain_power', player: 'self', amount: 1 },
+            { type: 'add_counter', target: { kind: 'choose', filter: { type: 'follower', zone: ['board'] }, count: 1 }, counter: 'stationary', amount: 1 },
+          ],
+          description: 'Gain 1 power. You may put a stationary counter on a follower.',
+        },
+      },
+    ],
+    description: 'I: Gain 1 stars standing and 1 power. II: Gain 1 power. You may put a stationary counter on a follower.',
+  },
+  {
     id: 'silkworm_terrarium',
     name: 'Silkworm Terrarium',
     type: 'location',
