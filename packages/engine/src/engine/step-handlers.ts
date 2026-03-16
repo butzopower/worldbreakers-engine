@@ -101,6 +101,8 @@ export function executeStep(state: GameState, step: EngineStep): StepResult {
       return handleCombatDeclareBlockers(state, step.defender, step.attackerIds);
     case 'combat_fight':
       return handleCombatFight(state, step.attackerId, step.blockerId);
+    case 'combat_resolve_fight':
+      return handleCombatResolveFight(state, step.attackerId, step.blockerId);
     case 'check_overwhelm_trigger':
       return handleCombatCheckOverwhelm(state, step.attackerId);
     case 'combat_post_block':
@@ -749,7 +751,6 @@ function handleCombatFight(state: GameState, attackerId: string, blockerId: stri
 
   let s = state;
   const events: GameEvent[] = [];
-  const prepend: EngineStep[] = [];
 
   const defender = opponentOf(state.combat.attackingPlayer);
 
@@ -757,6 +758,35 @@ function handleCombatFight(state: GameState, attackerId: string, blockerId: stri
   s = exhaustResult.state;
   events.push(...exhaustResult.events);
   events.push({ type: 'blocker_declared', defendingPlayer: defender, blockerId, attackerId });
+
+  // Check blocks triggers on the blocker before resolving fight damage
+  const prepend: EngineStep[] = [];
+  const blockerCard = getCard(s, blockerId);
+  if (blockerCard) {
+    const blockerDef = getCardDef(blockerCard);
+    if (blockerDef.abilities) {
+      const blocksTriggers: TriggerOption[] = [];
+      for (let i = 0; i < blockerDef.abilities.length; i++) {
+        if (blockerDef.abilities[i].timing === 'blocks') {
+          blocksTriggers.push({ sourceCardId: blockerId, abilityIndex: i, triggeringCardId: attackerId, forced: blockerDef.abilities[i].forced === true });
+        }
+      }
+      if (blocksTriggers.length > 0) {
+        prepend.push({ type: 'order_triggers', player: defender, triggers: blocksTriggers });
+      }
+    }
+  }
+  prepend.push({ type: 'combat_resolve_fight', attackerId, blockerId });
+
+  return { state: s, events, prepend };
+}
+
+function handleCombatResolveFight(state: GameState, attackerId: string, blockerId: string): StepResult {
+  if (!state.combat) return { state, events: [] };
+
+  let s = state;
+  const events: GameEvent[] = [];
+  const prepend: EngineStep[] = [];
 
   const fightResult = resolveSingleFight(s, attackerId, blockerId);
   s = fightResult.state;

@@ -34,6 +34,7 @@ export type EngineStep =
   | { type: 'combat_start'; attackingPlayer: PlayerId; attackerIds: string[] }
   | { type: 'combat_declare_blockers'; defender: PlayerId; attackerIds: string[] }
   | { type: 'combat_fight'; attackerId: string; blockerId: string }
+  | { type: 'combat_resolve_fight'; attackerId: string; blockerId: string }
   | { type: 'check_overwhelm_trigger'; attackerId: string }
   | { type: 'combat_post_block'; remainingAttackerIds: string[] }
   | { type: 'combat_breach'; livingAttackerIds: string[] }

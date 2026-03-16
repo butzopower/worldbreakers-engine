@@ -556,6 +556,22 @@ export const followers: CardDefinition[] = [
     description: 'While Sparring Braggart is attacking, followers with strength less than its strength can\'t be blocked. (Blocking Sparring Braggart will remove it from combat.)',
   },
   {
+    id: 'suave_sycophant',
+    name: 'Suave Sycophant',
+    type: 'follower',
+    guild: 'stars',
+    cost: 3,
+    strength: 1,
+    health: 4,
+    standingRequirement: { stars: 2 },
+    abilities: [{
+      timing: 'blocks',
+      effects: [{ type: 'add_counter', target: { kind: 'triggering_card' }, counter: 'stationary', amount: 1 }],
+      description: 'Blocks: Put a stationary counter on the follower Suave Sycophant is blocking.',
+    }],
+    description: 'Blocks: Put a stationary counter on the follower Suave Sycophant is blocking. (Followers with stationary can\'t attack.)',
+  },
+  {
     id: 'stars_apprentice',
     name: 'Stars Apprentice',
     type: 'follower',
