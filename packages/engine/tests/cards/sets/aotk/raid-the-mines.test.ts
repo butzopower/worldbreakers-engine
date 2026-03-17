@@ -111,6 +111,38 @@ describe('Raid the Mines', () => {
     expectPlayerMythium(result.state, 'player1', 3);
   });
 
+  it('breach with confident suitor triggers the response', () => {
+    const state = buildState()
+      .withActivePlayer('player1')
+      .withMythium('player1', 5)
+      .addCard('raid_the_mines', 'player1', 'hand', { instanceId: 'rtm1' })
+      .addCard('confident_suitor', 'player1', 'board', { instanceId: 'cs1' })
+      .build();
+
+    const playResult = processAction(state, {
+      player: 'player1',
+      action: { type: 'play_card', cardInstanceId: 'rtm1' },
+    });
+
+    const chooseAttackers = processAction(playResult.state, {
+      player: 'player1',
+      action: { type: 'choose_attackers', attackerIds: ['cs1'] },
+    });
+
+    const passResult = processAction(chooseAttackers.state, {
+      player: 'player2',
+      action: { type: 'pass_block' },
+    });
+
+    // Confident Suitor's breach trigger is forced, auto-resolves
+    // It gains 6 mythium and defeats itself
+    // Raid the Mines response should also fire on power gain: +5 mythium
+    // 5 starting - 2 cost + 6 (suitor breach) + 5 (response) = 14
+    expectPlayerMythium(passResult.state, 'player1', 14);
+    // 1 power from breach (1 per attacker)
+    expectPlayerPower(passResult.state, 'player1', 1);
+  });
+
   it('overwhelm power gain also triggers the response', () => {
     // champion_of_the_tumen is 4/2 overwhelm
     // lowly_bard is 1/1 (blocker that will be defeated)

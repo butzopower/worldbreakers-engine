@@ -111,8 +111,6 @@ export function executeStep(state: GameState, step: EngineStep): StepResult {
       return handleCombatPostBlock(state, step.remainingAttackerIds);
     case 'combat_breach':
       return handleCombatBreach(state, step.livingAttackerIds);
-    case 'combat_breach_complete':
-      return handleCombatBreachComplete(state);
     case 'choose_breach_target':
       return handleChooseBreachTarget(state, step.player);
     case 'combat_end':
@@ -926,58 +924,40 @@ function handleCombatPostBlock(state: GameState, remainingAttackerIds: string[])
 function handleCombatBreach(state: GameState, livingAttackerIds: string[]): StepResult {
   if (!state.combat) return { state, events: [] };
 
+  const attackingPlayer = state.combat.attackingPlayer;
+
   let s: GameState = {
     ...state,
     combat: { ...state.combat, step: 'breach' },
   };
   const events: GameEvent[] = [
-    { type: 'breach', attackingPlayer: s.combat!.attackingPlayer, attackerIds: livingAttackerIds },
+    { type: 'breach', attackingPlayer, attackerIds: livingAttackerIds },
   ];
-
-  // Queue breach triggers, then complete breach
-  const prepend: EngineStep[] = [
-    { type: 'check_triggers', timing: 'breach', player: s.combat!.attackingPlayer },
-    { type: 'cleanup' },
-    { type: 'combat_breach_complete' },
-  ];
-
-  return { state: s, events, prepend };
-}
-
-function handleCombatBreachComplete(state: GameState): StepResult {
-  if (!state.combat) return { state, events: [] };
-
-  const attackingPlayer = state.combat.attackingPlayer;
-
-  let s = state;
-  const events: GameEvent[] = [];
-
-  // Get living attackers
-  const livingAttackerIds = state.combat.attackerIds.filter(
-    id => s.cards.some(c => c.instanceId === id && c.zone === 'board')
-  );
-
-  // Calculate breach power
-  let breachPower = 0;
-  for (const id of livingAttackerIds) {
-    const card = getCard(s, id);
-    if (card) breachPower++;
-  }
 
   const prepend: EngineStep[] = [];
 
-  // Gain power from breach
+  // Calculate breach power now, while attackers are still alive
+  // (breach triggers like Confident Suitor may destroy attackers)
+  const breachPower = livingAttackerIds.length;
+
   if (breachPower > 0) {
-    // Fire combat responses triggered by successful breach
+    // 1. Gain power from breach
+    // 2. Check combat responses (e.g. Raid the Mines on_power_gain)
+    // 3. Fire breach triggers (e.g. Confident Suitor — "after you gain power from breaching")
+    // 4. Cleanup (in case breach triggers destroy cards)
+    // 5. Choose breach target (location damage)
     prepend.push(
-      { type: 'gain_power', player: attackingPlayer, amount: breachPower},
+      { type: 'gain_power', player: attackingPlayer, amount: breachPower },
       { type: 'check_combat_responses', timing: 'on_power_gain' },
-      { type: 'choose_breach_target', player: attackingPlayer }
+      { type: 'check_triggers', timing: 'breach', player: attackingPlayer },
+      { type: 'cleanup' },
+      { type: 'choose_breach_target', player: attackingPlayer },
     );
   }
 
-  // No locations — end combat via the queue
-  return { state: s, events, prepend: [...prepend, { type: 'combat_end' }] };
+  prepend.push({ type: 'combat_end' });
+
+  return { state: s, events, prepend };
 }
 
 function handleChooseBreachTarget(s: GameState, playerId: PlayerId): StepResult {

@@ -40,7 +40,6 @@ export type EngineStep =
   | { type: 'combat_post_block'; remainingAttackerIds: string[] }
   | { type: 'combat_breach'; livingAttackerIds: string[] }
   | { type: 'choose_breach_target', player: PlayerId; }
-  | { type: 'combat_breach_complete' }
   | { type: 'combat_end' }
   // Locations
   | { type: 'develop'; player: PlayerId; locationId: string; }
