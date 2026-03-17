@@ -89,9 +89,7 @@ export default function CardTooltip({cardDef, card, lastingEffects, children}: P
               <span className={styles.cardName} style={{ color: guildColor }}>
                 {cardDef.name}
               </span>
-              {cardDef.cost > 0 && (
-                <span className={styles.costBadge}>{cardDef.cost}</span>
-              )}
+              {cardDef.type !== 'worldbreaker' && <span className={styles.costBadge}>{cardDef.cost}</span>}
             </div>
 
             {/* Type line */}

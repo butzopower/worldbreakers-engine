@@ -108,7 +108,7 @@ export default function FollowerCard({ card, highlighted, selected, dimmed, onCl
       >
         <div className={styles.cardName} style={{ color: guildColor }}>
           {cardDef.name}
-          {compact && cardDef.cost > 0 && <span className={styles.cardCost}>{cardDef.cost}</span>}
+          {cardDef.type !== 'worldbreaker' && <span className={styles.cardCost}>{cardDef.cost}</span>}
         </div>
 
         {cardDef.type === 'follower' && (
@@ -123,7 +123,7 @@ export default function FollowerCard({ card, highlighted, selected, dimmed, onCl
           </div>
         )}
 
-        {cardDef.type === 'location' && (
+        {cardDef.type === 'location' && (card.counters['stage'] ?? 0 > 0) && (
           <div className={compact ? styles['stageLabel--compact'] : styles.stageLabel}>
             Stage {card.counters['stage'] ?? 0}
           </div>

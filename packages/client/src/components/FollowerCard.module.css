@@ -48,6 +48,7 @@
 .cardCost {
   float: right;
   color: var(--color-muted);
+  text-transform: uppercase;
 }
 
 .statsRow {
