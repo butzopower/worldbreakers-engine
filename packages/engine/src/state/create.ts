@@ -3,6 +3,7 @@ import { GameState, PlayerState, CardInstance } from '../types/state';
 import { generateInstanceId, resetIdCounter } from '../utils/id';
 import { getCardDefinition } from "../cards/registry";
 import { shuffleDeck } from "./mutate";
+import { nextRandom } from '../utils/random';
 
 export interface DeckConfig {
   worldbreakerId: string;
@@ -69,7 +70,14 @@ export function createGameState(config: GameConfig): GameState {
   const p2Cards = config.player2Deck.cardIds.map(id => createCardInstance(id, 'player2', 'deck'));
   cards.push(...p2Cards);
 
-  const firstPlayer = config.firstPlayer ?? 'player1';
+  let firstPlayer: PlayerId;
+  if (config.firstPlayer) {
+    firstPlayer = config.firstPlayer;
+  } else {
+    const [rand, nextRngState] = nextRandom(rngState);
+    rngState = nextRngState;
+    firstPlayer = rand < 0.5 ? 'player1' : 'player2';
+  }
 
   // Draw opening hands (5 cards each)
   let state: GameState = {

@@ -29,6 +29,7 @@ describe('createGameState', () => {
                   'star_warden', 'earthshaker_giant', 'sudden_strike', 'void_rift', 'void_nexus'],
       },
       seed: 42,
+      firstPlayer: 'player1',
     };
 
     const state = createGameState(config);
