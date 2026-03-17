@@ -205,6 +205,15 @@ function validatePendingChoice(state: GameState, player: PlayerId, action: Playe
       }
       return { valid: true };
 
+    case 'choose_play_order':
+      if (action.type !== 'choose_play' && action.type !== 'skip_play') {
+        return { valid: false, reason: 'Must choose or skip a play' };
+      }
+      if (!choice.cardInstanceIds.includes(action.cardInstanceId)) {
+        return { valid: false, reason: 'Card is not available to play' };
+      }
+      return { valid: true };
+
     default:
       return { valid: false, reason: 'Unknown choice type' };
   }

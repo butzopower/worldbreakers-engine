@@ -77,6 +77,10 @@ export default function GameView({ playerId, state, legalActions, events, onRetu
         );
         break;
       }
+      case 'choose_play_order': {
+        interaction.startPlayOrderSelection(choice.cardInstanceIds);
+        break;
+      }
     }
   }, [state.pendingChoice?.type, state.version]);
 

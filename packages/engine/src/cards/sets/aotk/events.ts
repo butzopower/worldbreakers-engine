@@ -352,6 +352,20 @@ export const events: CardDefinition[] = [
     }],
   },
   {
+    id: 'throes_of_fancy',
+    name: 'Throes of Fancy',
+    type: 'event',
+    guild: 'stars',
+    cost: 1,
+    standingRequirement: { stars: 3 },
+    description: 'Reveal cards from the top of your deck until you reveal a follower and a location. Draw them both and shuffle your deck. You may play either or both of those cards (paying all costs).',
+    abilities: [{
+      timing: 'play',
+      customResolve: 'throes_of_fancy',
+      description: 'Reveal cards from the top of your deck until you reveal a follower and a location. Draw them both and shuffle your deck. You may play either or both of those cards (paying all costs).',
+    }],
+  },
+  {
     id: 'wild_boar_charge',
     name: 'Wild Boar Charge',
     type: 'event',
@@ -469,6 +483,45 @@ export const eventResolvers: {key: string, resolver: CustomResolverFn}[] = [
         sourceCardId: ctx.sourceCardId,
         modes,
       }];
+    },
+  },
+  {
+    key: 'throes_of_fancy',
+    resolver: (state: GameState, ctx: ResolveContext): EngineStep[] => {
+      const player = ctx.controller;
+      const deck = getDeck(state, player);
+
+      const cardsToReveal: CardInstance[] = [];
+      let foundFollower: CardInstance | undefined;
+      let foundLocation: CardInstance | undefined;
+
+      for (const card of deck) {
+        cardsToReveal.push(card);
+        if (!foundFollower && isFollower(card)) foundFollower = card;
+        if (!foundLocation && getCardDef(card).type === 'location') foundLocation = card;
+        if (foundFollower && foundLocation) break;
+      }
+
+      const steps: EngineStep[] = [];
+
+      if (foundFollower) steps.push({ type: 'move_card', cardInstanceId: foundFollower.instanceId, toZone: 'hand' });
+      if (foundLocation) steps.push({ type: 'move_card', cardInstanceId: foundLocation.instanceId, toZone: 'hand' });
+
+      if (cardsToReveal.length > 0) {
+        steps.push({ type: 'reveal_cards', player, cardDefinitionIds: cardsToReveal.map(c => c.definitionId) });
+      }
+
+      steps.push({ type: 'shuffle_deck', player });
+
+      const toPlay = [
+        ...(foundFollower ? [foundFollower.instanceId] : []),
+        ...(foundLocation ? [foundLocation.instanceId] : []),
+      ];
+      if (toPlay.length > 0) {
+        steps.push({ type: 'request_choose_play_order', player, cardInstanceIds: toPlay });
+      }
+
+      return steps;
     },
   },
   {

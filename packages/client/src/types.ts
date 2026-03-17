@@ -50,7 +50,8 @@ export type PendingChoice =
   | { type: 'choose_breach_target'; playerId: PlayerId; validLocationIds: string[] }
   | { type: 'choose_mode'; playerId: PlayerId; sourceCardId: string; modes: { label: string; effects: unknown[] }[] }
   | { type: 'choose_trigger_order'; playerId: PlayerId; triggers: TriggerOption[] }
-  | { type: 'choose_cost_discount'; playerId: PlayerId; cardInstanceId: string; costDiscount: { costReduction: number; perTarget?: boolean; maxTargets?: number }; validTargetIds: string[] };
+  | { type: 'choose_cost_discount'; playerId: PlayerId; cardInstanceId: string; costDiscount: { costReduction: number; perTarget?: boolean; maxTargets?: number }; validTargetIds: string[] }
+  | { type: 'choose_play_order'; playerId: PlayerId; cardInstanceIds: string[] };
 
 export type LasingEffect = {
   type: string;
@@ -94,7 +95,7 @@ export interface ClientCardDefinition {
   name: string;
   type: string;
   guild: string;
-  cost: number;
+  cost: number | 'x';
   strength?: number;
   health?: number;
   stages?: number;
@@ -114,4 +115,5 @@ export type InteractionMode =
   | { type: 'choose_breach_target'; validLocations: string[] }
   | { type: 'choose_mode'; modes: { label: string }[] }
   | { type: 'choose_trigger_order'; triggers: TriggerOption[] }
-  | { type: 'choose_cost_discount'; validTargets: string[]; maxTargets: number; selected: string[] };
+  | { type: 'choose_cost_discount'; validTargets: string[]; maxTargets: number; selected: string[] }
+  | { type: 'choose_play_order'; cardInstanceIds: string[] };

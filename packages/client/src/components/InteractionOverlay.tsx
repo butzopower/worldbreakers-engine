@@ -120,6 +120,9 @@ export default function InteractionOverlay({ mode, state, playerId, onSubmitActi
     case 'choose_trigger_order':
       return <TriggerOrderPanel mode={mode} state={state} onSubmitAction={onSubmitAction} />;
 
+    case 'choose_play_order':
+      return <PlayOrderPanel mode={mode} state={state} onSubmitAction={onSubmitAction} />;
+
     case 'choose_cost_discount':
       return (
         <div className={styles.panel}>
@@ -138,6 +141,44 @@ export default function InteractionOverlay({ mode, state, playerId, onSubmitActi
         </div>
       );
   }
+}
+
+function PlayOrderPanel({ mode, state, onSubmitAction }: {
+  mode: Extract<InteractionMode, { type: 'choose_play_order' }>;
+  state: FilteredGameState;
+  onSubmitAction: (action: PlayerAction) => void;
+}) {
+  const cardDefs = useCardDefinitions();
+
+  function getCardName(instanceId: string) {
+    const card = state.cards.find(c => isVisible(c) && c.instanceId === instanceId);
+    if (!card || !isVisible(card)) return instanceId;
+    return cardDefs[card.definitionId]?.name ?? card.definitionId;
+  }
+
+  return (
+    <div className={styles.panel}>
+      <div className={styles.instructions}>Choose which card to play next (or skip):</div>
+      <div className={styles.triggerList}>
+        {mode.cardInstanceIds.map(id => (
+          <div key={id} className={styles.triggerRow}>
+            <button
+              onClick={() => onSubmitAction({ type: 'choose_play', cardInstanceId: id })}
+              className={styles.btn}
+            >
+              {getCardName(id)}
+            </button>
+            <button
+              onClick={() => onSubmitAction({ type: 'skip_play', cardInstanceId: id })}
+              className={styles.btnCancel}
+            >
+              Skip
+            </button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 function TriggerOrderPanel({ mode, state, onSubmitAction }: {

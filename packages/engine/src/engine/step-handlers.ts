@@ -59,6 +59,8 @@ export function executeStep(state: GameState, step: EngineStep): StepResult {
   switch (step.type) {
     case 'request_choose_mode':
       return handleRequestChooseMode(state, step.player, step.sourceCardId, step.modes)
+    case 'request_choose_play_order':
+      return setPendingChoice(state, { type: 'choose_play_order', playerId: step.player, cardInstanceIds: step.cardInstanceIds });
     case 'request_choose_discard':
       return handleRequestChooseDiscard(state, step.player, step.sourceCardId, step.count)
     case 'request_choose_attackers':

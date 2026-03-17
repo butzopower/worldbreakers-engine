@@ -61,7 +61,8 @@ export type PendingChoice =
   | { type: 'choose_mode'; playerId: PlayerId; sourceCardId: string; modes: Mode[] }
   | { type: 'choose_attackers'; playerId: PlayerId; maxAttackers?: number }
   | { type: 'choose_trigger_order'; playerId: PlayerId; triggers: TriggerOption[] }
-  | { type: 'choose_cost_discount'; playerId: PlayerId; cardInstanceId: string; costDiscount: CostDiscount; externalCostReduction: number; validTargetIds: string[] };
+  | { type: 'choose_cost_discount'; playerId: PlayerId; cardInstanceId: string; costDiscount: CostDiscount; externalCostReduction: number; validTargetIds: string[] }
+  | { type: 'choose_play_order'; playerId: PlayerId; cardInstanceIds: string[] };
 
 export interface PlayerState {
   mythium: number;

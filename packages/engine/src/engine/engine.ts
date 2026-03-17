@@ -287,6 +287,8 @@ function resolveChoice(
       return resolveChooseTriggerOrder(state, player, action);
     case 'choose_cost_discount':
       return resolveChooseCostDiscount(state, player, action);
+    case 'choose_play_order':
+      return resolveChoosePlayOrder(state, player, action);
     default:
       throw new Error(`Unknown choice type: ${(choice as PendingChoice).type}`);
   }
@@ -453,6 +455,27 @@ function resolveChooseTriggerOrder(state: GameState, _player: PlayerId, action: 
 
   if (remaining.length > 0) {
     prepend.push({ type: 'order_triggers', player: choice.playerId, triggers: remaining });
+  }
+
+  return { state: s, events: [], prepend };
+}
+
+function resolveChoosePlayOrder(state: GameState, _player: PlayerId, action: PlayerAction): ChoiceResult {
+  if (action.type !== 'choose_play' && action.type !== 'skip_play') throw new Error('Expected choose_play or skip_play');
+  const choice = state.pendingChoice!;
+  if (choice.type !== 'choose_play_order') throw new Error('Expected choose_play_order choice');
+
+  const remaining = choice.cardInstanceIds.filter(id => id !== action.cardInstanceId);
+  const s: GameState = { ...state, pendingChoice: null };
+  const prepend: EngineStep[] = [];
+
+  if (action.type === 'choose_play') {
+    prepend.push(...playCard(s, choice.playerId, action.cardInstanceId));
+    prepend.push({ type: 'cleanup' });
+  }
+
+  if (remaining.length > 0) {
+    prepend.push({ type: 'request_choose_play_order', player: choice.playerId, cardInstanceIds: remaining });
   }
 
   return { state: s, events: [], prepend };
@@ -673,6 +696,13 @@ function getLegalChoiceActions(state: GameState): ActionInput[] {
         if (!choice.triggers[i].forced) {
           actions.push({ player, action: { type: 'skip_trigger', triggerIndex: i } });
         }
+      }
+      break;
+    }
+    case 'choose_play_order': {
+      for (const cardInstanceId of choice.cardInstanceIds) {
+        actions.push({ player, action: { type: 'choose_play', cardInstanceId } });
+        actions.push({ player, action: { type: 'skip_play', cardInstanceId } });
       }
       break;
     }

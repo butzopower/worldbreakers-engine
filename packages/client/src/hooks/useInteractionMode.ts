@@ -63,6 +63,10 @@ export function useInteractionMode() {
     setMode({ type: 'choose_trigger_order', triggers });
   }, []);
 
+  const startPlayOrderSelection = useCallback((cardInstanceIds: string[]) => {
+    setMode({ type: 'choose_play_order', cardInstanceIds });
+  }, []);
+
   const startCostDiscountSelection = useCallback((validTargets: string[], maxTargets: number) => {
     setMode({ type: 'choose_cost_discount', validTargets, maxTargets, selected: [] });
   }, []);
@@ -92,6 +96,7 @@ export function useInteractionMode() {
     startBreachSelection,
     startModeSelection,
     startTriggerSelection,
+    startPlayOrderSelection,
     startCostDiscountSelection,
     toggleCostDiscountTarget,
   };

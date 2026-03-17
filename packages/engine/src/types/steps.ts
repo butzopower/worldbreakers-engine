@@ -8,6 +8,7 @@ import { CostDiscount } from './cards';
 export type EngineStep =
   // Player Input
   | { type: 'request_choose_mode', player: PlayerId; sourceCardId: string; modes: Mode[] }
+  | { type: 'request_choose_play_order'; player: PlayerId; cardInstanceIds: string[] }
   | { type: 'request_choose_discard', player: PlayerId; sourceCardId: string; count: number }
   | { type: 'request_choose_attackers', player: PlayerId; maxAttackers?: number }
   | { type: 'request_cost_discount'; player: PlayerId; cardInstanceId: string; costDiscount: CostDiscount; externalCostReduction: number }
