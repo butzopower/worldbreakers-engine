@@ -13,6 +13,8 @@ export interface ResolveContext {
   triggeringCardId?: string;
   /** Chosen targets (for 'choose' selectors) */
   chosenTargets?: string[];
+  /** External cost reduction applied when this card was played (e.g. from Yam Operator) */
+  costReduction?: number;
 }
 
 export function resolvePlayerSelector(selector: PlayerSelector, ctx: ResolveContext): PlayerId[] {

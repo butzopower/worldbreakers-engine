@@ -1,7 +1,7 @@
 import { CardInstance, GameState } from "../types/state";
 import { CardFilter } from "../types/effects";
 import { ResolveContext, resolvePlayerSelector } from "./primitives";
-import { canPay, getCardDef, hasKeyword } from "../state/query";
+import { canPay, getCardDef, getNumericCost, hasKeyword } from "../state/query";
 import { getCounter } from "../types/counters";
 
 export function matchesFilter(state: GameState, card: CardInstance, filter: CardFilter, ctx: ResolveContext): boolean {
@@ -26,7 +26,7 @@ export function matchesFilter(state: GameState, card: CardInstance, filter: Card
   if (filter.excludeSelf && card.instanceId === ctx.sourceCardId) return false;
   if (filter.keyword && !hasKeyword(state, card, filter.keyword)) return false;
   if (filter.notKeyword && hasKeyword(state, card, filter.notKeyword)) return false;
-  if (filter.maxCost !== undefined && def.cost > filter.maxCost) return false;
+  if (filter.maxCost !== undefined && getNumericCost(def) > filter.maxCost) return false;
   if (filter.cardInstanceIds && !filter.cardInstanceIds.includes(card.instanceId)) return false;
   if (filter.canPay && !canPay(state, ctx.controller, card, {costReduction: filter.canPay.costReduction})) return false;
   if (filter.wounded !== undefined) {

@@ -5,6 +5,10 @@ import { CardFilter } from '../types/effects';
 import { getCounter } from '../types/counters';
 import { getCardDefinition } from '../cards/registry';
 
+export function getNumericCost(def: CardDefinition): number {
+  return def.cost === 'x' ? 0 : def.cost;
+}
+
 export function getCard(state: GameState, instanceId: string): CardInstance | undefined {
   return state.cards.find(c => c.instanceId === instanceId);
 }
@@ -171,7 +175,7 @@ export function canPay(
   const def = getCardDef(card);
   const playerState = state.players[player];
 
-  const mythiumCost = Math.max(0, def.cost - (opts?.costReduction ?? 0));
+  const mythiumCost = Math.max(0, getNumericCost(def) - (opts?.costReduction ?? 0));
 
   // Check mythium cost
   if (playerState.mythium < mythiumCost) return false;

@@ -41,7 +41,7 @@ export const atokStars: DeckConfig = {
   cardIds: [
     'silkworm_terrarium',
     'polos_portraitist',
-    // 'exploitative_extraction',
+    'exploitative_extraction',
     'proof_of_the_grotto',
     'inspirational_vision',
     'straight_to_the_source',

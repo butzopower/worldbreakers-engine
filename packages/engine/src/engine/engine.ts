@@ -8,7 +8,7 @@ import { drainQueue, resolveEffectsWithQueue, StepResult } from './step-handlers
 
 import { ResolveContext } from '../abilities/primitives';
 import { moveCard, removeCounterFromCard } from '../state/mutate';
-import { getCard, getHand, getCardDef, canPay, hasKeyword, getPassiveCostReduction } from '../state/query';
+import { getCard, getHand, getCardDef, canPay, hasKeyword, getPassiveCostReduction, getNumericCost } from '../state/query';
 import { getCounter } from '../types/counters';
 import {
   canPlayCard, canAttack, canBlock, canBlockAttacker, canDevelop, canUseAbility,
@@ -144,7 +144,7 @@ export function playCard(
 
   // Pay mythium cost
   const passiveReduction = getPassiveCostReduction(state, player, def);
-  const actualCost = Math.max(0, def.cost - passiveReduction - (opts?.costReduction ?? 0));
+  const actualCost = Math.max(0, getNumericCost(def) - passiveReduction - (opts?.costReduction ?? 0));
   if (actualCost > 0) {
     steps.push({ type: 'spend_mythium', player, amount: actualCost });
   }
@@ -170,12 +170,13 @@ export function playCard(
   }
 
   // Queue abilities
+  const totalCostReduction = passiveReduction + (opts?.costReduction ?? 0);
   if (def.type === 'event') {
     // Play abilities always resolve (no opt-out)
     if (def.abilities) {
       for (let i = 0; i < def.abilities.length; i++) {
         if (def.abilities[i].timing === 'play') {
-          steps.push({ type: 'resolve_ability_at_index', controller: player, sourceCardId: cardInstanceId, abilityIndex: i });
+          steps.push({ type: 'resolve_ability_at_index', controller: player, sourceCardId: cardInstanceId, abilityIndex: i, costReduction: totalCostReduction || undefined });
         }
       }
     }
@@ -603,7 +604,7 @@ function getLegalChoiceActions(state: GameState): ActionInput[] {
         if (filter.owner === 'opponent' && c.owner === player) return false;
         if (filter.keyword && !hasKeyword(state, c, filter.keyword)) return false;
         if (filter.notKeyword && hasKeyword(state, c, filter.notKeyword)) return false;
-        if (filter.maxCost !== undefined && def.cost > filter.maxCost) return false;
+        if (filter.maxCost !== undefined && getNumericCost(def) > filter.maxCost) return false;
         if (filter.cardInstanceIds && !filter.cardInstanceIds.includes(c.instanceId)) return false;
         if (filter.canPay && !canPay(state, player, c, { costReduction: filter.canPay.costReduction })) return false;
         if (filter.wounded !== undefined) {

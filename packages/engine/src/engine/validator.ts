@@ -3,7 +3,7 @@ import { ActionInput, PlayerAction } from '../types/actions';
 import { PlayerId, opponentOf } from '../types/core';
 import {
   getCard, getCardDef, canPlayCard, canAttack, canBlock, canBlockAttacker, canDevelop, canUseAbility, canPay,
-  getHand, hasKeyword,
+  getHand, hasKeyword, getNumericCost,
 } from '../state/query';
 import { getCounter } from '../types/counters';
 
@@ -268,7 +268,7 @@ function validateChooseTarget(
   if (filter.owner === 'opponent' && card.owner === player) return { valid: false, reason: 'Target must belong to opponent' };
   if (filter.keyword && !hasKeyword(state, card, filter.keyword)) return { valid: false, reason: 'Target does not have required keyword' };
   if (filter.notKeyword && hasKeyword(state, card, filter.notKeyword)) return { valid: false, reason: 'Target has excluded keyword' };
-  if (filter.maxCost !== undefined && def.cost > filter.maxCost) return { valid: false, reason: 'Target cost exceeds maximum' };
+  if (filter.maxCost !== undefined && getNumericCost(def) > filter.maxCost) return { valid: false, reason: 'Target cost exceeds maximum' };
   if (filter.cardInstanceIds && !filter.cardInstanceIds.includes(card.instanceId)) return { valid: false, reason: 'Target does not match card instance' };
   if (filter.canPay && !canPay(state, player, card, { costReduction: filter.canPay.costReduction })) {
     return { valid: false, reason: 'Cannot afford this card' };

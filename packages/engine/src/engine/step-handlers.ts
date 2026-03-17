@@ -84,11 +84,11 @@ export function executeStep(state: GameState, step: EngineStep): StepResult {
     case 'resolve_effects':
       return handleResolveEffects(state, step.effects, step.ctx);
     case 'resolve_ability_at_index':
-      return handleResolveAbilityAtIndex(state, step.controller, step.sourceCardId, step.abilityIndex, step.triggeringCardId);
+      return handleResolveAbilityAtIndex(state, step.controller, step.sourceCardId, step.abilityIndex, step.triggeringCardId, step.costReduction);
     case 'resolve_ability':
-      return handleResolveAbility(state, step.controller, step.sourceCardId, step.ability, step.triggeringCardId);
+      return handleResolveAbility(state, step.controller, step.sourceCardId, step.ability, step.triggeringCardId, step.costReduction);
     case 'resolve_custom_ability':
-      return handleResolveCustomAbility(state, step.controller, step.sourceCardId, step.customResolve, step.triggeringCardId);
+      return handleResolveCustomAbility(state, step.controller, step.sourceCardId, step.customResolve, step.triggeringCardId, step.costReduction);
     case 'check_triggers':
       return handleCheckTriggers(state, step.timing, step.player, step.triggeringCardId);
     case 'order_triggers':
@@ -581,7 +581,7 @@ function handleResolveEffects(state: GameState, effects: EffectPrimitive[], ctx:
   return { state: result.state, events: result.events, prepend: result.prepend };
 }
 
-function handleResolveAbilityAtIndex(state: GameState, controller: PlayerId, sourceCardId: string, abilityIndex: number, triggeringCardId?: string): StepResult {
+function handleResolveAbilityAtIndex(state: GameState, controller: PlayerId, sourceCardId: string, abilityIndex: number, triggeringCardId?: string, costReduction?: number): StepResult {
   const card = getCard(state, sourceCardId);
   if (!card) return { state, events: [] };
   const def = getCardDef(card);
@@ -594,13 +594,14 @@ function handleResolveAbilityAtIndex(state: GameState, controller: PlayerId, sou
       controller,
       sourceCardId,
       triggeringCardId,
-      ability
+      ability,
+      costReduction,
     }
   ]
   return { state, events: [], prepend}
 }
 
-function handleResolveAbility(state: GameState, controller: PlayerId, sourceCardId: string, ability: AbilityDefinition, triggeringCardId?: string) {
+function handleResolveAbility(state: GameState, controller: PlayerId, sourceCardId: string, ability: AbilityDefinition, triggeringCardId?: string, costReduction?: number) {
   const events: GameEvent[] = [
     { type: 'ability_triggered', cardInstanceId: sourceCardId, timing: ability.timing },
   ];
@@ -613,6 +614,7 @@ function handleResolveAbility(state: GameState, controller: PlayerId, sourceCard
         sourceCardId,
         customResolve: ability.customResolve,
         triggeringCardId,
+        costReduction,
       }
     ]
     return { state, events, prepend };
@@ -628,7 +630,7 @@ function handleResolveAbility(state: GameState, controller: PlayerId, sourceCard
   return { state: result.state, events, prepend: result.prepend };
 }
 
-function handleResolveCustomAbility(state: GameState, controller: PlayerId, sourceCardId: string, customResolve: string, triggeringCardId?: string): StepResult {
+function handleResolveCustomAbility(state: GameState, controller: PlayerId, sourceCardId: string, customResolve: string, triggeringCardId?: string, costReduction?: number): StepResult {
   const card = getCard(state, sourceCardId);
   const events: GameEvent[] = [];
 
@@ -647,7 +649,7 @@ function handleResolveCustomAbility(state: GameState, controller: PlayerId, sour
 
   const customFn = getCustomResolver(customResolve);
   if (customFn) {
-    const ctx: ResolveContext = { controller, sourceCardId, triggeringCardId };
+    const ctx: ResolveContext = { controller, sourceCardId, triggeringCardId, costReduction };
     return { state, events, prepend: customFn(state, ctx) };
   }
   return { state, events };

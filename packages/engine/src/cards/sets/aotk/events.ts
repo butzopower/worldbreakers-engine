@@ -3,11 +3,12 @@ import { CustomResolverFn } from "../../../abilities/system";
 import { CardInstance, GameState } from "../../../types/state";
 import { ResolveContext } from "../../../abilities/primitives";
 import { GameEvent } from "../../../types/events";
-import { getCardDef, getDeck, isFollower } from "../../../state/query";
+import { getCard, getCardDef, getDeck, getPassiveCostReduction, isFollower } from "../../../state/query";
 import { drawCard, moveCard, shuffleDeck } from "../../../state/mutate";
 import { STANDING_GUILDS } from "../../../types/core";
 import { StepResult } from "../../../engine/step-handlers";
 import { EngineStep } from "../../../types/steps";
+import { EffectPrimitive, Mode } from "../../../types/effects";
 
 export const events: CardDefinition[] = [
   {
@@ -22,6 +23,20 @@ export const events: CardDefinition[] = [
       customResolve: 'call_to_arms',
       description: 'Reveal cards from the top of your deck until you reveal two follower cards. Draw them both and shuffle your deck. You may play one of those cards (paying all costs).',
     }]
+  },
+  {
+    id: 'exploitative_extraction',
+    name: 'Exploitative Extraction',
+    type: 'event',
+    guild: 'stars',
+    cost: 'x',
+    standingRequirement: { stars: 3 },
+    description: 'X must be less than or equal to your Stars standing. Do the following X times: Develop a location you control.',
+    abilities: [{
+      timing: 'play',
+      customResolve: 'exploitative_extraction',
+      description: 'X must be less than or equal to your Stars standing. Do the following X times: Develop a location you control.',
+    }],
   },
   {
     id: 'hide_in_plain_sight',
@@ -416,6 +431,45 @@ export const eventResolvers: {key: string, resolver: CustomResolverFn}[] = [
 
       return steps;
     }
+  },
+  {
+    key: 'exploitative_extraction',
+    resolver: (state: GameState, ctx: ResolveContext): EngineStep[] => {
+      const player = ctx.controller;
+      const costReduction = ctx.costReduction ?? 0;
+      const starsStanding = state.players[player].standing.stars;
+      const mythium = state.players[player].mythium;
+
+      // Max X is bounded by stars standing; mythium limits what you can actually pay
+      const maxX = starsStanding;
+      if (maxX === 0) return [];
+
+      const modes: Mode[] = [];
+      for (let x = 1; x <= maxX; x++) {
+        const actualCost = Math.max(0, x - costReduction);
+        if (actualCost > mythium) break;
+        const effects: EffectPrimitive[] = [];
+        if (actualCost > 0) {
+          effects.push({ type: 'lose_mythium', player: 'controller', amount: actualCost });
+        }
+        for (let i = 0; i < x; i++) {
+          effects.push({
+            type: 'develop',
+            target: { kind: 'choose', filter: { type: 'location', zone: ['board'], owner: 'controller' }, count: 1 },
+          });
+        }
+        modes.push({ label: `Pay ${actualCost} mythium, develop ${x} time${x > 1 ? 's' : ''}`, effects });
+      }
+
+      if (modes.length === 0) return [];
+
+      return [{
+        type: 'request_choose_mode',
+        player,
+        sourceCardId: ctx.sourceCardId,
+        modes,
+      }];
+    },
   },
   {
     key: 'inspirational_vision_follower',

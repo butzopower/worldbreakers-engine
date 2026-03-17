@@ -27,7 +27,7 @@ export {
   getBaseStrength, getBaseHealth, getEffectiveStrength, getEffectiveHealth,
   isDefeated, hasKeyword, canAttack, canBlock, canBlockAttacker,
   isLocationDepleted, getLocationStage,
-  canPlayCard, canDevelop, canUseAbility,
+  canPlayCard, canDevelop, canUseAbility, getNumericCost,
 } from './state/query';
 
 // Custom ability registration

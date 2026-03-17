@@ -45,7 +45,7 @@ export interface CardDefinition {
   name: string;
   type: CardType;
   guild: Guild;
-  cost: number;
+  cost: number | 'x';
   strength?: number;
   health?: number;
   stages?: number;
