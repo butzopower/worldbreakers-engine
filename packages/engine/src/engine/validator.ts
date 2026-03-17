@@ -212,6 +212,12 @@ function validatePendingChoice(state: GameState, player: PlayerId, action: Playe
       if (!choice.cardInstanceIds.includes(action.cardInstanceId)) {
         return { valid: false, reason: 'Card is not available to play' };
       }
+      if (action.type === 'choose_play') {
+        const card = getCard(state, action.cardInstanceId);
+        if (card && !canPlayCard(state, player, card)) {
+          return { valid: false, reason: 'Cannot afford to play this card' };
+        }
+      }
       return { valid: true };
 
     case 'choose_mulligan':

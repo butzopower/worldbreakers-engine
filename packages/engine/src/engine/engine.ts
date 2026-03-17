@@ -761,7 +761,10 @@ function getLegalChoiceActions(state: GameState): ActionInput[] {
     }
     case 'choose_play_order': {
       for (const cardInstanceId of choice.cardInstanceIds) {
-        actions.push({ player, action: { type: 'choose_play', cardInstanceId } });
+        const card = getCard(state, cardInstanceId);
+        if (card && canPlayCard(state, player, card)) {
+          actions.push({ player, action: { type: 'choose_play', cardInstanceId } });
+        }
         actions.push({ player, action: { type: 'skip_play', cardInstanceId } });
       }
       break;

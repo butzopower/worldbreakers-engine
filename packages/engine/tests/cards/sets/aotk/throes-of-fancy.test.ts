@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { registerSetCards } from '../../../../src/cards/sets';
 import { registerTestCards } from '../../../../src/cards/test-cards';
 import { clearRegistry } from '../../../../src/cards/registry.js';
-import { processAction } from '../../../../src/engine/engine.js';
+import { processAction, getLegalActions } from '../../../../src/engine/engine.js';
 import { buildState } from '../../../helpers/state-builder.js';
 import { expectCardInZone } from '../../../helpers/assertions.js';
 import { hasPlayCost } from '../../../helpers/properties';
@@ -191,6 +191,85 @@ describe('Throes of Fancy', () => {
     });
 
     expect(skip.state.pendingChoice).toBeNull();
+  });
+
+  it('cannot play a card you cannot afford', () => {
+    // Start with just 1 mythium — enough for Throes (cost 1) but 0 left over
+    const state = buildState()
+      .withActivePlayer('player1')
+      .withMythium('player1', 1)
+      .withStanding('player1', 'stars', 3)
+      .addCard('throes_of_fancy', 'player1', 'hand', { instanceId: 'tof1' })
+      .addCard('militia_scout', 'player1', 'deck', { instanceId: 'ms1' }) // costs 1
+      .addCard('the_humble_underpass', 'player1', 'deck', { instanceId: 'loc1' }) // costs 2
+      .build();
+
+    const result = processAction(state, {
+      player: 'player1',
+      action: { type: 'play_card', cardInstanceId: 'tof1' },
+    });
+
+    expect(result.state.pendingChoice?.type).toBe('choose_play_order');
+    expect(result.state.players.player1.mythium).toBe(0);
+
+    // Legal actions should only offer skip (no choose_play since both cost > 0)
+    const legal = getLegalActions(result.state);
+    const playActions = legal.filter(a => a.action.type === 'choose_play');
+    expect(playActions).toHaveLength(0);
+
+    // Trying to play should throw
+    expect(() => processAction(result.state, {
+      player: 'player1',
+      action: { type: 'choose_play', cardInstanceId: 'ms1' },
+    })).toThrow();
+
+    // Can skip both
+    const skip1 = processAction(result.state, {
+      player: 'player1',
+      action: { type: 'skip_play', cardInstanceId: 'ms1' },
+    });
+    const skip2 = processAction(skip1.state, {
+      player: 'player1',
+      action: { type: 'skip_play', cardInstanceId: 'loc1' },
+    });
+
+    expectCardInZone(skip2.state, 'ms1', 'hand');
+    expectCardInZone(skip2.state, 'loc1', 'hand');
+    expect(skip2.state.players.player1.mythium).toBe(0);
+  });
+
+  it('can play one card but not the other when partially affordable', () => {
+    // 2 mythium: 1 for Throes, 1 left. Can afford militia_scout (1) but not underpass (2)
+    const state = buildState()
+      .withActivePlayer('player1')
+      .withMythium('player1', 2)
+      .withStanding('player1', 'stars', 3)
+      .addCard('throes_of_fancy', 'player1', 'hand', { instanceId: 'tof1' })
+      .addCard('militia_scout', 'player1', 'deck', { instanceId: 'ms1' })
+      .addCard('the_humble_underpass', 'player1', 'deck', { instanceId: 'loc1' })
+      .build();
+
+    const result = processAction(state, {
+      player: 'player1',
+      action: { type: 'play_card', cardInstanceId: 'tof1' },
+    });
+
+    expect(result.state.players.player1.mythium).toBe(1);
+
+    const legal = getLegalActions(result.state);
+    const playActions = legal.filter(a => a.action.type === 'choose_play');
+    // Can only play militia_scout
+    expect(playActions).toHaveLength(1);
+    expect(playActions[0].action.cardInstanceId).toBe('ms1');
+
+    // Play the affordable one
+    const playFollower = processAction(result.state, {
+      player: 'player1',
+      action: { type: 'choose_play', cardInstanceId: 'ms1' },
+    });
+
+    expectCardInZone(playFollower.state, 'ms1', 'board');
+    expect(playFollower.state.players.player1.mythium).toBe(0);
   });
 
   it('shuffles the deck after revealing', () => {
