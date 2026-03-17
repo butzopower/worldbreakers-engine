@@ -81,6 +81,10 @@ export default function GameView({ playerId, state, legalActions, events, onRetu
         interaction.startPlayOrderSelection(choice.cardInstanceIds);
         break;
       }
+      case 'choose_mulligan': {
+        interaction.startMulligan();
+        break;
+      }
     }
   }, [state.pendingChoice?.type, state.version]);
 
@@ -131,6 +135,12 @@ export default function GameView({ playerId, state, legalActions, events, onRetu
       case 'choose_cost_discount': {
         if (mode.validTargets.includes(card.instanceId)) {
           interaction.toggleCostDiscountTarget(card.instanceId);
+        }
+        break;
+      }
+      case 'choose_mulligan': {
+        if (card.owner === playerId && card.zone === 'hand') {
+          interaction.toggleMulligan(card.instanceId);
         }
         break;
       }

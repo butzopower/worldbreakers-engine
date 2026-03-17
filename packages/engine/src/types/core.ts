@@ -5,7 +5,7 @@ export const STANDING_GUILDS = ['earth', 'moon', 'void', 'stars'] as const;
 export type StandingGuild = typeof STANDING_GUILDS[number];
 export type Guild = StandingGuild | 'neutral';
 
-export type Phase = 'action' | 'rally' | 'gameOver';
+export type Phase = 'mulligan' | 'action' | 'rally' | 'gameOver';
 
 export type Zone =
   | 'deck'

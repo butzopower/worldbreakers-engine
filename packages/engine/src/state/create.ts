@@ -15,6 +15,7 @@ export interface GameConfig {
   player2Deck: DeckConfig;
   seed?: number;
   firstPlayer?: PlayerId;
+  skipMulligan?: boolean;
 }
 
 function createPlayerState(guild: Guild): PlayerState {
@@ -79,10 +80,12 @@ export function createGameState(config: GameConfig): GameState {
     firstPlayer = rand < 0.5 ? 'player1' : 'player2';
   }
 
+  const startInMulligan = !config.skipMulligan;
+
   // Draw opening hands (5 cards each)
   let state: GameState = {
     version: 0,
-    phase: 'action',
+    phase: startInMulligan ? 'mulligan' : 'action',
     round: 1,
     actionsTaken: 0,
     firstPlayer,
@@ -109,7 +112,14 @@ export function createGameState(config: GameConfig): GameState {
   state = p2Shuffle.state
 
   // Draw 5 cards for each player
-  return drawOpeningHands(state);
+  state = drawOpeningHands(state);
+
+  // Set up mulligan pending choice for the first player
+  if (startInMulligan) {
+    state = { ...state, pendingChoice: { type: 'choose_mulligan', playerId: firstPlayer } };
+  }
+
+  return state;
 }
 
 function drawOpeningHands(state: GameState): GameState {

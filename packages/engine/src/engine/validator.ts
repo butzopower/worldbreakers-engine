@@ -214,6 +214,12 @@ function validatePendingChoice(state: GameState, player: PlayerId, action: Playe
       }
       return { valid: true };
 
+    case 'choose_mulligan':
+      if (action.type !== 'mulligan') {
+        return { valid: false, reason: 'Must submit a mulligan action' };
+      }
+      return validateMulligan(state, player, action.cardInstanceIds);
+
     default:
       return { valid: false, reason: 'Unknown choice type' };
   }
@@ -288,6 +294,25 @@ function validateChooseTarget(
     if (!filter.wounded && wounds > 0) return { valid: false, reason: 'Target must not be wounded' };
   }
 
+  return { valid: true };
+}
+
+function validateMulligan(state: GameState, player: PlayerId, cardIds: string[]): ValidationResult {
+  const hand = getHand(state, player);
+  // Empty mulligan is always valid (keep hand)
+  if (cardIds.length === 0) return { valid: true };
+  // Cannot mulligan more cards than in hand
+  if (cardIds.length > hand.length) {
+    return { valid: false, reason: 'Cannot mulligan more cards than are in hand' };
+  }
+  // All specified cards must be in the player's hand
+  for (const id of cardIds) {
+    const card = getCard(state, id);
+    if (!card) return { valid: false, reason: `Card ${id} not found` };
+    if (card.owner !== player || card.zone !== 'hand') {
+      return { valid: false, reason: `Card ${id} is not in your hand` };
+    }
+  }
   return { valid: true };
 }
 

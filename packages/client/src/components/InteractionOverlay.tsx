@@ -123,6 +123,24 @@ export default function InteractionOverlay({ mode, state, playerId, onSubmitActi
     case 'choose_play_order':
       return <PlayOrderPanel mode={mode} state={state} onSubmitAction={onSubmitAction} />;
 
+    case 'choose_mulligan':
+      return (
+        <div className={styles.panel}>
+          <div className={styles.instructions}>
+            Mulligan: click cards in your hand to set aside, then confirm.
+            {mode.selected.length > 0 && ` (${mode.selected.length} selected)`}
+          </div>
+          <button
+            onClick={() => {
+              onSubmitAction({ type: 'mulligan', cardInstanceIds: mode.selected });
+            }}
+            className={styles.btn}
+          >
+            {mode.selected.length > 0 ? 'Confirm Mulligan' : 'Keep Hand'}
+          </button>
+        </div>
+      );
+
     case 'choose_cost_discount':
       return (
         <div className={styles.panel}>

@@ -20,7 +20,8 @@ export type PlayerAction =
   | { type: 'skip_trigger'; triggerIndex: number }
   | { type: 'choose_cost_discount_targets'; targetInstanceIds: string[] }
   | { type: 'choose_play'; cardInstanceId: string }
-  | { type: 'skip_play'; cardInstanceId: string };
+  | { type: 'skip_play'; cardInstanceId: string }
+  | { type: 'mulligan'; cardInstanceIds: string[] };
 
 export interface ActionInput {
   player: PlayerId;

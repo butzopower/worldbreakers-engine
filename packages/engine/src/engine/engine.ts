@@ -7,8 +7,8 @@ import { validateAction } from './validator';
 import { drainQueue, resolveEffectsWithQueue, StepResult } from './step-handlers';
 
 import { ResolveContext } from '../abilities/primitives';
-import { moveCard, removeCounterFromCard } from '../state/mutate';
-import { getCard, getHand, getCardDef, canPay, hasKeyword, getPassiveCostReduction, getNumericCost } from '../state/query';
+import { moveCard, removeCounterFromCard, shuffleDeck } from '../state/mutate';
+import { getCard, getHand, getDeck, getCardDef, canPay, hasKeyword, getPassiveCostReduction, getNumericCost } from '../state/query';
 import { getCounter } from '../types/counters';
 import {
   canPlayCard, canAttack, canBlock, canBlockAttacker, canDevelop, canUseAbility,
@@ -289,6 +289,8 @@ function resolveChoice(
       return resolveChooseCostDiscount(state, player, action);
     case 'choose_play_order':
       return resolveChoosePlayOrder(state, player, action);
+    case 'choose_mulligan':
+      return resolveChooseMulligan(state, player, action);
     default:
       throw new Error(`Unknown choice type: ${(choice as PendingChoice).type}`);
   }
@@ -479,6 +481,64 @@ function resolveChoosePlayOrder(state: GameState, _player: PlayerId, action: Pla
   }
 
   return { state: s, events: [], prepend };
+}
+
+function resolveChooseMulligan(state: GameState, _player: PlayerId, action: PlayerAction): ChoiceResult {
+  if (action.type !== 'mulligan') throw new Error('Expected mulligan');
+  const choice = state.pendingChoice!;
+  if (choice.type !== 'choose_mulligan') throw new Error('Expected choose_mulligan choice');
+
+  let s: GameState = { ...state, pendingChoice: null };
+  const events: GameEvent[] = [];
+  const mulliganPlayer = choice.playerId;
+
+  // Per the rules: set aside cards, draw replacements from deck, shuffle set-aside cards back in
+  if (action.cardInstanceIds.length > 0) {
+    const drawCount = action.cardInstanceIds.length;
+
+    // Move set-aside cards to 'removed' temporarily (so they aren't drawn back)
+    for (const cardId of action.cardInstanceIds) {
+      const moveResult = moveCard(s, cardId, 'removed');
+      s = moveResult.state;
+      events.push(...moveResult.events);
+    }
+
+    // Draw the same number of replacement cards from deck
+    for (let i = 0; i < drawCount; i++) {
+      const deck = getDeck(s, mulliganPlayer);
+      if (deck.length === 0) break;
+      const topCard = deck[0];
+      const moveResult = moveCard(s, topCard.instanceId, 'hand');
+      s = moveResult.state;
+      events.push(...moveResult.events);
+    }
+
+    // Move set-aside cards into deck
+    for (const cardId of action.cardInstanceIds) {
+      const moveResult = moveCard(s, cardId, 'deck');
+      s = moveResult.state;
+      events.push(...moveResult.events);
+    }
+
+    // Shuffle deck
+    const shuffleResult = shuffleDeck(s, mulliganPlayer);
+    s = shuffleResult.state;
+    events.push(...shuffleResult.events);
+  }
+
+  events.push({ type: 'mulligan_complete', player: mulliganPlayer, cardsReturned: action.cardInstanceIds.length });
+
+  // Determine next step: other player's mulligan or start the game
+  const otherPlayer = opponentOf(mulliganPlayer);
+  if (mulliganPlayer === state.firstPlayer) {
+    // First player just mulliganed → second player's turn
+    s = { ...s, pendingChoice: { type: 'choose_mulligan', playerId: otherPlayer } };
+  } else {
+    // Both players have mulliganed → start the game
+    s = { ...s, phase: 'action' };
+  }
+
+  return { state: s, events };
 }
 
 function resolveChooseCostDiscount(state: GameState, _player: PlayerId, action: PlayerAction): ChoiceResult {
@@ -703,6 +763,20 @@ function getLegalChoiceActions(state: GameState): ActionInput[] {
       for (const cardInstanceId of choice.cardInstanceIds) {
         actions.push({ player, action: { type: 'choose_play', cardInstanceId } });
         actions.push({ player, action: { type: 'skip_play', cardInstanceId } });
+      }
+      break;
+    }
+    case 'choose_mulligan': {
+      // Can always keep hand (mulligan 0 cards)
+      actions.push({ player, action: { type: 'mulligan', cardInstanceIds: [] } });
+      // Can mulligan any subset of hand cards
+      const mulliganHand = getHand(state, player);
+      for (const card of mulliganHand) {
+        actions.push({ player, action: { type: 'mulligan', cardInstanceIds: [card.instanceId] } });
+      }
+      // Can mulligan entire hand
+      if (mulliganHand.length > 1) {
+        actions.push({ player, action: { type: 'mulligan', cardInstanceIds: mulliganHand.map(c => c.instanceId) } });
       }
       break;
     }

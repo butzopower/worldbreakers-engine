@@ -30,6 +30,7 @@ describe('createGameState', () => {
       },
       seed: 42,
       firstPlayer: 'player1',
+      skipMulligan: true,
     };
 
     const state = createGameState(config);

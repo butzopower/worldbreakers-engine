@@ -34,4 +34,5 @@ export type GameEvent =
   | { type: 'lasting_effect_created'; effectId: string; description: string }
   | { type: 'lasting_effect_expired'; effectId: string }
   | { type: 'reveal'; player: PlayerId; cardDefinitionIds: string[] }
-  | { type: 'removed_from_combat'; cardInstanceId: string };
+  | { type: 'removed_from_combat'; cardInstanceId: string }
+  | { type: 'mulligan_complete'; player: PlayerId; cardsReturned: number };
