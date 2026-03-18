@@ -1,13 +1,38 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, ReactElement } from 'react';
 import type { ClientCardDefinition, GameEvent } from '../types';
 import { useCardDefinitions } from "../context/CardDefinitions";
 import styles from './GameLog.module.css';
+import CardTooltip from "./CardTooltip";
 
 interface Props {
   events: GameEvent[];
 }
 
-function formatEvent(event: GameEvent, cardDefinitions: Record<string, ClientCardDefinition>): string {
+interface RevealProps {
+  player: string,
+  defIds: string[],
+  cardDefinitions: Record<string, ClientCardDefinition>
+}
+
+function Reveal({cardDefinitions, defIds, player}: RevealProps) {
+  return <span>
+    {player} reveals {' '}
+    <span className={styles.revealList}>
+      {
+        defIds.map(
+          (id, i) => {
+            const cardDef = cardDefinitions[id];
+            return <span className={styles.revealItem}>
+              <CardTooltip key={i} cardDef={cardDef}>{cardDef.name}</CardTooltip>
+            </span>;
+          }
+        )
+      }
+      </span>
+    </span>;
+}
+
+function formatEvent(event: GameEvent, cardDefinitions: Record<string, ClientCardDefinition>): string | ReactElement {
   function getCardName(cid: string) { return cardDefinitions[cid].name }
 
   switch (event.type) {
@@ -36,7 +61,8 @@ function formatEvent(event: GameEvent, cardDefinitions: Record<string, ClientCar
     case 'rally_phase': return 'Rally phase';
     case 'round_ended': return `Round ended`;
     case 'game_over': return `Game over! Winner: ${event.winner}`;
-    case 'reveal': return `${event.player} reveals ${(event.cardDefinitionIds as string[]).map(getCardName).join(', ')}`
+    case 'reveal': return <Reveal player={event.player as string} defIds={event.cardDefinitionIds as string[]} cardDefinitions={cardDefinitions}/>;
+
     case 'deck_shuffled': return `${event.player} shuffled their deck`;
     default: return event.type;
   }
