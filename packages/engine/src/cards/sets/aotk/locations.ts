@@ -90,6 +90,40 @@ export const locations: CardDefinition[] = [
     description: 'Hidden (Your opponent cannot damage this location.) I: Gain 4 mythium. II: Draw 2 cards. III: Draw 1 card and gain 2 mythium.',
   },
   {
+    id: 'forlorn_flats',
+    name: 'Forlorn Flats',
+    type: 'location',
+    guild: 'void',
+    cost: 4,
+    standingRequirement: { void: 1 },
+    stages: 2,
+    locationStages: [
+      {
+        stage: 1,
+        ability: {
+          timing: 'enters',
+          effects: [
+            { type: 'gain_standing', player: 'self', guild: 'void', amount: 1 },
+            { type: 'gain_power', player: 'self', amount: 1 },
+          ],
+          description: 'Gain 1 void standing and 1 power.',
+        },
+      },
+      {
+        stage: 2,
+        ability: {
+          timing: 'enters',
+          effects: [
+            { type: 'gain_power', player: 'self', amount: 1 },
+            { type: 'deal_wounds', target: { kind: 'choose', filter: { type: 'follower', zone: ['board'] }, count: 1 }, amount: 2 },
+          ],
+          description: 'Gain 1 power. You may deal 2 wounds to a follower.',
+        },
+      },
+    ],
+    description: 'I: Gain 1 void standing and 1 power. II: Gain 1 power. You may deal 2 wounds to a follower.',
+  },
+  {
     id: 'illicit_bazaar',
     name: 'Illicit Bazaar',
     type: 'location',
@@ -162,6 +196,51 @@ export const locations: CardDefinition[] = [
       },
     ],
     description: 'I: Gain 1 stars standing and 1 power. II: Gain 1 power. You may put a stationary counter on a follower.',
+  },
+  {
+    id: 'raiders_hideaway',
+    name: "Raider's Hideaway",
+    type: 'location',
+    guild: 'void',
+    cost: 5,
+    standingRequirement: { void: 2 },
+    stages: 3,
+    locationStages: [
+      {
+        stage: 1,
+        ability: {
+          timing: 'enters',
+          effects: [
+            { type: 'gain_mythium', player: 'self', amount: 2 },
+            { type: 'gain_power', player: 'self', amount: 1 },
+          ],
+          description: 'Gain 2 mythium and 1 power.',
+        },
+      },
+      {
+        stage: 2,
+        ability: {
+          timing: 'enters',
+          effects: [
+            { type: 'gain_mythium', player: 'self', amount: 2 },
+            { type: 'initiate_attack' },
+          ],
+          description: 'Gain 2 mythium. You may attack.',
+        },
+      },
+      {
+        stage: 3,
+        ability: {
+          timing: 'enters',
+          effects: [
+            { type: 'gain_mythium', player: 'self', amount: 2 },
+            { type: 'gain_power', player: 'self', amount: 1 },
+          ],
+          description: 'Gain 2 mythium and 1 power.',
+        },
+      },
+    ],
+    description: 'I: Gain 2 mythium and 1 power. II: Gain 2 mythium. You may attack. III: Gain 2 mythium and 1 power.',
   },
   {
     id: 'silkworm_terrarium',
