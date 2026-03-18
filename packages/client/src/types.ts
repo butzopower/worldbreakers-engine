@@ -3,7 +3,7 @@ export type PlayerId = 'player1' | 'player2';
 export interface HiddenCard {
   hidden: true;
   owner: PlayerId;
-  zone: 'hand';
+  zone: 'hand' | 'deck';
 }
 
 export interface VisibleCard {

@@ -10,6 +10,7 @@ import { isVisible } from '../types';
 import FollowerCard from './FollowerCard';
 import LocationCard from './LocationCard';
 import Hand from './Hand';
+import DeckDiscard from './DeckDiscard';
 import { socket } from '../socket';
 import { useCardDefinitions } from "../context/CardDefinitions";
 import styles from './PlayerArea.module.css';
@@ -141,6 +142,8 @@ export default function PlayerArea({ state, playerId, interactionMode, onCardCli
         legalActions={legalActions}
         onCardClick={onCardClick}
       />
+
+      <DeckDiscard state={state} owner={playerId} />
     </div>
   );
 }

@@ -2,6 +2,7 @@ import type { PlayerId, FilteredGameState, VisibleCard, InteractionMode, ClientC
 import { isVisible } from '../types';
 import FollowerCard from './FollowerCard';
 import LocationCard from './LocationCard';
+import DeckDiscard from './DeckDiscard';
 import { useCardDefinitions } from "../context/CardDefinitions";
 import styles from './OpponentArea.module.css';
 
@@ -89,6 +90,8 @@ export default function OpponentArea({ state, opponent, interactionMode, onCardC
           </div>
         </div>
       </div>
+
+      <DeckDiscard state={state} owner={opponent} />
     </div>
   );
 }
