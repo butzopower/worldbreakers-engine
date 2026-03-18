@@ -273,6 +273,16 @@ export function resolvePrimitive(
         },
       ];
     }
+    case 'pays_mythium': {
+      return [
+        { type: 'spend_mythium', player: ctx.controller, amount: effect.amount },
+        {
+          type: 'resolve_effects',
+          effects: effect.effects,
+          ctx: { controller: ctx.controller, sourceCardId: ctx.sourceCardId, triggeringCardId: ctx.triggeringCardId },
+        },
+      ];
+    }
     case 'custom_resolve': {
       return [
         {

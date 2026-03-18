@@ -75,7 +75,7 @@ export const atokStars: DeckConfig = {
 export const atokVoid: DeckConfig = {
   worldbreakerId: 'ruknuddin_khurshah_leader_of_the_order',
   cardIds: [
-    // 'the_right_hand',
+    'the_right_hand',
     'alamut_castle',
     'hide_in_plain_sight',
     'amazing_arithmetic',

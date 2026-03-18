@@ -692,6 +692,38 @@ export const followers: CardDefinition[] = [
     description: 'Rally: Develop a location you control.',
   },
   {
+    id: 'the_right_hand',
+    name: 'The Right Hand',
+    type: 'follower',
+    guild: 'void',
+    cost: 4,
+    strength: 2,
+    health: 2,
+    standingRequirement: { void: 1 },
+    abilities: [
+      {
+        timing: 'your_attack',
+        effects: [
+          {
+            type: 'pays_mythium',
+            amount: 1,
+            effects: [
+              {
+                type: 'grant_lasting_effect',
+                target: { kind: 'all', filter: { zone: ['worldbreaker'], owner: 'controller' } },
+                effect: 'boost_ruknuddin_khurshah_ability',
+                amount: 1,
+                expiresAt: 'end_of_combat',
+              },
+            ],
+          },
+        ],
+        description: 'Your Attack: Pay 1 mythium → Your Worldbreaker\'s ability deals +1 wound this combat.',
+      },
+    ],
+    description: 'Your Attack: Pay 1 mythium → Your Worldbreaker\'s ability deals +1 wound this combat.',
+  },
+  {
     id: 'void_apprentice',
     name: 'Void Apprentice',
     type: 'follower',

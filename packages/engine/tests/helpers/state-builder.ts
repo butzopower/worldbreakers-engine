@@ -1,5 +1,5 @@
 import { PlayerId, StandingGuild } from '../../src/types/core.js';
-import { GameState, PlayerState, CardInstance } from '../../src/types/state.js';
+import { GameState, PlayerState, CardInstance, LastingEffect } from '../../src/types/state.js';
 import { CounterMap } from '../../src/types/counters.js';
 
 let builderId = 1;

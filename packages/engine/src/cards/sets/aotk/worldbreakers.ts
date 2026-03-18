@@ -48,6 +48,32 @@ export const worldbreakers: CardDefinition[] = [
     ],
     description: 'Response — Location Played: Exhaust → Reveal the top card of your deck. If it is a follower card, draw it. Otherwise, put it on the bottom of your deck.',
   },
+  {
+    id: 'ruknuddin_khurshah_leader_of_the_order',
+    name: 'Ruknuddin Khurshah, Leader of the Order',
+    type: 'worldbreaker',
+    cost: 0,
+    guild: 'void',
+    abilities: [
+      {
+        timing: 'your_attack',
+        effects: [
+          {
+            type: 'pays_mythium',
+            amount: 1,
+            effects: [
+              {
+                type: 'exhausts',
+                effects: [{ type: 'custom_resolve', customResolve: 'ruknuddin_khurshah' }],
+              },
+            ],
+          },
+        ],
+        description: 'Your Attack: Pay 1 mythium, exhaust → Deal 1 wound to a follower defending player controls.',
+      },
+    ],
+    description: 'Your Attack: Pay 1 mythium, exhaust → Deal 1 wound to a follower defending player controls.',
+  },
 ];
 
 export const worldbreakerResolvers: { key: string; resolver: CustomResolverFn }[] = [
@@ -80,6 +106,38 @@ export const worldbreakerResolvers: { key: string; resolver: CustomResolverFn }[
       }
 
       return steps;
+    },
+  },
+  {
+    key: 'ruknuddin_khurshah',
+    resolver: (
+      state: GameState,
+      ctx: ResolveContext,
+    ): EngineStep[] => {
+      const controller = ctx.controller;
+
+      // Count boost_ruknuddin_khurshah_ability lasting effects targeting the worldbreaker
+      const wb = state.cards.find(c => c.owner === controller && c.zone === 'worldbreaker');
+      let bonus = 0;
+      if (wb) {
+        for (const le of state.lastingEffects) {
+          if (le.type === 'boost_ruknuddin_khurshah_ability' && le.targetInstanceIds.includes(wb.instanceId)) {
+            bonus += le.amount;
+          }
+        }
+      }
+
+      const woundAmount = 1 + bonus;
+
+      return [{
+        type: 'resolve_effects',
+        effects: [{
+          type: 'deal_wounds',
+          target: { kind: 'choose', filter: { type: 'follower', zone: ['board'], owner: 'opponent' }, count: 1 },
+          amount: woundAmount,
+        }],
+        ctx: { controller, sourceCardId: ctx.sourceCardId },
+      }];
     },
   },
 ];

@@ -66,6 +66,7 @@ export type EffectPrimitive =
   | { type: 'lose_power'; player: PlayerSelector; amount: number }
   | { type: 'register_combat_response'; trigger: CombatResponseTrigger; effects: EffectPrimitive[] }
   | { type: 'exhausts'; effects: EffectPrimitive[] }
+  | { type: 'pays_mythium'; amount: number; effects: EffectPrimitive[] }
   | { type: 'custom_resolve'; customResolve: string }
   | { type: 'grant_bonus_action'; player: PlayerSelector }
   | { type: 'remove_from_combat'; target: TargetSelector };

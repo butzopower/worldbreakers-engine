@@ -655,17 +655,50 @@ function handleResolveCustomAbility(state: GameState, controller: PlayerId, sour
   return { state, events };
 }
 
-function requiresExhaust(ability: AbilityDefinition): boolean {
-  return ability.effects?.some(e => e.type === 'exhausts') ?? false;
+function checkEffectsRecursive(effects: AbilityDefinition['effects'], check: (e: EffectPrimitive) => boolean): boolean {
+  if (!effects) return false;
+  for (const e of effects) {
+    if (check(e)) return true;
+    if (e.type === 'pays_mythium' || e.type === 'exhausts') {
+      if (checkEffectsRecursive(e.effects, check)) return true;
+    }
+  }
+  return false;
 }
 
-function canActivateAbility(card: { exhausted: boolean }, ability: AbilityDefinition): boolean {
+function requiresExhaust(ability: AbilityDefinition): boolean {
+  return checkEffectsRecursive(ability.effects, e => e.type === 'exhausts');
+}
+
+function requiresMythiumPayment(ability: AbilityDefinition): number {
+  if (!ability.effects) return 0;
+  let total = 0;
+  const sumMythium = (effects: EffectPrimitive[]) => {
+    for (const e of effects) {
+      if (e.type === 'pays_mythium') {
+        total += e.amount;
+        sumMythium(e.effects);
+      } else if (e.type === 'exhausts') {
+        sumMythium(e.effects);
+      }
+    }
+  };
+  sumMythium(ability.effects);
+  return total;
+}
+
+function canActivateAbility(card: { exhausted: boolean }, ability: AbilityDefinition, mythiumAvailable?: number): boolean {
   if (requiresExhaust(ability) && card.exhausted) return false;
+  if (mythiumAvailable !== undefined) {
+    const cost = requiresMythiumPayment(ability);
+    if (cost > mythiumAvailable) return false;
+  }
   return true;
 }
 
 function collectTriggers(state: GameState, timing: AbilityTiming, player: PlayerId, triggeringCardId?: string): TriggerOption[] {
   const triggers: TriggerOption[] = [];
+  const mythium = state.players[player].mythium;
 
   // Scan worldbreaker
   const wb = getWorldbreaker(state, player);
@@ -673,7 +706,7 @@ function collectTriggers(state: GameState, timing: AbilityTiming, player: Player
     const wbDef = getCardDef(wb);
     if (wbDef.abilities) {
       for (let i = 0; i < wbDef.abilities.length; i++) {
-        if (wbDef.abilities[i].timing === timing && canActivateAbility(wb, wbDef.abilities[i])) {
+        if (wbDef.abilities[i].timing === timing && canActivateAbility(wb, wbDef.abilities[i], mythium)) {
           triggers.push({ sourceCardId: wb.instanceId, abilityIndex: i, triggeringCardId, forced: wbDef.abilities[i].forced === true });
         }
       }
@@ -686,7 +719,7 @@ function collectTriggers(state: GameState, timing: AbilityTiming, player: Player
     const def = getCardDef(card);
     if (!def.abilities) continue;
     for (let i = 0; i < def.abilities.length; i++) {
-      if (def.abilities[i].timing === timing && canActivateAbility(card, def.abilities[i])) {
+      if (def.abilities[i].timing === timing && canActivateAbility(card, def.abilities[i], mythium)) {
         triggers.push({ sourceCardId: card.instanceId, abilityIndex: i, triggeringCardId, forced: def.abilities[i].forced === true });
       }
     }
