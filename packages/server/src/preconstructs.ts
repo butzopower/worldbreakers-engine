@@ -81,7 +81,7 @@ export const atokVoid: DeckConfig = {
     'amazing_arithmetic',
     // 'stupefy',
     'serpent_strike',
-    // 'vicious_stab',
+    'vicious_stab',
     // 'consumed_by_the_dust',
     // 'pernicious_powder',
     // 'novice_cutpurse',

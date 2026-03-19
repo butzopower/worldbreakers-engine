@@ -213,6 +213,22 @@ export const events: CardDefinition[] = [
     }],
   },
   {
+    id: 'vicious_stab',
+    name: 'Vicious Stab',
+    type: 'event',
+    guild: 'void',
+    cost: 1,
+    standingRequirement: { void: 1 },
+    description: 'Deal 2 wounds to a follower.',
+    abilities: [{
+      timing: 'play',
+      effects: [
+        { type: 'deal_wounds', target: { kind: 'choose', filter: { type: 'follower', zone: ['board'] }, count: 1 }, amount: 2 },
+      ],
+      description: 'Deal 2 wounds to a follower.',
+    }],
+  },
+  {
     id: 'ger_migration',
     name: 'Ger Migration',
     type: 'event',
