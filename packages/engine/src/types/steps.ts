@@ -1,5 +1,5 @@
 import { PlayerId, StandingGuild, Zone } from './core';
-import { AbilityDefinition, AbilityTiming, EffectPrimitive, Mode } from './effects';
+import { AbilityDefinition, AbilityTiming, CardFilter, EffectPrimitive, Mode } from './effects';
 import { CombatResponseTrigger, LastingEffectExpiration, LastingEffectType, TriggerOption } from "./state";
 import { ResolveContext } from "../abilities/primitives";
 import { CounterType } from './counters';
@@ -12,6 +12,7 @@ export type EngineStep =
   | { type: 'request_choose_discard', player: PlayerId; sourceCardId: string; count: number }
   | { type: 'request_choose_attackers', player: PlayerId; maxAttackers?: number }
   | { type: 'request_cost_discount'; player: PlayerId; cardInstanceId: string; costDiscount: CostDiscount; externalCostReduction: number }
+  | { type: 'request_choose_target'; player: PlayerId; sourceCardId: string; abilityIndex: number; effects: EffectPrimitive[]; filter: CardFilter; triggeringCardId?: string }
   // Effect Resolution
   | { type: 'resolve_effects'; effects: EffectPrimitive[]; ctx: ResolveContext }
   | { type: 'resolve_ability_at_index'; controller: PlayerId; sourceCardId: string; abilityIndex: number; triggeringCardId?: string; costReduction?: number }

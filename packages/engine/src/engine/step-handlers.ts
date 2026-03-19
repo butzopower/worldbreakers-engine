@@ -37,7 +37,7 @@ import { ResolveContext, findValidTargets, resolvePrimitive } from '../abilities
 import { getCustomResolver } from '../abilities/system';
 import { getCard } from '../state/query';
 import { getFollowers, getLocations, isHidden, canAttack, canBlock, canBlockAttacker, hasKeyword } from '../state/query';
-import { AbilityDefinition, AbilityTiming, EffectPrimitive, Mode } from '../types/effects';
+import { AbilityDefinition, AbilityTiming, CardFilter, EffectPrimitive, Mode } from '../types/effects';
 import { handleDevelop } from "../actions/develop";
 import { playCard } from './engine';
 import { CostDiscount } from '../types/cards';
@@ -67,6 +67,8 @@ export function executeStep(state: GameState, step: EngineStep): StepResult {
       return handleRequestChooseAttackers(state, step.player, step.maxAttackers)
     case 'request_cost_discount':
       return handleRequestCostDiscount(state, step)
+    case 'request_choose_target':
+      return handleRequestChooseTarget(state, step)
     case 'cleanup':
       return handleCleanup(state);
     case 'advance_turn':
@@ -275,6 +277,21 @@ function handleRequestCostDiscount(
     costDiscount,
     externalCostReduction,
     validTargetIds,
+  });
+}
+
+function handleRequestChooseTarget(
+  state: GameState,
+  step: { player: PlayerId; sourceCardId: string; abilityIndex: number; effects: EffectPrimitive[]; filter: CardFilter; triggeringCardId?: string },
+): StepResult {
+  return setPendingChoice(state, {
+    type: 'choose_target',
+    playerId: step.player,
+    sourceCardId: step.sourceCardId,
+    abilityIndex: step.abilityIndex,
+    effects: step.effects,
+    filter: step.filter,
+    triggeringCardId: step.triggeringCardId,
   });
 }
 
@@ -1061,47 +1078,42 @@ export function resolveEffectsWithQueue(
   ctx: ResolveContext,
   abilityIndex = 0,
 ): { state: GameState; events: GameEvent[]; prepend?: EngineStep[] } {
-  let s = state;
-  const events: GameEvent[] = [];
-
   for (let i = 0; i < effects.length; i++) {
     const effect = effects[i];
 
     if (!ctx.chosenTargets && 'target' in effect && effect.target && effect.target.kind === 'choose') {
-      const validTargets = findValidTargets(s, effect.target, ctx);
+      const validTargets = findValidTargets(state, effect.target, ctx);
       if (validTargets.length === 0) continue;
 
       const remainingEffects = effects.slice(i + 1);
-      s = {
-        ...s,
-        pendingChoice: {
-          type: 'choose_target',
-          playerId: ctx.controller,
+      const prepend: EngineStep[] = [
+        {
+          type: 'request_choose_target',
+          player: ctx.controller,
           sourceCardId: ctx.sourceCardId,
           abilityIndex,
           effects: [effect],
           filter: effect.target.filter,
           triggeringCardId: ctx.triggeringCardId,
         },
-      };
-      const prepend: EngineStep[] = [];
+      ];
       if (remainingEffects.length > 0) {
         prepend.push({ type: 'resolve_effects', effects: remainingEffects, ctx: { controller: ctx.controller, sourceCardId: ctx.sourceCardId, triggeringCardId: ctx.triggeringCardId } });
       }
-      return { state: s, events, prepend };
+      return { state, events: [], prepend };
     }
 
-    const prepend = resolvePrimitive(s, effect, ctx);
+    const prepend = resolvePrimitive(state, effect, ctx);
     if (prepend.length > 0) {
       const remainingEffects = effects.slice(i + 1);
       if (remainingEffects.length > 0) {
         prepend.push({ type: 'resolve_effects', effects: remainingEffects, ctx: { controller: ctx.controller, sourceCardId: ctx.sourceCardId, triggeringCardId: ctx.triggeringCardId } });
       }
-      return { state: s, events, prepend };
+      return { state, events: [], prepend };
     }
   }
 
-  return { state: s, events };
+  return { state, events: [] };
 }
 
 function handleGrantLastingEffect(
