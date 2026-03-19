@@ -302,6 +302,30 @@ export function resolvePrimitive(
       const targets = resolveTargets(state, effect.target, ctx);
       return targets.map(cardInstanceId => ({ type: 'remove_from_combat' as const, cardInstanceId }));
     }
+    case 'optional': {
+      return [
+        {
+          type: 'request_choose_mode',
+          player: ctx.controller,
+          sourceCardId: ctx.sourceCardId,
+          modes: [
+            { label: effect.label, effects: effect.effects },
+            { label: 'Pass', effects: [] },
+          ],
+        },
+      ];
+    }
+    case 'choose_one': {
+      return [
+        {
+          type: 'request_choose_mode',
+          player: ctx.controller,
+          sourceCardId: ctx.sourceCardId,
+          modes: effect.modes,
+        },
+      ]
+    }
+
   }
 
   return [];
