@@ -54,6 +54,7 @@ export type EffectPrimitive =
   | { type: 'ready'; target: TargetSelector }
   | { type: 'buff_attackers'; counter: 'strength_buff'; amount: number }
   | { type: 'choose_one'; modes: Mode[] }
+  | { type: 'optional'; label: string; effects: EffectPrimitive[] }
   | { type: 'play_card'; target: TargetSelector; costReduction?: number }
   | { type: 'conditional'; condition: Condition; effects: EffectPrimitive[]; else?: EffectPrimitive[] }
   | { type: 'develop'; target: TargetSelector }

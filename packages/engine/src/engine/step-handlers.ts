@@ -1067,6 +1067,25 @@ export function resolveEffectsWithQueue(
   for (let i = 0; i < effects.length; i++) {
     const effect = effects[i];
 
+    if (effect.type === 'optional') {
+      const remainingEffects = effects.slice(i + 1);
+      const prepend: EngineStep[] = [
+        {
+          type: 'request_choose_mode',
+          player: ctx.controller,
+          sourceCardId: ctx.sourceCardId,
+          modes: [
+            { label: effect.label, effects: effect.effects },
+            { label: 'Pass', effects: [] },
+          ],
+        },
+      ];
+      if (remainingEffects.length > 0) {
+        prepend.push({ type: 'resolve_effects', effects: remainingEffects, ctx: { controller: ctx.controller, sourceCardId: ctx.sourceCardId, triggeringCardId: ctx.triggeringCardId } });
+      }
+      return { state: s, events, prepend };
+    }
+
     if (effect.type === 'choose_one') {
       const remainingEffects = effects.slice(i + 1);
       const prepend: EngineStep[] = [

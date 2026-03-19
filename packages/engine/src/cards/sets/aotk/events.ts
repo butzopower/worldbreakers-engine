@@ -175,6 +175,24 @@ export const events: CardDefinition[] = [
     }],
   },
   {
+    id: 'pernicious_powder',
+    name: 'Pernicious Powder',
+    type: 'event',
+    guild: 'void',
+    cost: 4,
+    standingRequirement: { void: 3 },
+    description: 'Deal 2 wounds to each of up to 3 followers.',
+    abilities: [{
+      timing: 'play',
+      effects: [
+        { type: 'optional', label: 'Deal 2 wounds to a follower', effects: [{ type: 'deal_wounds', target: { kind: 'choose', filter: { type: 'follower', zone: ['board'] }, count: 1 }, amount: 2 }] },
+        { type: 'optional', label: 'Deal 2 wounds to a follower', effects: [{ type: 'deal_wounds', target: { kind: 'choose', filter: { type: 'follower', zone: ['board'] }, count: 1 }, amount: 2 }] },
+        { type: 'optional', label: 'Deal 2 wounds to a follower', effects: [{ type: 'deal_wounds', target: { kind: 'choose', filter: { type: 'follower', zone: ['board'] }, count: 1 }, amount: 2 }] },
+      ],
+      description: 'Deal 2 wounds to each of up to 3 followers.',
+    }],
+  },
+  {
     id: 'raid_the_mines',
     name: 'Raid the Mines',
     type: 'event',
