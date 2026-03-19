@@ -33,6 +33,7 @@ function createPlayerState(guild: Guild): PlayerState {
     bonusActions: 0,
     pendingBonusActions: 0,
     powerGainedThisRound: false,
+    soloAttackedThisRound: false,
   };
 }
 

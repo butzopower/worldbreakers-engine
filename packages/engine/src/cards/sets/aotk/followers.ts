@@ -529,6 +529,22 @@ export const followers: CardDefinition[] = [
     description: 'Enters: Players cannot attack for the remainder of this round.',
   },
   {
+    id: 'resourceful_aide',
+    name: 'Resourceful Aide',
+    type: 'follower',
+    guild: 'void',
+    cost: 3,
+    standingRequirement: { void: 1 },
+    strength: 2,
+    health: 2,
+    abilities: [{
+      timing: 'first_solo_attack_this_round',
+      effects: [{ type: 'gain_mythium', player: 'controller', amount: 2 }],
+      description: 'The first time each round one of your followers attacks alone → Gain 2 mythium.',
+    }],
+    description: 'Your Attack: The first time each round one of your followers attacks alone → Gain 2 mythium.',
+  },
+  {
     id: 'serendipitous_witness',
     name: 'Serendipitous Witness',
     type: 'follower',

@@ -86,7 +86,8 @@ export type AbilityTiming =
   | 'location_depleted'
   | 'location_played'
   | 'overwhelms'
-  | 'first_power_gain_this_round';
+  | 'first_power_gain_this_round'
+  | 'first_solo_attack_this_round';
 
 export interface AbilityDefinition {
   timing: AbilityTiming;

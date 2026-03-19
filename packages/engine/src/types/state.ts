@@ -73,6 +73,7 @@ export interface PlayerState {
   bonusActions: number;
   pendingBonusActions: number;
   powerGainedThisRound: boolean;
+  soloAttackedThisRound: boolean;
 }
 
 export interface GameState {

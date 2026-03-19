@@ -509,8 +509,8 @@ function handleRallyNewRound(state: GameState): StepResult {
     activePlayer: newFirstPlayer,
     defeatedThisRound: [],
     players: {
-      player1: { ...state.players.player1, bonusActions: 0, pendingBonusActions: 0, powerGainedThisRound: false },
-      player2: { ...state.players.player2, bonusActions: 0, pendingBonusActions: 0, powerGainedThisRound: false },
+      player1: { ...state.players.player1, bonusActions: 0, pendingBonusActions: 0, powerGainedThisRound: false, soloAttackedThisRound: false },
+      player2: { ...state.players.player2, bonusActions: 0, pendingBonusActions: 0, powerGainedThisRound: false, soloAttackedThisRound: false },
     },
   };
 
@@ -788,6 +788,9 @@ function handleCheckCombatResponses(state: GameState, timing: CombatResponseTrig
 // --- Combat Step Handlers ---
 
 function handleCombatStart(state: GameState, attackingPlayer: PlayerId, attackerIds: string[]): StepResult {
+  const isSoloAttack = attackerIds.length === 1;
+  const isFirstSoloAttack = isSoloAttack && !state.players[attackingPlayer].soloAttackedThisRound;
+
   const s: GameState = {
     ...state,
     combat: {
@@ -795,10 +798,26 @@ function handleCombatStart(state: GameState, attackingPlayer: PlayerId, attacker
       attackingPlayer,
       attackerIds,
     },
+    ...(isFirstSoloAttack ? {
+      players: {
+        ...state.players,
+        [attackingPlayer]: {
+          ...state.players[attackingPlayer],
+          soloAttackedThisRound: true,
+        },
+      },
+    } : {}),
   };
+
+  const prepend: EngineStep[] = [];
+  if (isFirstSoloAttack) {
+    prepend.push({ type: 'check_triggers', timing: 'first_solo_attack_this_round', player: attackingPlayer });
+  }
+
   return {
     state: s,
     events: [{ type: 'combat_started', attackingPlayer, attackerIds }],
+    prepend: prepend.length > 0 ? prepend : undefined,
   };
 }
 
