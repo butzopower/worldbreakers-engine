@@ -881,6 +881,25 @@ function handleCombatFight(state: GameState, attackerId: string, blockerId: stri
       }
     }
   }
+
+  // Check is_blocked triggers on the attacker before resolving fight damage
+  const attackingPlayer = state.combat!.attackingPlayer;
+  const attackerCard = getCard(s, attackerId);
+  if (attackerCard) {
+    const attackerDef = getCardDef(attackerCard);
+    if (attackerDef.abilities) {
+      const isBlockedTriggers: TriggerOption[] = [];
+      for (let i = 0; i < attackerDef.abilities.length; i++) {
+        if (attackerDef.abilities[i].timing === 'is_blocked') {
+          isBlockedTriggers.push({ sourceCardId: attackerId, abilityIndex: i, triggeringCardId: blockerId, forced: attackerDef.abilities[i].forced === true });
+        }
+      }
+      if (isBlockedTriggers.length > 0) {
+        prepend.push({ type: 'order_triggers', player: attackingPlayer, triggers: isBlockedTriggers });
+      }
+    }
+  }
+
   prepend.push({ type: 'combat_resolve_fight', attackerId, blockerId });
 
   return { state: s, events, prepend };

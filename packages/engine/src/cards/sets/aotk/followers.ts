@@ -483,6 +483,24 @@ export const followers: CardDefinition[] = [
     }],
   },
   {
+    id: 'novice_cutpurse',
+    name: 'Novice Cutpurse',
+    type: 'follower',
+    guild: 'void',
+    cost: 1,
+    standingRequirement: { void: 1 },
+    strength: 1,
+    health: 1,
+    abilities: [{
+      timing: 'is_blocked',
+      effects: [
+        { type: 'gain_mythium', player: 'self', amount: 2 },
+        { type: 'gain_standing', player: 'self', guild: 'choose', amount: 1 },
+      ],
+      description: 'Response: After Novice Cutpurse is blocked → Gain 2 mythium and 1 standing with any guild.',
+    }],
+  },
+  {
     id: 'poised_duelist',
     name: 'Poised Duelist',
     type: 'follower',

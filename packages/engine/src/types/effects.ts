@@ -87,6 +87,7 @@ export type AbilityTiming =
   | 'location_depleted'
   | 'location_played'
   | 'overwhelms'
+  | 'is_blocked'
   | 'first_power_gain_this_round'
   | 'first_solo_attack_this_round';
 
