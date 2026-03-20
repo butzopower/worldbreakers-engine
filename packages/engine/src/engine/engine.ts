@@ -415,7 +415,7 @@ function resolveChooseBreachTarget(state: GameState, _player: PlayerId, action: 
   }
   // skip_breach_damage: just continue to combat_end
 
-  return { state: s, events, prepend: [...prepend, { type: 'combat_end' }] };
+  return { state: s, events, prepend };
 }
 
 function resolveChooseAttackers(state: GameState, _player: PlayerId, action: PlayerAction): ChoiceResult {

@@ -192,6 +192,23 @@ export function resolvePrimitive(
       }
       return [];
     }
+    case 'on_successful_attack': {
+      const attackable = getFollowers(state, ctx.controller).filter(f => canAttack(state, f));
+      if (attackable.length === 0) return [];
+      return [
+        {
+          type: 'register_combat_response',
+          trigger: 'on_breach' as const,
+          effects: effect.effects,
+          controller: ctx.controller,
+          sourceCardId: ctx.sourceCardId,
+        },
+        { type: 'request_choose_attackers', player: ctx.controller, maxAttackers: effect.maxAttackers },
+      ];
+    }
+    case 'damage_location': {
+      return [{ type: 'choose_breach_target', player: ctx.controller }];
+    }
     case 'lose_standing': {
       const players = resolvePlayerSelector(effect.player, ctx);
       return players.map(player => (

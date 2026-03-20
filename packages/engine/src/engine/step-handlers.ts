@@ -1040,6 +1040,8 @@ function handleCombatBreach(state: GameState, livingAttackerIds: string[]): Step
       { type: 'check_triggers', timing: 'breach', player: attackingPlayer },
       { type: 'cleanup' },
       { type: 'choose_breach_target', player: attackingPlayer },
+      { type: 'check_combat_responses', timing: 'on_breach' },
+      { type: 'cleanup' },
     );
   }
 

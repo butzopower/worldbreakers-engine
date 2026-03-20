@@ -25,6 +25,25 @@ export const events: CardDefinition[] = [
     }]
   },
   {
+    id: 'consumed_by_the_dust',
+    name: 'Consumed by the Dust',
+    type: 'event',
+    guild: 'void',
+    cost: 2,
+    standingRequirement: { void: 2 },
+    abilities: [{
+      timing: 'play',
+      effects: [{
+        type: 'on_successful_attack',
+        effects: [
+          { type: 'optional', label: 'Damage a location', effects: [{ type: 'damage_location' }] },
+          { type: 'optional', label: 'Damage a location', effects: [{ type: 'damage_location' }] },
+        ],
+      }],
+      description: 'Attack. Interrupt: Before combat ends, if the attack was successful → Damage a location. Then you may damage a location again.',
+    }],
+  },
+  {
     id: 'exploitative_extraction',
     name: 'Exploitative Extraction',
     type: 'event',

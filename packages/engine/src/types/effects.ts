@@ -70,7 +70,9 @@ export type EffectPrimitive =
   | { type: 'pays_mythium'; amount: number; effects: EffectPrimitive[] }
   | { type: 'custom_resolve'; customResolve: string }
   | { type: 'grant_bonus_action'; player: PlayerSelector }
-  | { type: 'remove_from_combat'; target: TargetSelector };
+  | { type: 'remove_from_combat'; target: TargetSelector }
+  | { type: 'on_successful_attack'; effects: EffectPrimitive[]; maxAttackers?: number }
+  | { type: 'damage_location' };
 
 export type AbilityTiming =
   | 'enters'

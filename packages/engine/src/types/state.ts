@@ -4,7 +4,7 @@ import { CounterMap } from './counters';
 import { CardFilter, EffectPrimitive, Mode } from './effects';
 import { EngineStep } from './steps';
 
-export type CombatResponseTrigger = 'on_power_gain';
+export type CombatResponseTrigger = 'on_power_gain' | 'on_breach';
 
 export interface CombatResponse {
   id: string;
