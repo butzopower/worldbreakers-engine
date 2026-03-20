@@ -88,7 +88,7 @@ export const atokVoid: DeckConfig = {
     'cunning_reclaimer',
     'resourceful_aide',
     'serendipitous_witness',
-    // 'silent_assassin',
+    'silent_assassin',
     'baleful_viper',
     'alamut_saboteur',
     'alamut_emissary',

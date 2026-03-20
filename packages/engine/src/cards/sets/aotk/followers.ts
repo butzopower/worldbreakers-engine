@@ -609,6 +609,30 @@ export const followers: CardDefinition[] = [
     }],
   },
   {
+    id: 'silent_assassin',
+    name: 'Silent Assassin',
+    type: 'follower',
+    guild: 'void',
+    cost: 3,
+    standingRequirement: { void: 1 },
+    strength: 1,
+    health: 1,
+    keywords: ['bloodshed'],
+    abilities: [{
+      timing: 'attacks',
+      effects: [{
+        type: 'conditional',
+        condition: { type: 'attacking_alone' },
+        effects: [{
+          type: 'deal_wounds',
+          target: { kind: 'choose', filter: { type: 'follower', zone: ['board'], owner: 'opponent' }, count: 1 },
+          amount: 1,
+        }],
+      }],
+      description: 'Bloodshed 1: When this attacks alone, it deals 1 wound to a follower defending player controls.',
+    }],
+  },
+  {
     id: 'skillful_bruiser',
     name: 'Skillful Bruiser',
     type: 'follower',
