@@ -747,6 +747,24 @@ export const followers: CardDefinition[] = [
     ],
   },
   {
+    id: 'swirling_skirmisher',
+    name: 'Swirling Skirmisher',
+    type: 'follower',
+    guild: 'void',
+    cost: 2,
+    standingRequirement: { void: 3 },
+    strength: 2,
+    health: 2,
+    abilities: [{
+      timing: 'enters',
+      effects: [
+        { type: 'optional', label: 'Attack with one follower', effects: [{ type: 'initiate_attack', maxAttackers: 1 }] },
+        { type: 'optional', label: 'Attack with one follower again', effects: [{ type: 'initiate_attack', maxAttackers: 1 }] },
+      ],
+      description: 'Enters: You may attack with one follower. When that combat ends, you may attack with one follower again.',
+    }],
+  },
+  {
     id: 'tengris_cavalry',
     name: 'Tengri\'s Cavalry',
     type: 'follower',
