@@ -114,6 +114,7 @@ export function canBlock(state: GameState, card: CardInstance): boolean {
   if (card.exhausted) return false;
   if (getCardDef(card).type !== 'follower') return false;
   if (getCounter(card.counters, 'stun') > 0) return false;
+  if (state.lastingEffects.some(e => e.type === 'cant_block' && e.targetInstanceIds.includes(card.instanceId))) return false;
   return true;
 }
 

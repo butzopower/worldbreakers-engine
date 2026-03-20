@@ -24,7 +24,7 @@ export interface CardInstance {
   markAsDestroyed: boolean;
 }
 
-export type LastingEffectType = 'strength_buff' | 'health_buff' | 'lethal' | 'overwhelm' | 'unblockable' | 'no_attacks' | 'boost_ruknuddin_khurshah_ability';
+export type LastingEffectType = 'strength_buff' | 'health_buff' | 'lethal' | 'overwhelm' | 'unblockable' | 'cant_block' | 'no_attacks' | 'boost_ruknuddin_khurshah_ability';
 export type LastingEffectExpiration = 'end_of_combat' | 'end_of_turn' | 'end_of_round';
 
 export interface LastingEffect {

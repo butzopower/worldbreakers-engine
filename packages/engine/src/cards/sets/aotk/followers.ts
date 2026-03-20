@@ -231,6 +231,31 @@ export const followers: CardDefinition[] = [
     ],
   },
   {
+    id: 'cunning_reclaimer',
+    name: 'Cunning Reclaimer',
+    type: 'follower',
+    guild: 'void',
+    cost: 3,
+    standingRequirement: { void: 1 },
+    strength: 3,
+    health: 3,
+    abilities: [{
+      timing: 'attacks',
+      effects: [{
+        type: 'conditional',
+        condition: { type: 'attacking_alone' },
+        effects: [{
+          type: 'grant_lasting_effect',
+          target: { kind: 'choose', filter: { type: 'follower', zone: ['board'], owner: 'opponent' }, count: 1 },
+          effect: 'cant_block',
+          expiresAt: 'end_of_combat',
+        }],
+      }],
+      forced: true,
+      description: 'Attacks: If Cunning Reclaimer is attacking alone → Choose a follower. It can\'t block for this combat.',
+    }],
+  },
+  {
     id: 'dogtamer',
     name: 'Dogtamer',
     type: 'follower',
