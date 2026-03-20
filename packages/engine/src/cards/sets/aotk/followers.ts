@@ -2,8 +2,9 @@ import { CardDefinition } from '../../../types/cards';
 import { CustomResolverFn } from '../../../abilities/system';
 import { GameState } from '../../../types/state';
 import { ResolveContext } from '../../../abilities/primitives';
-import { STANDING_GUILDS } from '../../../types/core';
+import { STANDING_GUILDS, opponentOf } from '../../../types/core';
 import { gainMythium } from '../../../state/mutate';
+import { getFollowers } from '../../../state/query';
 
 export const followers: CardDefinition[] = [
   {
@@ -777,6 +778,26 @@ export const followers: CardDefinition[] = [
     description: 'Overwhelm (When this defeats a blocker, gain 1 power.)',
   },
   {
+    id: 'the_ancient_butcher',
+    name: 'The Ancient Butcher',
+    type: 'follower',
+    guild: 'void',
+    cost: 6,
+    standingRequirement: { void: 3 },
+    strength: 4,
+    health: 6,
+    abilities: [{
+      timing: 'attacks',
+      effects: [{
+        type: 'conditional',
+        condition: { type: 'attacking_alone' },
+        effects: [{ type: 'custom_resolve', customResolve: 'the_ancient_butcher_attacks' }],
+      }],
+      forced: true,
+      description: 'Attacks: If The Ancient Butcher is attacking alone, pay X mythium → Deal X plus 1 wounds to a follower the defending player controls.',
+    }],
+  },
+  {
     id: 'the_blind_sculptor',
     name: 'The Blind Sculptor',
     type: 'follower',
@@ -910,6 +931,35 @@ export const followerResolvers: { key: string; resolver: CustomResolverFn }[] = 
           target: { kind: 'choose', filter: { type: 'follower', zone: ['board'], cardInstanceIds: otherAttackerIds }, count: 1 },
         }],
         ctx: { controller: ctx.controller, sourceCardId: ctx.sourceCardId, triggeringCardId: ctx.triggeringCardId },
+      }];
+    },
+  },
+  {
+    key: 'the_ancient_butcher_attacks',
+    resolver: (state: GameState, ctx: ResolveContext) => {
+      const opponent = opponentOf(ctx.controller);
+      const opponentFollowers = getFollowers(state, opponent);
+      if (opponentFollowers.length === 0) return [];
+
+      const mythium = state.players[ctx.controller].mythium;
+      const woundTarget = { kind: 'choose' as const, filter: { type: 'follower' as const, zone: ['board' as const], owner: 'opponent' as const }, count: 1 };
+
+      const modes = [];
+      for (let x = 0; x <= mythium; x++) {
+        const effects = [];
+        if (x > 0) {
+          effects.push({ type: 'lose_mythium' as const, player: 'self' as const, amount: x });
+        }
+        effects.push({ type: 'deal_wounds' as const, target: woundTarget, amount: x + 1 });
+        modes.push({ label: `Pay ${x} → Deal ${x + 1} wounds`, effects });
+      }
+      modes.push({ label: 'Pass', effects: [] });
+
+      return [{
+        type: 'request_choose_mode',
+        player: ctx.controller,
+        sourceCardId: ctx.sourceCardId,
+        modes,
       }];
     },
   },

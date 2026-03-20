@@ -94,7 +94,7 @@ export const atokVoid: DeckConfig = {
     'alamut_emissary',
     'callous_closer',
     'swirling_skirmisher',
-    // 'the_ancient_butcher',
+    'the_ancient_butcher',
     'forlorn_flats',
     'raiders_hideaway',
     'gratuitous_gift',
