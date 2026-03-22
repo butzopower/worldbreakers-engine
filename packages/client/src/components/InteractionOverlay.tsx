@@ -162,6 +162,30 @@ export default function InteractionOverlay({ mode, state, playerId, onSubmitActi
         </div>
       );
 
+    case 'choose_store_target':
+      return (
+        <div className={styles.panel}>
+          <div className={styles.instructions}>
+            Choose a card to store (click a highlighted card), or pass.
+          </div>
+          <button onClick={() => onSubmitAction({ type: 'pass_store' })} className={styles.btnCancel}>
+            Pass
+          </button>
+        </div>
+      );
+
+    case 'choose_stored_card_to_play':
+      return (
+        <div className={styles.panel}>
+          <div className={styles.instructions}>
+            Choose a stored card to play (click a highlighted card), or pass.
+          </div>
+          <button onClick={() => onSubmitAction({ type: 'pass_play_stored' })} className={styles.btnCancel}>
+            Pass
+          </button>
+        </div>
+      );
+
     case 'choose_cost_discount':
       return (
         <div className={styles.panel}>

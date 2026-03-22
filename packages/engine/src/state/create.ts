@@ -50,6 +50,8 @@ function createCardInstance(
     exhausted: false,
     counters: {},
     markAsDestroyed: false,
+    storedCards: [],
+    storedOn: null,
   };
 }
 

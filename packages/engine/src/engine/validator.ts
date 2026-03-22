@@ -232,6 +232,26 @@ function validatePendingChoice(state: GameState, player: PlayerId, action: Playe
       }
       return validateRevealChoice(state, player, action.cardInstanceIds, choice.count);
 
+    case 'choose_store_target':
+      if (action.type === 'pass_store') return { valid: true };
+      if (action.type !== 'choose_store_target') {
+        return { valid: false, reason: 'Must choose a card to store or pass' };
+      }
+      if (!choice.validTargetIds.includes(action.cardInstanceId)) {
+        return { valid: false, reason: 'Invalid store target' };
+      }
+      return { valid: true };
+
+    case 'choose_stored_card_to_play':
+      if (action.type === 'pass_play_stored') return { valid: true };
+      if (action.type !== 'choose_stored_card_to_play') {
+        return { valid: false, reason: 'Must choose a stored card to play or pass' };
+      }
+      if (!choice.validCardIds.includes(action.cardInstanceId)) {
+        return { valid: false, reason: 'Invalid stored card' };
+      }
+      return { valid: true };
+
     default:
       return { valid: false, reason: 'Unknown choice type' };
   }

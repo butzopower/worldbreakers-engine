@@ -45,17 +45,31 @@ export function moveCard(
   const fromZone = card.zone;
   if (fromZone === toZone) return { state, events: [] };
 
+  const leavingBoard = fromZone === 'board' && toZone !== 'board';
+
   const newCard: CardInstance = {
     ...card,
     zone: toZone,
     // Reset state when leaving board
     exhausted: toZone === 'board' ? card.exhausted : false,
     counters: toZone === 'board' ? card.counters : {},
+    // Clear storage tracking when leaving board
+    storedCards: leavingBoard ? [] : card.storedCards,
   };
+
+  // When a card with stored cards leaves the board, discard all stored cards
+  const storedCardIds = leavingBoard ? card.storedCards : [];
 
   const newState = bump({
     ...state,
-    cards: state.cards.map(c => c.instanceId === instanceId ? newCard : c),
+    cards: state.cards.map(c => {
+      if (c.instanceId === instanceId) return newCard;
+      // Discard stored cards and clear their storedOn reference
+      if (storedCardIds.includes(c.instanceId)) {
+        return { ...c, zone: 'discard' as Zone, storedOn: null, exhausted: false, counters: {} };
+      }
+      return c;
+    }),
   });
 
   // Update hand size tracking
@@ -67,9 +81,14 @@ export function moveCard(
     finalState = adjustHandSize(finalState, card.owner, 1);
   }
 
+  const events: GameEvent[] = [{ type: 'card_moved', cardInstanceId: instanceId, from: fromZone, to: toZone }];
+  for (const storedId of storedCardIds) {
+    events.push({ type: 'card_moved', cardInstanceId: storedId, from: 'stored', to: 'discard' });
+  }
+
   return {
     state: finalState,
-    events: [{ type: 'card_moved', cardInstanceId: instanceId, from: fromZone, to: toZone }],
+    events,
   };
 }
 
@@ -423,6 +442,66 @@ export function setPendingChoice(
 
 export function setActivePlayer(state: GameState, player: PlayerId): GameState {
   return bump({ ...state, activePlayer: player });
+}
+
+export function storeCard(
+  state: GameState,
+  cardInstanceId: string,
+  hostInstanceId: string,
+): MutationResult {
+  const card = state.cards.find(c => c.instanceId === cardInstanceId);
+  const host = state.cards.find(c => c.instanceId === hostInstanceId);
+  if (!card || !host) return { state, events: [] };
+
+  const fromZone = card.zone;
+
+  const newState = bump({
+    ...state,
+    cards: state.cards.map(c => {
+      if (c.instanceId === cardInstanceId) {
+        return { ...c, zone: 'stored' as Zone, storedOn: hostInstanceId, exhausted: false, counters: {} };
+      }
+      if (c.instanceId === hostInstanceId) {
+        return { ...c, storedCards: [...c.storedCards, cardInstanceId] };
+      }
+      return c;
+    }),
+  });
+
+  let finalState = newState;
+  if (fromZone === 'hand') {
+    finalState = adjustHandSize(finalState, card.owner, -1);
+  }
+
+  return {
+    state: finalState,
+    events: [{ type: 'card_moved', cardInstanceId, from: fromZone, to: 'stored' }],
+  };
+}
+
+export function unstoreCard(
+  state: GameState,
+  cardInstanceId: string,
+): MutationResult {
+  const card = state.cards.find(c => c.instanceId === cardInstanceId);
+  if (!card || !card.storedOn) return { state, events: [] };
+
+  const hostId = card.storedOn;
+
+  const newState = bump({
+    ...state,
+    cards: state.cards.map(c => {
+      if (c.instanceId === cardInstanceId) {
+        return { ...c, storedOn: null };
+      }
+      if (c.instanceId === hostId) {
+        return { ...c, storedCards: c.storedCards.filter(id => id !== cardInstanceId) };
+      }
+      return c;
+    }),
+  });
+
+  return { state: newState, events: [] };
 }
 
 export function incrementActions(state: GameState): GameState {

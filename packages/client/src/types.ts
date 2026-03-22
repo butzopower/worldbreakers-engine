@@ -14,6 +14,8 @@ export interface VisibleCard {
   exhausted: boolean;
   counters: Record<string, number>;
   usedAbilities: number[];
+  storedCards: string[];
+  storedOn: string | null;
 }
 
 export type FilteredCard = VisibleCard | HiddenCard;
@@ -53,7 +55,9 @@ export type PendingChoice =
   | { type: 'choose_cost_discount'; playerId: PlayerId; cardInstanceId: string; costDiscount: { costReduction: number; perTarget?: boolean; maxTargets?: number }; validTargetIds: string[] }
   | { type: 'choose_play_order'; playerId: PlayerId; cardInstanceIds: string[] }
   | { type: 'choose_mulligan'; playerId: PlayerId }
-  | { type: 'choose_reveal_for_opponent_discard'; playerId: PlayerId; count: number };
+  | { type: 'choose_reveal_for_opponent_discard'; playerId: PlayerId; count: number }
+  | { type: 'choose_store_target'; playerId: PlayerId; sourceCardId: string; validTargetIds: string[]; hostInstanceId: string }
+  | { type: 'choose_stored_card_to_play'; playerId: PlayerId; hostInstanceId: string; validCardIds: string[] };
 
 export type LasingEffect = {
   type: string;
@@ -106,6 +110,7 @@ export interface ClientCardDefinition {
   description?: string;
   cardDescription?: string;
   locationStages?: { stage: number; description?: string }[];
+  storage?: number;
 }
 
 export type InteractionMode =
@@ -120,4 +125,6 @@ export type InteractionMode =
   | { type: 'choose_cost_discount'; validTargets: string[]; maxTargets: number; selected: string[] }
   | { type: 'choose_play_order'; cardInstanceIds: string[] }
   | { type: 'choose_mulligan'; selected: string[] }
-  | { type: 'choose_reveal_for_opponent_discard'; count: number; selected: string[] };
+  | { type: 'choose_reveal_for_opponent_discard'; count: number; selected: string[] }
+  | { type: 'choose_store_target'; validTargets: string[]; hostInstanceId: string }
+  | { type: 'choose_stored_card_to_play'; validCardIds: string[]; hostInstanceId: string };

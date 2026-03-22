@@ -124,3 +124,41 @@
   border-radius: 50%;
   display: inline-block;
 }
+
+.cardWithStorage {
+  display: flex;
+  flex-direction: column;
+}
+
+.storedContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 2px;
+}
+
+.storedCard {
+  font-size: 9px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--color-bg-dark, #1a1a2e);
+  border: 1px solid #555;
+  color: #ccc;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.storedCard--highlighted {
+  border-color: #ffff00;
+  background: rgba(255, 255, 0, 0.1);
+}
+
+.storedCard--clickable {
+  cursor: pointer;
+}
+
+.storedLabel {
+  color: #888;
+  font-style: italic;
+}

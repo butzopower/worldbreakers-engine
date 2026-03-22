@@ -124,7 +124,7 @@ export function playCard(
   state: GameState,
   player: PlayerId,
   cardInstanceId: string,
-  opts?: { costReduction?: number; skipCostDiscount?: boolean },
+  opts?: { costReduction?: number; skipCostDiscount?: boolean; fromStorage?: string },
 ): EngineStep[] {
   const card = getCard(state, cardInstanceId)!;
   const def = getCardDef(card);
@@ -141,6 +141,11 @@ export function playCard(
   }
 
   const steps: EngineStep[] = [];
+
+  // If playing from storage, unstore the card first
+  if (opts?.fromStorage) {
+    steps.push({ type: 'unstore_card', cardInstanceId });
+  }
 
   // Pay mythium cost
   const passiveReduction = getPassiveCostReduction(state, player, def);
@@ -293,6 +298,12 @@ function resolveChoice(
       return resolveChooseMulligan(state, player, action);
     case 'choose_reveal_for_opponent_discard':
       return resolveChooseRevealForOpponentDiscard(state, player, action);
+    case 'choose_store_target':
+      if (action.type === 'pass_store') return { state: { ...state, pendingChoice: null }, events: [], prepend: [] };
+      return resolveChooseStoreTarget(state, player, action);
+    case 'choose_stored_card_to_play':
+      if (action.type === 'pass_play_stored') return { state: { ...state, pendingChoice: null }, events: [], prepend: [] };
+      return resolveChooseStoredCardToPlay(state, player, action);
     default:
       throw new Error(`Unknown choice type: ${(choice as PendingChoice).type}`);
   }
@@ -611,6 +622,42 @@ function resolveChooseCostDiscount(state: GameState, _player: PlayerId, action: 
 
 import { handleDevelop } from "../actions/develop";
 
+function resolveChooseStoreTarget(state: GameState, _player: PlayerId, action: PlayerAction): ChoiceResult {
+  if (action.type !== 'choose_store_target') throw new Error('Expected choose_store_target');
+  const choice = state.pendingChoice!;
+  if (choice.type !== 'choose_store_target') throw new Error('Expected choose_store_target choice');
+
+  const s: GameState = { ...state, pendingChoice: null };
+
+  const prepend: EngineStep[] = [
+    { type: 'store_card', cardInstanceId: action.cardInstanceId, hostInstanceId: choice.hostInstanceId },
+  ];
+
+  // If the store effect has follow-up effects (e.g., draw a card after storing), queue them
+  if (choice.effects && choice.effects.length > 0) {
+    prepend.push({
+      type: 'resolve_effects',
+      effects: choice.effects,
+      ctx: { controller: choice.playerId, sourceCardId: choice.sourceCardId },
+    });
+  }
+
+  return { state: s, events: [], prepend };
+}
+
+function resolveChooseStoredCardToPlay(state: GameState, _player: PlayerId, action: PlayerAction): ChoiceResult {
+  if (action.type !== 'choose_stored_card_to_play') throw new Error('Expected choose_stored_card_to_play');
+  const choice = state.pendingChoice!;
+  if (choice.type !== 'choose_stored_card_to_play') throw new Error('Expected choose_stored_card_to_play choice');
+
+  const s: GameState = { ...state, pendingChoice: null };
+
+  // Unstore the card first, then play it
+  const prepend: EngineStep[] = playCard(s, choice.playerId, action.cardInstanceId, { costReduction: choice.costReduction, fromStorage: choice.hostInstanceId });
+
+  return { state: s, events: [], prepend };
+}
+
 /**
  * Compute all legal actions for the current game state.
  */
@@ -811,6 +858,20 @@ function getLegalChoiceActions(state: GameState): ActionInput[] {
       const combos = combinations(revealHand.map(c => c.instanceId), count);
       for (const combo of combos) {
         actions.push({ player, action: { type: 'choose_reveal_for_opponent_discard', cardInstanceIds: combo } });
+      }
+      break;
+    }
+    case 'choose_store_target': {
+      actions.push({ player, action: { type: 'pass_store' } });
+      for (const targetId of choice.validTargetIds) {
+        actions.push({ player, action: { type: 'choose_store_target', cardInstanceId: targetId } });
+      }
+      break;
+    }
+    case 'choose_stored_card_to_play': {
+      actions.push({ player, action: { type: 'pass_play_stored' } });
+      for (const cardId of choice.validCardIds) {
+        actions.push({ player, action: { type: 'choose_stored_card_to_play', cardInstanceId: cardId } });
       }
       break;
     }

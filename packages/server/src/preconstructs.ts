@@ -129,7 +129,7 @@ export const atokMoon: DeckConfig = {
     // 'fanciful_astronomer',
     // 'muhandasat_savior',
     // 'nocturnal_reaper',
-    // 'patient_mentor',
+    'patient_mentor',
     // 'the_paragon',
     // 'luminous_lagoon',
     // 'volatile_furnace',

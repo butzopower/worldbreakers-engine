@@ -82,6 +82,11 @@ export default function PlayerArea({ state, playerId, interactionMode, onCardCli
                 a => a.type === 'use_ability' && a.cardInstanceId === card.instanceId
               );
 
+              const storedHighlighted = interactionMode.type === 'choose_stored_card_to_play' &&
+                interactionMode.hostInstanceId === card.instanceId
+                ? interactionMode.validCardIds
+                : undefined;
+
               return (
                 <div key={card.instanceId} className={styles.cardWrapper}>
                   <FollowerCard
@@ -90,6 +95,9 @@ export default function PlayerArea({ state, playerId, interactionMode, onCardCli
                     highlighted={isTargetable || isCostDiscountTarget}
                     onClick={() => onCardClick(card)}
                     lastingEffects={state.lastingEffects}
+                    allCards={state.cards}
+                    storedCardHighlighted={storedHighlighted}
+                    onStoredCardClick={storedHighlighted ? onCardClick : undefined}
                   />
                   {canUse && interactionMode.type === 'none' && (
                     <button

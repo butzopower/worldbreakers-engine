@@ -66,4 +66,6 @@ export interface CardDefinition {
   description?: string;
   /** Optional cost discount: player can take an action before paying to reduce cost */
   costDiscount?: CostDiscount;
+  /** How many cards this card can store (followers, events, locations) */
+  storage?: number;
 }

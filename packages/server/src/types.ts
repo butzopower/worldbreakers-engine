@@ -14,6 +14,7 @@ export interface ClientCardDefinition {
   description?: string;
   cardDescription?: string;
   locationStages?: { stage: number; description?: string }[];
+  storage?: number;
 }
 
 export interface GameInfo {
@@ -55,6 +56,8 @@ export type FilteredCard = {
   zone: string;
   exhausted: boolean;
   counters: Record<string, number>;
+  storedCards: string[];
+  storedOn: string | null;
 } | HiddenCard;
 
 export interface FilteredGameState {

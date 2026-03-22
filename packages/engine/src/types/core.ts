@@ -13,7 +13,8 @@ export type Zone =
   | 'board'
   | 'discard'
   | 'removed'
-  | 'worldbreaker';
+  | 'worldbreaker'
+  | 'stored';
 
 export type CombatStep =
   | 'resolve_attack_abilities'

@@ -91,6 +91,14 @@ export default function GameView({ playerId, state, legalActions, events, onRetu
         interaction.startRevealSelection(choice.count);
         break;
       }
+      case 'choose_store_target': {
+        interaction.startStoreTargetSelection(choice.validTargetIds, choice.hostInstanceId);
+        break;
+      }
+      case 'choose_stored_card_to_play': {
+        interaction.startStoredCardPlaySelection(choice.validCardIds, choice.hostInstanceId);
+        break;
+      }
     }
   }, [state.pendingChoice?.type, state.pendingChoice?.playerId, state.version]);
 
@@ -153,6 +161,18 @@ export default function GameView({ playerId, state, legalActions, events, onRetu
       case 'choose_reveal_for_opponent_discard': {
         if (card.owner === playerId && card.zone === 'hand') {
           interaction.toggleReveal(card.instanceId);
+        }
+        break;
+      }
+      case 'choose_store_target': {
+        if (mode.validTargets.includes(card.instanceId)) {
+          submitAction({ type: 'choose_store_target', cardInstanceId: card.instanceId });
+        }
+        break;
+      }
+      case 'choose_stored_card_to_play': {
+        if (mode.validCardIds.includes(card.instanceId)) {
+          submitAction({ type: 'choose_stored_card_to_play', cardInstanceId: card.instanceId });
         }
         break;
       }

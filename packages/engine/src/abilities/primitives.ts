@@ -348,6 +348,24 @@ export function resolvePrimitive(
         { type: 'move_card' as const, cardInstanceId: targetId, toZone: 'discard' as const }
       ));
     }
+    case 'store_card': {
+      return [{
+        type: 'request_choose_store_target',
+        player: ctx.controller,
+        sourceCardId: ctx.sourceCardId,
+        filter: effect.filter,
+        hostInstanceId: ctx.sourceCardId,
+        effects: effect.effects,
+      }];
+    }
+    case 'play_stored_card': {
+      return [{
+        type: 'request_choose_stored_card_to_play',
+        player: ctx.controller,
+        hostInstanceId: ctx.sourceCardId,
+        costReduction: effect.costReduction,
+      }];
+    }
 
   }
 

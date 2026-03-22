@@ -73,7 +73,9 @@ export type EffectPrimitive =
   | { type: 'remove_from_combat'; target: TargetSelector }
   | { type: 'on_successful_attack'; effects: EffectPrimitive[]; maxAttackers?: number }
   | { type: 'damage_location' }
-  | { type: 'discard_target'; target: TargetSelector };
+  | { type: 'discard_target'; target: TargetSelector }
+  | { type: 'store_card'; from: Zone; filter: CardFilter; host: 'self'; effects?: EffectPrimitive[] }
+  | { type: 'play_stored_card'; host: 'self'; costReduction?: number };
 
 export type AbilityTiming =
   | 'enters'

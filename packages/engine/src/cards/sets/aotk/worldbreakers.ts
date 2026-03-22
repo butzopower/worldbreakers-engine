@@ -74,6 +74,13 @@ export const worldbreakers: CardDefinition[] = [
     ],
     description: 'Your Attack: Pay 1 mythium, exhaust → Deal 1 wound to a follower defending player controls.',
   },
+  {
+    id: 'the_muhandasat_council_of_engineers',
+    name: 'The Muhandasat, Council of Engineers',
+    type: 'worldbreaker',
+    cost: 0,
+    guild: 'moon',
+  }
 ];
 
 export const worldbreakerResolvers: { key: string; resolver: CustomResolverFn }[] = [

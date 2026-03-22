@@ -36,12 +36,14 @@ export default function Hand({ cards, interactionMode, legalActions, onCardClick
           const isReveal = interactionMode.type === 'choose_reveal_for_opponent_discard';
           const isRevealSelected = isReveal &&
             interactionMode.selected.includes(card.instanceId);
+          const isStoreTarget = interactionMode.type === 'choose_store_target' &&
+            interactionMode.validTargets.includes(card.instanceId);
 
           return (
             <FollowerCard
               key={card.instanceId}
               card={card}
-              highlighted={(canPlay && interactionMode.type === 'none') || isTargetChoice || isCostDiscountTarget || isMulligan || isReveal}
+              highlighted={(canPlay && interactionMode.type === 'none') || isTargetChoice || isCostDiscountTarget || isMulligan || isReveal || isStoreTarget}
               selected={isDiscardTarget || isCostDiscountSelected || isMulliganSelected || isRevealSelected}
               onClick={() => onCardClick(card)}
               compact

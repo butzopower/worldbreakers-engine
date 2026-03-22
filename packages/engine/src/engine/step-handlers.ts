@@ -30,10 +30,13 @@ import {
   removeCounterFromCard,
   setPendingChoice,
   shuffleDeck,
+  storeCard,
+  unstoreCard,
 } from '../state/mutate';
 import { getBoard, getCardDef, getWorldbreaker, isDefeated, isLocationDepleted, countDiscountTargets } from '../state/query';
 import { getCounter } from '../types/counters';
 import { ResolveContext, findValidTargets, resolvePrimitive } from '../abilities/primitives';
+import { matchesFilter } from '../abilities/matches-filter';
 import { getCustomResolver } from '../abilities/system';
 import { getCardDefinition } from '../cards/registry';
 import { getCard } from '../state/query';
@@ -169,6 +172,14 @@ export function executeStep(state: GameState, step: EngineStep): StepResult {
       return handleGrantBonusAction(state, step.player);
     case 'remove_from_combat':
       return handleRemoveFromCombat(state, step.cardInstanceId);
+    case 'store_card':
+      return handleStoreCard(state, step.cardInstanceId, step.hostInstanceId);
+    case 'unstore_card':
+      return handleUnstoreCard(state, step.cardInstanceId);
+    case 'request_choose_store_target':
+      return handleRequestChooseStoreTarget(state, step);
+    case 'request_choose_stored_card_to_play':
+      return handleRequestChooseStoredCardToPlay(state, step);
   }
 }
 
@@ -1230,4 +1241,59 @@ function revealCards(state: GameState, player: PlayerId, cardDefinitionIds: stri
     }
   ]
   return { state, events };
+}
+
+function handleStoreCard(state: GameState, cardInstanceId: string, hostInstanceId: string): StepResult {
+  const result = storeCard(state, cardInstanceId, hostInstanceId);
+  return { state: result.state, events: result.events };
+}
+
+function handleUnstoreCard(state: GameState, cardInstanceId: string): StepResult {
+  const result = unstoreCard(state, cardInstanceId);
+  return { state: result.state, events: result.events };
+}
+
+function handleRequestChooseStoreTarget(
+  state: GameState,
+  step: { player: PlayerId; sourceCardId: string; filter: CardFilter; hostInstanceId: string; effects?: EffectPrimitive[] },
+): StepResult {
+  const host = getCard(state, step.hostInstanceId);
+  if (!host) return { state, events: [] };
+
+  const def = getCardDefinition(host.definitionId);
+  const storageCapacity = def?.storage ?? 0;
+  const currentlyStored = host.storedCards.length;
+  if (currentlyStored >= storageCapacity) return { state, events: [] };
+
+  const ctx: ResolveContext = { controller: step.player, sourceCardId: step.sourceCardId };
+  const validTargets = state.cards
+    .filter(c => matchesFilter(state, c, step.filter, ctx))
+    .map(c => c.instanceId);
+
+  if (validTargets.length === 0) return { state, events: [] };
+
+  return setPendingChoice(state, {
+    type: 'choose_store_target',
+    playerId: step.player,
+    sourceCardId: step.sourceCardId,
+    validTargetIds: validTargets,
+    hostInstanceId: step.hostInstanceId,
+    effects: step.effects,
+  });
+}
+
+function handleRequestChooseStoredCardToPlay(
+  state: GameState,
+  step: { player: PlayerId; hostInstanceId: string; costReduction?: number },
+): StepResult {
+  const host = getCard(state, step.hostInstanceId);
+  if (!host || host.storedCards.length === 0) return { state, events: [] };
+
+  return setPendingChoice(state, {
+    type: 'choose_stored_card_to_play',
+    playerId: step.player,
+    hostInstanceId: step.hostInstanceId,
+    validCardIds: [...host.storedCards],
+    costReduction: step.costReduction,
+  });
 }

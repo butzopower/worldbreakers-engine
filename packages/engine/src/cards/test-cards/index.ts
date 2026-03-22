@@ -335,6 +335,41 @@ const testCards: CardDefinition[] = [
     passiveEffects: [{ type: 'draw_aggro' }],
   },
 
+  // Storage
+  {
+    id: 'storage_keeper',
+    name: 'Storage Keeper',
+    type: 'follower',
+    guild: 'moon',
+    standingRequirement: { moon: 2 },
+    cost: 3,
+    strength: 1,
+    health: 2,
+    storage: 1,
+    abilities: [
+      {
+        timing: 'enters',
+        effects: [{
+          type: 'store_card',
+          from: 'hand',
+          filter: { type: 'follower', zone: ['hand'], owner: 'self' },
+          host: 'self',
+          effects: [{ type: 'draw_cards', player: 'self', count: 1 }],
+        }],
+        description: 'Enters: You may store a follower from your hand here. If you do, draw a card.',
+      },
+      {
+        timing: 'blocks',
+        forced: true,
+        effects: [{
+          type: 'play_stored_card',
+          host: 'self',
+        }],
+        description: 'Blocks: Play a card stored here.',
+      },
+    ],
+  },
+
   // Locations
   {
     id: 'watchtower',

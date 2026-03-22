@@ -4,10 +4,10 @@ import {
   type GameEvent, type PendingChoice, type DeckConfig,
 } from '@worldbreakers/engine';
 import type { FilteredGameState, FilteredCard, HiddenCard, AdjustableResource } from './types';
-import { atokEarth, atokStars } from "./preconstructs";
+import { atokEarth, atokMoon, atokStars } from "./preconstructs";
 
 const DEFAULT_DECK = atokEarth;
-const DEFAULT_DECK_2 = atokStars;
+const DEFAULT_DECK_2 = atokMoon;
 
 // Ensure test cards are registered
 let cardsRegistered = false;
@@ -80,6 +80,8 @@ export class GameSession {
         zone: card.zone,
         exhausted: card.exhausted,
         counters: { ...card.counters },
+        storedCards: card.storedCards,
+        storedOn: card.storedOn,
       };
     });
 

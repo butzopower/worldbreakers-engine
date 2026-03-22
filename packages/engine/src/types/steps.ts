@@ -70,4 +70,9 @@ export type EngineStep =
   | { type: 'register_combat_response'; trigger: CombatResponseTrigger; effects: EffectPrimitive[]; controller: PlayerId; sourceCardId: string }
   | { type: 'grant_bonus_action'; player: PlayerId }
   | { type: 'remove_from_combat'; cardInstanceId: string }
+  // Storage
+  | { type: 'store_card'; cardInstanceId: string; hostInstanceId: string }
+  | { type: 'unstore_card'; cardInstanceId: string }
+  | { type: 'request_choose_store_target'; player: PlayerId; sourceCardId: string; filter: CardFilter; hostInstanceId: string; effects?: EffectPrimitive[] }
+  | { type: 'request_choose_stored_card_to_play'; player: PlayerId; hostInstanceId: string; costReduction?: number }
   ;

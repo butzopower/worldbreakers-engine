@@ -22,7 +22,11 @@ export type PlayerAction =
   | { type: 'choose_play'; cardInstanceId: string }
   | { type: 'skip_play'; cardInstanceId: string }
   | { type: 'mulligan'; cardInstanceIds: string[] }
-  | { type: 'choose_reveal_for_opponent_discard'; cardInstanceIds: string[] };
+  | { type: 'choose_reveal_for_opponent_discard'; cardInstanceIds: string[] }
+  | { type: 'choose_store_target'; cardInstanceId: string }
+  | { type: 'pass_store' }
+  | { type: 'choose_stored_card_to_play'; cardInstanceId: string }
+  | { type: 'pass_play_stored' };
 
 export interface ActionInput {
   player: PlayerId;

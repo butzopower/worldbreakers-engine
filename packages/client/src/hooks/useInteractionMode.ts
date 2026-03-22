@@ -113,6 +113,14 @@ export function useInteractionMode() {
     });
   }, []);
 
+  const startStoreTargetSelection = useCallback((validTargets: string[], hostInstanceId: string) => {
+    setMode({ type: 'choose_store_target', validTargets, hostInstanceId });
+  }, []);
+
+  const startStoredCardPlaySelection = useCallback((validCardIds: string[], hostInstanceId: string) => {
+    setMode({ type: 'choose_stored_card_to_play', validCardIds, hostInstanceId });
+  }, []);
+
   return {
     mode,
     reset,
@@ -133,5 +141,7 @@ export function useInteractionMode() {
     toggleMulligan,
     startRevealSelection,
     toggleReveal,
+    startStoreTargetSelection,
+    startStoredCardPlaySelection,
   };
 }

@@ -1,4 +1,5 @@
-import { VisibleCard, ClientCardDefinition, LasingEffect } from '../types';
+import { VisibleCard, FilteredCard, ClientCardDefinition, LasingEffect } from '../types';
+import { isVisible } from '../types';
 import { useCardDefinitions } from '../context/CardDefinitions';
 import CardTooltip from './CardTooltip';
 import styles from './FollowerCard.module.css';
@@ -29,6 +30,10 @@ function getActiveBadges(card: VisibleCard, cardDef: ClientCardDefinition): Badg
 
   if (cardDef.keywords?.includes('stationary') || (card.counters['stationary'] ?? 0) > 0) {
     badges.push({ label: 'STATIONARY', color: '#999', bg: '#2a2a2a' });
+  }
+
+  if (cardDef.storage) {
+    badges.push({ label: `STORAGE ${card.storedCards.length}/${cardDef.storage}`, color: '#60a5fa', bg: '#1e3a5f' });
   }
 
   return badges;
@@ -69,9 +74,12 @@ interface Props {
   onClick?: () => void;
   compact?: boolean;
   lastingEffects?: LasingEffect[];
+  allCards?: FilteredCard[];
+  storedCardHighlighted?: string[];
+  onStoredCardClick?: (card: VisibleCard) => void;
 }
 
-export default function FollowerCard({ card, highlighted, selected, dimmed, onClick, compact, lastingEffects }: Props) {
+export default function FollowerCard({ card, highlighted, selected, dimmed, onClick, compact, lastingEffects, allCards, storedCardHighlighted, onStoredCardClick }: Props) {
   const cardDefinitions = useCardDefinitions();
   const cardDef = cardDefinitions[card.definitionId] ?? FALLBACK_CARD;
   const wounds = (card.counters['wound'] ?? 0);
@@ -100,61 +108,108 @@ export default function FollowerCard({ card, highlighted, selected, dimmed, onCl
   ].filter(Boolean).join(' ');
 
   return (
-    <CardTooltip cardDef={cardDef} card={card} lastingEffects={lastingEffects}>
-      <div
-        onClick={onClick}
-        className={cardClasses}
-        style={{ border: `2px solid ${borderColor}` }}
-      >
-        <div className={styles.cardName} style={{ color: guildColor }}>
-          {cardDef.name}
-          {cardDef.type !== 'worldbreaker' && <span className={styles.cardCost}>{cardDef.cost}</span>}
+    <div className={styles.cardWithStorage}>
+      <CardTooltip cardDef={cardDef} card={card} lastingEffects={lastingEffects}>
+        <div
+          onClick={onClick}
+          className={cardClasses}
+          style={{ border: `2px solid ${borderColor}` }}
+        >
+          <div className={styles.cardName} style={{ color: guildColor }}>
+            {cardDef.name}
+            {cardDef.type !== 'worldbreaker' && <span className={styles.cardCost}>{cardDef.cost}</span>}
+          </div>
+
+          {cardDef.type === 'follower' && (
+            <div className={`${styles.statsRow} ${compact ? styles['statsRow--compact'] : styles['statsRow--normal']}`}>
+              <span>
+                <span>STR {(cardDef.strength ?? 0) + (card.counters['strength_buff'] ?? 0) + plusOnePlusOne}</span>
+                {buffedStrength > 0 && <span>&nbsp;(<span style={{ color: '#0A0' }}>+{buffedStrength}</span>)</span>}
+              </span>
+              <span className={wounds > 0 ? styles.hpDamaged : undefined}>
+                HP {effectiveHp}/{maxHp}
+              </span>
+            </div>
+          )}
+
+          {cardDef.type === 'location' && (card.counters['stage'] ?? 0 > 0) && (
+            <div className={compact ? styles['stageLabel--compact'] : styles.stageLabel}>
+              Stage {card.counters['stage'] ?? 0}
+            </div>
+          )}
+
+          {cardDef.type === 'worldbreaker' && cardDef.description && (
+            <div className={styles.worldbreakerDesc}>{cardDef.description}</div>
+          )}
+
+          {cardDef.type === 'follower' && (
+            <StatusBadges card={card} cardDef={cardDef} compact={compact} />
+          )}
+
+          {cardDef.description && cardDef.type === 'follower' && (
+            <div className={styles.description}>{cardDef.description}</div>
+          )}
+
+          {cardDef.standingRequirement && (
+            <div className={styles.standingDots}>
+              {Object.entries(cardDef.standingRequirement).flatMap(([guild, count]) =>
+                Array.from({ length: count }, (_, i) => (
+                  <span
+                    key={`${guild}-${i}`}
+                    className={styles.standingDot}
+                    style={{ background: GUILD_COLORS[guild] ?? '#555' }}
+                  />
+                ))
+              )}
+            </div>
+          )}
         </div>
+      </CardTooltip>
+      {card.storedCards.length > 0 && allCards && (
+        <StoredCards
+          storedCardIds={card.storedCards}
+          allCards={allCards}
+          highlightedIds={storedCardHighlighted}
+          onCardClick={onStoredCardClick}
+        />
+      )}
+    </div>
+  );
+}
 
-        {cardDef.type === 'follower' && (
-          <div className={`${styles.statsRow} ${compact ? styles['statsRow--compact'] : styles['statsRow--normal']}`}>
-            <span>
-              <span>STR {(cardDef.strength ?? 0) + (card.counters['strength_buff'] ?? 0) + plusOnePlusOne}</span>
-              {buffedStrength > 0 && <span>&nbsp;(<span style={{ color: '#0A0' }}>+{buffedStrength}</span>)</span>}
-            </span>
-            <span className={wounds > 0 ? styles.hpDamaged : undefined}>
-              HP {effectiveHp}/{maxHp}
-            </span>
-          </div>
-        )}
+function StoredCards({ storedCardIds, allCards, highlightedIds, onCardClick }: {
+  storedCardIds: string[];
+  allCards: FilteredCard[];
+  highlightedIds?: string[];
+  onCardClick?: (card: VisibleCard) => void;
+}) {
+  const cardDefs = useCardDefinitions();
 
-        {cardDef.type === 'location' && (card.counters['stage'] ?? 0 > 0) && (
-          <div className={compact ? styles['stageLabel--compact'] : styles.stageLabel}>
-            Stage {card.counters['stage'] ?? 0}
-          </div>
-        )}
+  const storedCards = storedCardIds
+    .map(id => allCards.find(c => isVisible(c) && c.instanceId === id))
+    .filter((c): c is VisibleCard => c !== undefined);
 
-        {cardDef.type === 'worldbreaker' && cardDef.description && (
-          <div className={styles.worldbreakerDesc}>{cardDef.description}</div>
-        )}
+  if (storedCards.length === 0) return null;
 
-        {cardDef.type === 'follower' && (
-          <StatusBadges card={card} cardDef={cardDef} compact={compact} />
-        )}
-
-        {cardDef.description && cardDef.type === 'follower' && (
-          <div className={styles.description}>{cardDef.description}</div>
-        )}
-
-        {cardDef.standingRequirement && (
-          <div className={styles.standingDots}>
-            {Object.entries(cardDef.standingRequirement).flatMap(([guild, count]) =>
-              Array.from({ length: count }, (_, i) => (
-                <span
-                  key={`${guild}-${i}`}
-                  className={styles.standingDot}
-                  style={{ background: GUILD_COLORS[guild] ?? '#555' }}
-                />
-              ))
-            )}
-          </div>
-        )}
-      </div>
-    </CardTooltip>
+  return (
+    <div className={styles.storedContainer}>
+      {storedCards.map(stored => {
+        const def = cardDefs[stored.definitionId];
+        const name = def?.name ?? stored.definitionId;
+        const guild = def?.guild ?? 'neutral';
+        const isHighlighted = highlightedIds?.includes(stored.instanceId);
+        return (
+          <CardTooltip key={stored.instanceId} cardDef={def ?? FALLBACK_CARD} card={stored}>
+            <div
+              className={`${styles.storedCard} ${isHighlighted ? styles['storedCard--highlighted'] : ''} ${onCardClick ? styles['storedCard--clickable'] : ''}`}
+              style={{ borderColor: GUILD_COLORS[guild] ?? '#555' }}
+              onClick={onCardClick ? (e) => { e.stopPropagation(); onCardClick(stored); } : undefined}
+            >
+              <span className={styles.storedLabel}>Stored</span> {name}
+            </div>
+          </CardTooltip>
+        );
+      })}
+    </div>
   );
 }

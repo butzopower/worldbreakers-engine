@@ -99,10 +99,23 @@ export class StateBuilder {
       exhausted: opts?.exhausted ?? false,
       counters: opts?.counters ?? {},
       markAsDestroyed: false,
+      storedCards: [],
+      storedOn: null,
     };
     this.state.cards.push(card);
     if (zone === 'hand') {
       this.state.players[owner].handSize++;
+    }
+    return this;
+  }
+
+  withStoredCard(cardInstanceId: string, hostInstanceId: string): this {
+    const card = this.state.cards.find(c => c.instanceId === cardInstanceId);
+    const host = this.state.cards.find(c => c.instanceId === hostInstanceId);
+    if (card && host) {
+      card.zone = 'stored';
+      card.storedOn = hostInstanceId;
+      host.storedCards.push(cardInstanceId);
     }
     return this;
   }

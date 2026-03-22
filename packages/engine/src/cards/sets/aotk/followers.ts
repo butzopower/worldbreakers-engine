@@ -527,6 +527,38 @@ export const followers: CardDefinition[] = [
     }],
   },
   {
+    id: 'patient_mentor',
+    name: 'Patient Mentor',
+    type: 'follower',
+    guild: 'moon',
+    standingRequirement: { moon: 2 },
+    cost: 5,
+    strength: 2,
+    health: 4,
+    storage: 1,
+    abilities: [
+      {
+        timing: 'enters',
+        effects: [{
+          type: 'store_card',
+          from: 'hand',
+          filter: { type: 'follower', zone: ['hand'], owner: 'self' },
+          host: 'self',
+          effects: [{ type: 'draw_cards', player: 'self', count: 1 }],
+        }],
+        description: 'Enters: Store a follower card from your hand here → Draw 1 card.',
+      },
+      {
+        timing: 'blocks',
+        effects: [{
+          type: 'play_stored_card',
+          host: 'self',
+        }],
+        description: 'Blocks: Play a card stored here (paying all costs).',
+      },
+    ],
+  },
+  {
     id: 'poised_duelist',
     name: 'Poised Duelist',
     type: 'follower',

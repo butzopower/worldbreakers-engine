@@ -22,6 +22,10 @@ export interface CardInstance {
   exhausted: boolean;
   counters: CounterMap;
   markAsDestroyed: boolean;
+  /** Instance IDs of cards stored on this card (storage keyword) */
+  storedCards: string[];
+  /** Instance ID of the card this card is stored on (reverse lookup) */
+  storedOn: string | null;
 }
 
 export type LastingEffectType = 'strength_buff' | 'health_buff' | 'lethal' | 'overwhelm' | 'unblockable' | 'cant_block' | 'no_attacks' | 'boost_ruknuddin_khurshah_ability';
@@ -64,7 +68,9 @@ export type PendingChoice =
   | { type: 'choose_cost_discount'; playerId: PlayerId; cardInstanceId: string; costDiscount: CostDiscount; externalCostReduction: number; validTargetIds: string[] }
   | { type: 'choose_play_order'; playerId: PlayerId; cardInstanceIds: string[] }
   | { type: 'choose_mulligan'; playerId: PlayerId }
-  | { type: 'choose_reveal_for_opponent_discard'; playerId: PlayerId; count: number; choosingPlayer: PlayerId; sourceCardId: string };
+  | { type: 'choose_reveal_for_opponent_discard'; playerId: PlayerId; count: number; choosingPlayer: PlayerId; sourceCardId: string }
+  | { type: 'choose_store_target'; playerId: PlayerId; sourceCardId: string; validTargetIds: string[]; hostInstanceId: string; effects?: EffectPrimitive[] }
+  | { type: 'choose_stored_card_to_play'; playerId: PlayerId; hostInstanceId: string; validCardIds: string[]; costReduction?: number };
 
 export interface PlayerState {
   mythium: number;
