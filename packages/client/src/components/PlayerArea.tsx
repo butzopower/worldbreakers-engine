@@ -11,6 +11,7 @@ import FollowerCard from './FollowerCard';
 import LocationCard from './LocationCard';
 import Hand from './Hand';
 import DeckDiscard from './DeckDiscard';
+import ResourceAdjuster from './ResourceAdjuster';
 import { socket } from '../socket';
 import { useCardDefinitions } from "../context/CardDefinitions";
 import styles from './PlayerArea.module.css';
@@ -43,9 +44,14 @@ export default function PlayerArea({ state, playerId, interactionMode, onCardCli
           You ({playerId})
         </div>
         <div className={styles.resourceBar}>
-          <span className={styles.mythium}>Mythium: {player.mythium}</span>
-          <span className={styles.power}>Power: {player.power}/10</span>
-          <span>Standing: E{player.standing.earth} M{player.standing.moon} V{player.standing.void} S{player.standing.stars}</span>
+          <ResourceAdjuster player={playerId} resource="mythium" label="Mythium" value={player.mythium} className={styles.mythium} />
+          <ResourceAdjuster player={playerId} resource="power" label="Power" value={player.power} className={styles.power} />
+          <span>Standing:
+            {' '}E<ResourceAdjuster player={playerId} resource="standing_earth" label="" value={player.standing.earth} />
+            {' '}M<ResourceAdjuster player={playerId} resource="standing_moon" label="" value={player.standing.moon} />
+            {' '}V<ResourceAdjuster player={playerId} resource="standing_void" label="" value={player.standing.void} />
+            {' '}S<ResourceAdjuster player={playerId} resource="standing_stars" label="" value={player.standing.stars} />
+          </span>
         </div>
       </div>
 

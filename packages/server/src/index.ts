@@ -149,6 +149,38 @@ io.on('connection', (socket) => {
     }
   });
 
+  socket.on('adjust_resource', ({ player: targetPlayer, resource, delta }) => {
+    const session = manager.getGameBySocket(socket.id);
+    if (!session) {
+      socket.emit('error', { message: 'Not in a game' });
+      return;
+    }
+
+    try {
+      session.adjustResource(targetPlayer, resource, delta);
+
+      const event = {
+        type: 'resource_adjusted' as const,
+        player: targetPlayer,
+        resource,
+        delta,
+      };
+
+      for (const p of ['player1', 'player2'] as PlayerId[]) {
+        const sid = session.getSocketId(p);
+        if (!sid) continue;
+        io.to(sid).emit('game_state', {
+          state: session.getFilteredState(p),
+          legalActions: session.getLegalActionsForPlayer(p),
+          events: [event],
+        });
+      }
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      socket.emit('error', { message });
+    }
+  });
+
   socket.on('disconnect', () => {
     const result = manager.handleDisconnect(socket.id);
     if (result) {

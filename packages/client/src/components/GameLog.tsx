@@ -64,6 +64,11 @@ function formatEvent(event: GameEvent, cardDefinitions: Record<string, ClientCar
     case 'reveal': return <Reveal player={event.player as string} defIds={event.cardDefinitionIds as string[]} cardDefinitions={cardDefinitions}/>;
 
     case 'deck_shuffled': return `${event.player} shuffled their deck`;
+    case 'resource_adjusted': {
+      const label = (event.resource as string).replace('standing_', '') ;
+      const dir = (event.delta as number) > 0 ? '+' : '';
+      return `${event.player} adjusted ${label} ${dir}${event.delta} (fix up)`;
+    }
     default: return event.type;
   }
 }

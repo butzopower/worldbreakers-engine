@@ -32,3 +32,24 @@
   border-radius: 4px;
   font-family: inherit;
 }
+
+.fixupToggle {
+  position: fixed;
+  bottom: 12px;
+  right: 12px;
+  background: var(--color-bg-deep);
+  color: var(--color-muted);
+  border: 1px solid var(--color-muted);
+  padding: 4px 10px;
+  cursor: pointer;
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 11px;
+  z-index: 100;
+}
+
+.fixupToggle--active {
+  background: var(--color-accent-red);
+  color: white;
+  border-color: var(--color-accent-red);
+}

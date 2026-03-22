@@ -32,11 +32,14 @@ export interface ServerToClientEvents {
   opponent_disconnected: () => void;
 }
 
+export type AdjustableResource = 'mythium' | 'power' | 'standing_earth' | 'standing_moon' | 'standing_void' | 'standing_stars';
+
 export interface ClientToServerEvents {
   create_game: (data: { deck?: DeckConfig }) => void;
   join_game: (data: { gameId: string; deck?: DeckConfig }) => void;
   list_games: () => void;
   submit_action: (data: { action: PlayerAction }) => void;
+  adjust_resource: (data: { player: PlayerId; resource: AdjustableResource; delta: number }) => void;
 }
 
 export interface HiddenCard {

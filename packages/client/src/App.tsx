@@ -3,6 +3,7 @@ import { socket } from './socket';
 import LobbyView from './components/LobbyView';
 import GameView from './components/GameView';
 import { CardDefinitionsProvider } from './context/CardDefinitions';
+import { FixupModeProvider } from './context/FixupMode';
 import type { PlayerId, FilteredGameState, PlayerAction, GameEvent, ClientCardDefinition } from './types';
 import styles from './App.module.css';
 
@@ -99,13 +100,15 @@ export default function App() {
 
       {appState.screen === 'game' && (
         <CardDefinitionsProvider value={cardDefinitions}>
-          <GameView
-            playerId={appState.playerId}
-            state={appState.state}
-            legalActions={appState.legalActions}
-            events={appState.events}
-            onReturnToLobby={returnToLobby}
-          />
+          <FixupModeProvider>
+            <GameView
+              playerId={appState.playerId}
+              state={appState.state}
+              legalActions={appState.legalActions}
+              events={appState.events}
+              onReturnToLobby={returnToLobby}
+            />
+          </FixupModeProvider>
         </CardDefinitionsProvider>
       )}
     </div>

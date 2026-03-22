@@ -3,7 +3,7 @@ import {
   type GameState, type PlayerId, type PlayerAction, type ActionInput,
   type GameEvent, type PendingChoice, type DeckConfig,
 } from '@worldbreakers/engine';
-import type { FilteredGameState, FilteredCard, HiddenCard } from './types';
+import type { FilteredGameState, FilteredCard, HiddenCard, AdjustableResource } from './types';
 import { atokEarth, atokStars } from "./preconstructs";
 
 const DEFAULT_DECK = atokEarth;
@@ -116,6 +116,19 @@ export class GameSession {
     this.state = result.state;
     this.lastActivityAt = Date.now();
     return result;
+  }
+
+  adjustResource(player: PlayerId, resource: AdjustableResource, delta: number): void {
+    const playerState = this.state.players[player];
+    if (resource === 'mythium') {
+      playerState.mythium = Math.max(0, playerState.mythium + delta);
+    } else if (resource === 'power') {
+      playerState.power = Math.max(0, playerState.power + delta);
+    } else if (resource.startsWith('standing_')) {
+      const guild = resource.replace('standing_', '') as 'earth' | 'moon' | 'void' | 'stars';
+      playerState.standing[guild] = Math.max(0, playerState.standing[guild] + delta);
+    }
+    this.lastActivityAt = Date.now();
   }
 
   handleDisconnect(socketId: string): PlayerId | null {

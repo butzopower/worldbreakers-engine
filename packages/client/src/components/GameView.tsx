@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { socket } from '../socket';
 import { useInteractionMode } from '../hooks/useInteractionMode';
+import { useFixupMode } from '../context/FixupMode';
 import GameBoard from './GameBoard';
 import ActionPanel from './ActionPanel';
 import InteractionOverlay from './InteractionOverlay';
@@ -21,12 +22,13 @@ interface Props {
 export default function GameView({ playerId, state, legalActions, events, onReturnToLobby }: Props) {
   const interaction = useInteractionMode();
   const [log, setLog] = useState<GameEvent[]>([]);
+  const { fixupMode, toggleFixupMode } = useFixupMode();
 
   useEffect(() => {
     if (events.length > 0) {
       setLog(prev => [...prev, ...events]);
     }
-  }, [state.version]);
+  }, [events]);
 
   useEffect(() => {
     if (!state.pendingChoice || state.pendingChoice.playerId !== playerId) {
@@ -223,6 +225,14 @@ export default function GameView({ playerId, state, legalActions, events, onRetu
       <div className={styles.sidebar}>
         <GameLog events={log} />
       </div>
+
+      <button
+        className={`${styles.fixupToggle} ${fixupMode ? styles['fixupToggle--active'] : ''}`}
+        onClick={toggleFixupMode}
+        title="Toggle resource adjustment mode"
+      >
+        Fix Up
+      </button>
     </div>
   );
 }
