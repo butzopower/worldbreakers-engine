@@ -21,9 +21,8 @@ function Reveal({cardDefinitions, defIds, player}: RevealProps) {
       {
         defIds.map(
           (id, i) => {
-            const cardDef = cardDefinitions[id];
-            return <span className={styles.revealItem}>
-              <CardTooltip key={i} cardDef={cardDef}>{cardDef.name}</CardTooltip>
+            return <span className={styles.revealItem} key={i}>
+              <Preview defId={id} cardDefinitions={cardDefinitions} />
             </span>;
           }
         )
@@ -32,9 +31,17 @@ function Reveal({cardDefinitions, defIds, player}: RevealProps) {
     </span>;
 }
 
-function formatEvent(event: GameEvent, cardDefinitions: Record<string, ClientCardDefinition>): string | ReactElement {
-  function getCardName(cid: string) { return cardDefinitions[cid].name }
+interface PreviewProps {
+  defId: string,
+  cardDefinitions: Record<string, ClientCardDefinition>
+}
 
+function Preview({defId, cardDefinitions}: PreviewProps) {
+  const cardDef = cardDefinitions[defId];
+  return <span className={styles.preview}><CardTooltip cardDef={cardDef}>{cardDef.name}</CardTooltip></span>;
+}
+
+function formatEvent(event: GameEvent, cardDefinitions: Record<string, ClientCardDefinition>): string | ReactElement {
   switch (event.type) {
     case 'game_started': return 'Game started!';
     case 'phase_changed': return `Phase: ${event.phase}`;
@@ -44,7 +51,7 @@ function formatEvent(event: GameEvent, cardDefinitions: Record<string, ClientCar
     case 'power_gained': return `${event.player} +${event.amount} power`;
     case 'standing_gained': return `${event.player} +${event.amount} ${event.guild} standing`;
     case 'card_drawn': return `${event.player} drew a card`;
-    case 'card_played': return `${event.player} played ${getCardName(event.definitionId as string) ?? 'card'}`;
+    case 'card_played': return <span>{event.player as string} played {<Preview defId={event.definitionId as string} cardDefinitions={cardDefinitions}/>}</span>;
     case 'card_moved': return `Card moved ${event.from} → ${event.to}`;
     case 'card_exhausted': return `Card tapped`;
     case 'card_readied': return `Card readied`;
@@ -62,7 +69,6 @@ function formatEvent(event: GameEvent, cardDefinitions: Record<string, ClientCar
     case 'round_ended': return `Round ended`;
     case 'game_over': return `Game over! Winner: ${event.winner}`;
     case 'reveal': return <Reveal player={event.player as string} defIds={event.cardDefinitionIds as string[]} cardDefinitions={cardDefinitions}/>;
-
     case 'deck_shuffled': return `${event.player} shuffled their deck`;
     case 'resource_adjusted': {
       const label = (event.resource as string).replace('standing_', '') ;

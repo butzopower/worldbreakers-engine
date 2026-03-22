@@ -20,16 +20,16 @@
   padding-bottom: 2px;
 }
 
-.revealItem {
-  color: var(--color-mythium);
-  cursor: pointer;
-  font-weight: bold;
-}
-
 .revealItem:after {
   content: ', '
 }
 
 .revealItem:last-of-type:after {
   content: ''
+}
+
+.preview {
+  color: var(--color-mythium);
+  cursor: pointer;
+  font-weight: bold;
 }
