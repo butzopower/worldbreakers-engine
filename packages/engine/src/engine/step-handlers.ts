@@ -35,6 +35,7 @@ import { getBoard, getCardDef, getWorldbreaker, isDefeated, isLocationDepleted, 
 import { getCounter } from '../types/counters';
 import { ResolveContext, findValidTargets, resolvePrimitive } from '../abilities/primitives';
 import { getCustomResolver } from '../abilities/system';
+import { getCardDefinition } from '../cards/registry';
 import { getCard } from '../state/query';
 import { getFollowers, getLocations, isHidden, canAttack, canBlock, canBlockAttacker, hasKeyword } from '../state/query';
 import { AbilityDefinition, AbilityTiming, CardFilter, EffectPrimitive, Mode } from '../types/effects';
@@ -69,6 +70,8 @@ export function executeStep(state: GameState, step: EngineStep): StepResult {
       return handleRequestCostDiscount(state, step)
     case 'request_choose_target':
       return handleRequestChooseTarget(state, step)
+    case 'request_choose_reveal_for_opponent_discard':
+      return handleRequestChooseRevealForOpponentDiscard(state, step)
     case 'cleanup':
       return handleCleanup(state);
     case 'advance_turn':
@@ -292,6 +295,46 @@ function handleRequestChooseTarget(
     effects: step.effects,
     filter: step.filter,
     triggeringCardId: step.triggeringCardId,
+  });
+}
+
+export function buildDiscardChoiceModes(revealedCards: { instanceId: string; definitionId: string }[]): Mode[] {
+  return revealedCards.map(card => {
+    const def = getCardDefinition(card.definitionId);
+    return {
+      label: `Discard ${def.name}`,
+      effects: [{ type: 'discard_target' as const, target: { kind: 'all' as const, filter: { cardInstanceIds: [card.instanceId] } } }],
+    };
+  });
+}
+
+function handleRequestChooseRevealForOpponentDiscard(
+  state: GameState,
+  step: { player: PlayerId; count: number; choosingPlayer: PlayerId; sourceCardId: string },
+): StepResult {
+  const hand = state.cards.filter(c => c.owner === step.player && c.zone === 'hand');
+
+  if (hand.length === 0) {
+    return { state, events: [] };
+  }
+
+  if (hand.length <= step.count) {
+    // Auto-reveal all cards in hand
+    const revealedDefIds = hand.map(c => c.definitionId);
+    const modes = buildDiscardChoiceModes(hand);
+    const prepend: EngineStep[] = [
+      { type: 'reveal_cards', player: step.player, cardDefinitionIds: revealedDefIds },
+      { type: 'request_choose_mode', player: step.choosingPlayer, sourceCardId: step.sourceCardId, modes },
+    ];
+    return { state, events: [], prepend };
+  }
+
+  return setPendingChoice(state, {
+    type: 'choose_reveal_for_opponent_discard',
+    playerId: step.player,
+    count: step.count,
+    choosingPlayer: step.choosingPlayer,
+    sourceCardId: step.sourceCardId,
   });
 }
 

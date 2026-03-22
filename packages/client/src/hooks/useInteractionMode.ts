@@ -85,6 +85,22 @@ export function useInteractionMode() {
     });
   }, []);
 
+  const startRevealSelection = useCallback((count: number) => {
+    setMode({ type: 'choose_reveal_for_opponent_discard', count, selected: [] });
+  }, []);
+
+  const toggleReveal = useCallback((instanceId: string) => {
+    setMode(prev => {
+      if (prev.type !== 'choose_reveal_for_opponent_discard') return prev;
+      const selected = prev.selected.includes(instanceId)
+        ? prev.selected.filter(id => id !== instanceId)
+        : prev.selected.length < prev.count
+          ? [...prev.selected, instanceId]
+          : prev.selected;
+      return { ...prev, selected };
+    });
+  }, []);
+
   const toggleCostDiscountTarget = useCallback((instanceId: string) => {
     setMode(prev => {
       if (prev.type !== 'choose_cost_discount') return prev;
@@ -115,5 +131,7 @@ export function useInteractionMode() {
     toggleCostDiscountTarget,
     startMulligan,
     toggleMulligan,
+    startRevealSelection,
+    toggleReveal,
   };
 }

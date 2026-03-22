@@ -85,6 +85,10 @@ export default function GameView({ playerId, state, legalActions, events, onRetu
         interaction.startMulligan();
         break;
       }
+      case 'choose_reveal_for_opponent_discard': {
+        interaction.startRevealSelection(choice.count);
+        break;
+      }
     }
   }, [state.pendingChoice?.type, state.version]);
 
@@ -141,6 +145,12 @@ export default function GameView({ playerId, state, legalActions, events, onRetu
       case 'choose_mulligan': {
         if (card.owner === playerId && card.zone === 'hand') {
           interaction.toggleMulligan(card.instanceId);
+        }
+        break;
+      }
+      case 'choose_reveal_for_opponent_discard': {
+        if (card.owner === playerId && card.zone === 'hand') {
+          interaction.toggleReveal(card.instanceId);
         }
         break;
       }

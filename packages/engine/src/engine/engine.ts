@@ -4,7 +4,7 @@ import { GameEvent } from '../types/events';
 import { PlayerId, STANDING_GUILDS, opponentOf } from '../types/core';
 import { EngineStep } from '../types/steps';
 import { validateAction } from './validator';
-import { drainQueue, resolveEffectsWithQueue, StepResult } from './step-handlers';
+import { drainQueue, resolveEffectsWithQueue, StepResult, buildDiscardChoiceModes } from './step-handlers';
 
 import { ResolveContext } from '../abilities/primitives';
 import { moveCard, removeCounterFromCard, shuffleDeck } from '../state/mutate';
@@ -291,6 +291,8 @@ function resolveChoice(
       return resolveChoosePlayOrder(state, player, action);
     case 'choose_mulligan':
       return resolveChooseMulligan(state, player, action);
+    case 'choose_reveal_for_opponent_discard':
+      return resolveChooseRevealForOpponentDiscard(state, player, action);
     default:
       throw new Error(`Unknown choice type: ${(choice as PendingChoice).type}`);
   }
@@ -541,6 +543,25 @@ function resolveChooseMulligan(state: GameState, _player: PlayerId, action: Play
   return { state: s, events };
 }
 
+function resolveChooseRevealForOpponentDiscard(state: GameState, _player: PlayerId, action: PlayerAction): ChoiceResult {
+  if (action.type !== 'choose_reveal_for_opponent_discard') throw new Error('Expected choose_reveal_for_opponent_discard');
+  const choice = state.pendingChoice!;
+  if (choice.type !== 'choose_reveal_for_opponent_discard') throw new Error('Expected choose_reveal_for_opponent_discard choice');
+
+  const s: GameState = { ...state, pendingChoice: null };
+  const revealedIds = action.cardInstanceIds;
+  const revealedCards = revealedIds.map(id => getCard(s, id)!);
+  const revealedDefIds = revealedCards.map(c => c.definitionId);
+  const modes = buildDiscardChoiceModes(revealedCards);
+
+  const prepend: EngineStep[] = [
+    { type: 'reveal_cards', player: choice.playerId, cardDefinitionIds: revealedDefIds },
+    { type: 'request_choose_mode', player: choice.choosingPlayer, sourceCardId: choice.sourceCardId, modes },
+  ];
+
+  return { state: s, events: [], prepend };
+}
+
 function resolveChooseCostDiscount(state: GameState, _player: PlayerId, action: PlayerAction): ChoiceResult {
   if (action.type !== 'choose_cost_discount_targets') throw new Error('Expected choose_cost_discount_targets');
   const choice = state.pendingChoice!;
@@ -783,6 +804,16 @@ function getLegalChoiceActions(state: GameState): ActionInput[] {
       }
       break;
     }
+    case 'choose_reveal_for_opponent_discard': {
+      const revealHand = getHand(state, player);
+      // Generate all combinations of `count` cards from hand
+      const count = choice.count;
+      const combos = combinations(revealHand.map(c => c.instanceId), count);
+      for (const combo of combos) {
+        actions.push({ player, action: { type: 'choose_reveal_for_opponent_discard', cardInstanceIds: combo } });
+      }
+      break;
+    }
     case 'choose_cost_discount': {
       // Can always skip discount (select 0 targets)
       actions.push({ player, action: { type: 'choose_cost_discount_targets', targetInstanceIds: [] } });
@@ -804,6 +835,19 @@ function getLegalChoiceActions(state: GameState): ActionInput[] {
   }
 
   return actions;
+}
+
+function combinations(items: string[], k: number): string[][] {
+  if (k === 0) return [[]];
+  if (items.length < k) return [];
+  const result: string[][] = [];
+  for (let i = 0; i <= items.length - k; i++) {
+    const rest = combinations(items.slice(i + 1), k - 1);
+    for (const combo of rest) {
+      result.push([items[i], ...combo]);
+    }
+  }
+  return result;
 }
 
 function getLegalCombatActions(state: GameState): ActionInput[] {

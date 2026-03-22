@@ -72,7 +72,8 @@ export type EffectPrimitive =
   | { type: 'grant_bonus_action'; player: PlayerSelector }
   | { type: 'remove_from_combat'; target: TargetSelector }
   | { type: 'on_successful_attack'; effects: EffectPrimitive[]; maxAttackers?: number }
-  | { type: 'damage_location' };
+  | { type: 'damage_location' }
+  | { type: 'discard_target'; target: TargetSelector };
 
 export type AbilityTiming =
   | 'enters'

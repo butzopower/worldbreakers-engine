@@ -5,7 +5,7 @@ import { ResolveContext } from "../../../abilities/primitives";
 import { GameEvent } from "../../../types/events";
 import { getCard, getCardDef, getDeck, getPassiveCostReduction, isFollower } from "../../../state/query";
 import { drawCard, moveCard, shuffleDeck } from "../../../state/mutate";
-import { STANDING_GUILDS } from "../../../types/core";
+import { STANDING_GUILDS, opponentOf } from "../../../types/core";
 import { StepResult } from "../../../engine/step-handlers";
 import { EngineStep } from "../../../types/steps";
 import { EffectPrimitive, Mode } from "../../../types/effects";
@@ -158,6 +158,23 @@ export const events: CardDefinition[] = [
       timing: 'play',
       effects: [{ type: 'gain_mythium', player: 'self', amount: 3 }],
       description: 'Gain 3 mythium.',
+    }],
+  },
+  {
+    id: 'stupefy',
+    name: 'Stupefy',
+    type: 'event',
+    guild: 'void',
+    cost: 0,
+    standingRequirement: { void: 1 },
+    description: 'Attack. Response: After combat ends, if the attack was successful → The defending player reveals 3 cards from their hand. They must discard 1 revealed card of your choice.',
+    abilities: [{
+      timing: 'play',
+      effects: [{
+        type: 'on_successful_attack',
+        effects: [{ type: 'custom_resolve', customResolve: 'stupefy_on_breach' }],
+      }],
+      description: 'Attack. Response: After combat ends, if the attack was successful → The defending player reveals 3 cards from their hand. They must discard 1 revealed card of your choice.',
     }],
   },
   {
@@ -586,6 +603,23 @@ export const eventResolvers: {key: string, resolver: CustomResolverFn}[] = [
     key: 'inspirational_vision_location',
     resolver: (state: GameState, ctx: ResolveContext): EngineStep[] =>
       inspirationalVisionSearch(state, ctx, 'location'),
+  },
+  {
+    key: 'stupefy_on_breach',
+    resolver: (state: GameState, ctx: ResolveContext): EngineStep[] => {
+      const defender = opponentOf(ctx.controller);
+      const defenderHand = state.cards.filter(c => c.owner === defender && c.zone === 'hand');
+
+      if (defenderHand.length === 0) return [];
+
+      return [{
+        type: 'request_choose_reveal_for_opponent_discard',
+        player: defender,
+        count: 3,
+        choosingPlayer: ctx.controller,
+        sourceCardId: ctx.sourceCardId,
+      }];
+    },
   },
   {
     key: 'proof_of_the_grotto',

@@ -141,6 +141,27 @@ export default function InteractionOverlay({ mode, state, playerId, onSubmitActi
         </div>
       );
 
+    case 'choose_reveal_for_opponent_discard':
+      return (
+        <div className={styles.panel}>
+          <div className={styles.instructions}>
+            Select {mode.count} card(s) from your hand to reveal.
+            {mode.selected.length > 0 && ` (${mode.selected.length}/${mode.count} selected)`}
+          </div>
+          <button
+            onClick={() => {
+              if (mode.selected.length === mode.count) {
+                onSubmitAction({ type: 'choose_reveal_for_opponent_discard', cardInstanceIds: mode.selected });
+              }
+            }}
+            disabled={mode.selected.length !== mode.count}
+            className={`${styles.btn} ${mode.selected.length !== mode.count ? styles['btn--disabled'] : ''}`}
+          >
+            Confirm Reveal
+          </button>
+        </div>
+      );
+
     case 'choose_cost_discount':
       return (
         <div className={styles.panel}>

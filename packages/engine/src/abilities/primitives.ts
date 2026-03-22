@@ -342,6 +342,12 @@ export function resolvePrimitive(
         },
       ]
     }
+    case 'discard_target': {
+      const targets = resolveTargets(state, effect.target, ctx);
+      return targets.map(targetId => (
+        { type: 'move_card' as const, cardInstanceId: targetId, toZone: 'discard' as const }
+      ));
+    }
 
   }
 

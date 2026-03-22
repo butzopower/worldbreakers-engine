@@ -21,7 +21,8 @@ export type PlayerAction =
   | { type: 'choose_cost_discount_targets'; targetInstanceIds: string[] }
   | { type: 'choose_play'; cardInstanceId: string }
   | { type: 'skip_play'; cardInstanceId: string }
-  | { type: 'mulligan'; cardInstanceIds: string[] };
+  | { type: 'mulligan'; cardInstanceIds: string[] }
+  | { type: 'choose_reveal_for_opponent_discard'; cardInstanceIds: string[] };
 
 export interface ActionInput {
   player: PlayerId;

@@ -226,6 +226,12 @@ function validatePendingChoice(state: GameState, player: PlayerId, action: Playe
       }
       return validateMulligan(state, player, action.cardInstanceIds);
 
+    case 'choose_reveal_for_opponent_discard':
+      if (action.type !== 'choose_reveal_for_opponent_discard') {
+        return { valid: false, reason: 'Must choose cards to reveal' };
+      }
+      return validateRevealChoice(state, player, action.cardInstanceIds, choice.count);
+
     default:
       return { valid: false, reason: 'Unknown choice type' };
   }
@@ -312,6 +318,25 @@ function validateMulligan(state: GameState, player: PlayerId, cardIds: string[])
     return { valid: false, reason: 'Cannot mulligan more cards than are in hand' };
   }
   // All specified cards must be in the player's hand
+  for (const id of cardIds) {
+    const card = getCard(state, id);
+    if (!card) return { valid: false, reason: `Card ${id} not found` };
+    if (card.owner !== player || card.zone !== 'hand') {
+      return { valid: false, reason: `Card ${id} is not in your hand` };
+    }
+  }
+  return { valid: true };
+}
+
+function validateRevealChoice(state: GameState, player: PlayerId, cardIds: string[], count: number): ValidationResult {
+  const hand = getHand(state, player);
+  if (cardIds.length !== count) {
+    return { valid: false, reason: `Must reveal exactly ${count} card(s)` };
+  }
+  const uniqueIds = new Set(cardIds);
+  if (uniqueIds.size !== cardIds.length) {
+    return { valid: false, reason: 'Duplicate cards in reveal selection' };
+  }
   for (const id of cardIds) {
     const card = getCard(state, id);
     if (!card) return { valid: false, reason: `Card ${id} not found` };

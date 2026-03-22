@@ -63,7 +63,8 @@ export type PendingChoice =
   | { type: 'choose_trigger_order'; playerId: PlayerId; triggers: TriggerOption[] }
   | { type: 'choose_cost_discount'; playerId: PlayerId; cardInstanceId: string; costDiscount: CostDiscount; externalCostReduction: number; validTargetIds: string[] }
   | { type: 'choose_play_order'; playerId: PlayerId; cardInstanceIds: string[] }
-  | { type: 'choose_mulligan'; playerId: PlayerId };
+  | { type: 'choose_mulligan'; playerId: PlayerId }
+  | { type: 'choose_reveal_for_opponent_discard'; playerId: PlayerId; count: number; choosingPlayer: PlayerId; sourceCardId: string };
 
 export interface PlayerState {
   mythium: number;

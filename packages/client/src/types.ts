@@ -52,7 +52,8 @@ export type PendingChoice =
   | { type: 'choose_trigger_order'; playerId: PlayerId; triggers: TriggerOption[] }
   | { type: 'choose_cost_discount'; playerId: PlayerId; cardInstanceId: string; costDiscount: { costReduction: number; perTarget?: boolean; maxTargets?: number }; validTargetIds: string[] }
   | { type: 'choose_play_order'; playerId: PlayerId; cardInstanceIds: string[] }
-  | { type: 'choose_mulligan'; playerId: PlayerId };
+  | { type: 'choose_mulligan'; playerId: PlayerId }
+  | { type: 'choose_reveal_for_opponent_discard'; playerId: PlayerId; count: number };
 
 export type LasingEffect = {
   type: string;
@@ -118,4 +119,5 @@ export type InteractionMode =
   | { type: 'choose_trigger_order'; triggers: TriggerOption[] }
   | { type: 'choose_cost_discount'; validTargets: string[]; maxTargets: number; selected: string[] }
   | { type: 'choose_play_order'; cardInstanceIds: string[] }
-  | { type: 'choose_mulligan'; selected: string[] };
+  | { type: 'choose_mulligan'; selected: string[] }
+  | { type: 'choose_reveal_for_opponent_discard'; count: number; selected: string[] };

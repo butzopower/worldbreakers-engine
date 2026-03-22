@@ -13,6 +13,7 @@ export type EngineStep =
   | { type: 'request_choose_attackers', player: PlayerId; maxAttackers?: number }
   | { type: 'request_cost_discount'; player: PlayerId; cardInstanceId: string; costDiscount: CostDiscount; externalCostReduction: number }
   | { type: 'request_choose_target'; player: PlayerId; sourceCardId: string; abilityIndex: number; effects: EffectPrimitive[]; filter: CardFilter; triggeringCardId?: string }
+  | { type: 'request_choose_reveal_for_opponent_discard'; player: PlayerId; count: number; choosingPlayer: PlayerId; sourceCardId: string }
   // Effect Resolution
   | { type: 'resolve_effects'; effects: EffectPrimitive[]; ctx: ResolveContext }
   | { type: 'resolve_ability_at_index'; controller: PlayerId; sourceCardId: string; abilityIndex: number; triggeringCardId?: string; costReduction?: number }

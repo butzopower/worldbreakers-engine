@@ -79,7 +79,7 @@ export const atokVoid: DeckConfig = {
     'alamut_castle',
     'hide_in_plain_sight',
     'amazing_arithmetic',
-    // 'stupefy',
+    'stupefy',
     'serpent_strike',
     'vicious_stab',
     'consumed_by_the_dust',
