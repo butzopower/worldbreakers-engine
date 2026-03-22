@@ -92,7 +92,7 @@ export default function GameView({ playerId, state, legalActions, events, onRetu
         break;
       }
     }
-  }, [state.pendingChoice?.type, state.version]);
+  }, [state.pendingChoice?.type, state.pendingChoice?.playerId, state.version]);
 
   const submitAction = (action: PlayerAction) => {
     socket.emit('submit_action', { action });
