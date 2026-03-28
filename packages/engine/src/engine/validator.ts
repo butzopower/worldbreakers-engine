@@ -3,7 +3,7 @@ import { ActionInput, PlayerAction } from '../types/actions';
 import { PlayerId, opponentOf } from '../types/core';
 import {
   getCard, getCardDef, canPlayCard, canAttack, canBlock, canBlockAttacker, canDevelop, canUseAbility, canPay,
-  getHand, hasKeyword, getNumericCost,
+  getHand, hasKeyword, getNumericCost, isStoredPlayableAsHand, getPassiveCostReduction,
 } from '../state/query';
 import { getCounter } from '../types/counters';
 
@@ -76,10 +76,12 @@ function validateBuyStanding(state: GameState, player: PlayerId): ValidationResu
 function validatePlayCard(state: GameState, player: PlayerId, cardInstanceId: string): ValidationResult {
   const card = getCard(state, cardInstanceId);
   if (!card) return { valid: false, reason: 'Card not found' };
-  if (!canPlayCard(state, player, card)) {
-    return { valid: false, reason: 'Cannot play this card (wrong zone, not enough mythium, or standing requirement)' };
+  if (canPlayCard(state, player, card)) return { valid: true };
+  // Also allow stored cards that are playable as if in hand
+  if (isStoredPlayableAsHand(state, card) && canPay(state, player, card, { costReduction: getPassiveCostReduction(state, player, getCardDef(card)) })) {
+    return { valid: true };
   }
-  return { valid: true };
+  return { valid: false, reason: 'Cannot play this card (wrong zone, not enough mythium, or standing requirement)' };
 }
 
 function validateAttack(state: GameState, player: PlayerId, attackerIds: string[]): ValidationResult {

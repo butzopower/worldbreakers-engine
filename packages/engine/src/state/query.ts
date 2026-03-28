@@ -305,6 +305,15 @@ export function isFollower(card: CardInstance): boolean {
   return getCardDef(card).type === 'follower'
 }
 
+export function isStoredPlayableAsHand(state: GameState, card: CardInstance): boolean {
+  if (card.zone !== 'stored' || !card.storedOn) return false;
+  const host = getCard(state, card.storedOn);
+  if (!host) return false;
+  const hostDef = getCardDef(host);
+  const cardDef = getCardDef(card);
+  return !!hostDef.storedPlayableAsHand?.includes(cardDef.type);
+}
+
 export function hasLethal(state: GameState, card: CardInstance): boolean {
   if (hasKeyword(state, card, 'lethal')) return true;
   for (const effect of state.lastingEffects) {

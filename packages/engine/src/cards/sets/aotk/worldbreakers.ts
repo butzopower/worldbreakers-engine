@@ -80,6 +80,23 @@ export const worldbreakers: CardDefinition[] = [
     type: 'worldbreaker',
     cost: 0,
     guild: 'moon',
+    storage: 3,
+    storedPlayableAsHand: ['location'],
+    abilities: [
+      {
+        timing: 'draws_location',
+        effects: [
+          {
+            type: 'exhausts',
+            effects: [
+              { type: 'store_triggering_card', host: 'self', effects: [{ type: 'draw_cards', player: 'self', count: 1 }] },
+            ],
+          },
+        ],
+        description: 'Response: After you draw a location card during your turn, exhaust → Store it here. If you do, draw another card.',
+      },
+    ],
+    description: 'Storage 3. You may play location cards stored here as if they were in your hand.',
   }
 ];
 

@@ -129,7 +129,7 @@ export function executeStep(state: GameState, step: EngineStep): StepResult {
     case 'reveal_cards':
       return revealCards(state, step.player, step.cardDefinitionIds);
     case 'draw_card':
-      return drawCard(state, step.player);
+      return handleDrawCard(state, step.player);
     case 'move_card':
       return moveCard(state, step.cardInstanceId, step.toZone);
     case 'move_card_to_deck_bottom':
@@ -1243,7 +1243,37 @@ function revealCards(state: GameState, player: PlayerId, cardDefinitionIds: stri
   return { state, events };
 }
 
+function handleDrawCard(state: GameState, player: PlayerId): StepResult {
+  const result = drawCard(state, player);
+  // Check if a location was drawn during the player's turn (not rally)
+  if (state.phase === 'action' && player === state.activePlayer) {
+    const drawnEvent = result.events.find(
+      (e): e is Extract<GameEvent, { type: 'card_moved' }> => e.type === 'card_moved' && e.to === 'hand'
+    );
+    if (drawnEvent) {
+      const drawnCard = getCard(result.state, drawnEvent.cardInstanceId);
+      if (drawnCard && getCardDef(drawnCard).type === 'location') {
+        return {
+          state: result.state,
+          events: result.events,
+          prepend: [{ type: 'check_triggers', timing: 'draws_location', player, triggeringCardId: drawnCard.instanceId }],
+        };
+      }
+    }
+  }
+  return result;
+}
+
 function handleStoreCard(state: GameState, cardInstanceId: string, hostInstanceId: string): StepResult {
+  // Check storage capacity before storing
+  const host = getCard(state, hostInstanceId);
+  if (host) {
+    const def = getCardDefinition(host.definitionId);
+    const storageCapacity = def?.storage ?? 0;
+    if (host.storedCards.length >= storageCapacity) {
+      return { state, events: [] };
+    }
+  }
   const result = storeCard(state, cardInstanceId, hostInstanceId);
   return { state: result.state, events: result.events };
 }

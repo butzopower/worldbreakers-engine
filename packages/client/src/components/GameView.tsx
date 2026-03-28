@@ -177,7 +177,7 @@ export default function GameView({ playerId, state, legalActions, events, onRetu
         break;
       }
       case 'none': {
-        if (card.owner === playerId && card.zone === 'hand') {
+        if (card.owner === playerId && (card.zone === 'hand' || card.zone === 'stored')) {
           const canPlay = legalActions.some(
             a => a.type === 'play_card' && a.cardInstanceId === card.instanceId
           );

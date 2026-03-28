@@ -42,7 +42,7 @@ export default function OpponentArea({ state, opponent, interactionMode, onCardC
 
       {worldbreaker && (
         <div className={styles.worldbreaker}>
-          <FollowerCard card={worldbreaker} />
+          <FollowerCard card={worldbreaker} allCards={state.cards} />
         </div>
       )}
 

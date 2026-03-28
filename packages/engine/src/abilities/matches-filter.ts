@@ -1,7 +1,7 @@
 import { CardInstance, GameState } from "../types/state";
 import { CardFilter } from "../types/effects";
 import { ResolveContext, resolvePlayerSelector } from "./primitives";
-import { canPay, getCardDef, getNumericCost, hasKeyword } from "../state/query";
+import { canPay, getCardDef, getNumericCost, hasKeyword, isStoredPlayableAsHand } from "../state/query";
 import { getCounter } from "../types/counters";
 
 export function matchesFilter(state: GameState, card: CardInstance, filter: CardFilter, ctx: ResolveContext): boolean {
@@ -17,7 +17,10 @@ export function matchesFilter(state: GameState, card: CardInstance, filter: Card
   }
   if (filter.zone) {
     const zones = Array.isArray(filter.zone) ? filter.zone : [filter.zone];
-    if (!zones.includes(card.zone)) return false;
+    if (!zones.includes(card.zone)) {
+      // Stored cards on hosts with storedPlayableAsHand count as 'hand'
+      if (!(zones.includes('hand') && isStoredPlayableAsHand(state, card))) return false;
+    }
   }
   if (filter.owner) {
     const owners = resolvePlayerSelector(filter.owner, ctx);

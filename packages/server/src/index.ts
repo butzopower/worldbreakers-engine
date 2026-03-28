@@ -57,6 +57,7 @@ function buildClientCardDefs(): Record<string, ClientCardDefinition> {
       ...(def.description && { cardDescription: def.description }),
       ...(def.locationStages && { locationStages: def.locationStages.map(ls => ({ stage: ls.stage, description: ls.ability.description })) }),
       ...(def.storage !== undefined && { storage: def.storage }),
+      ...(def.storedPlayableAsHand && { storedPlayableAsHand: def.storedPlayableAsHand }),
     };
   }
   return defs;

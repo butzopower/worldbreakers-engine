@@ -54,6 +54,11 @@ export class StateBuilder {
     return this;
   }
 
+  withPhase(phase: GameState['phase']): this {
+    this.state.phase = phase;
+    return this;
+  }
+
   withRound(round: number): this {
     this.state.round = round;
     return this;

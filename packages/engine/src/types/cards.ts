@@ -68,4 +68,6 @@ export interface CardDefinition {
   costDiscount?: CostDiscount;
   /** How many cards this card can store (followers, events, locations) */
   storage?: number;
+  /** Stored cards of these types can be played as if they were in the player's hand */
+  storedPlayableAsHand?: CardType[];
 }

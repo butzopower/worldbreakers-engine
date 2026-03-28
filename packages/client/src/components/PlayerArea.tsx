@@ -57,7 +57,21 @@ export default function PlayerArea({ state, playerId, interactionMode, onCardCli
 
       {worldbreaker && (
         <div className={styles.worldbreaker}>
-          <FollowerCard card={worldbreaker} />
+          <FollowerCard
+            card={worldbreaker}
+            allCards={state.cards}
+            storedCardHighlighted={
+              interactionMode.type === 'none'
+                ? legalActions
+                    .filter(a => a.type === 'play_card')
+                    .map(a => a.type === 'play_card' ? a.cardInstanceId : '')
+                    .filter(id => worldbreaker.storedCards.includes(id))
+                : interactionMode.type === 'choose_stored_card_to_play' && interactionMode.hostInstanceId === worldbreaker.instanceId
+                  ? interactionMode.validCardIds
+                  : undefined
+            }
+            onStoredCardClick={onCardClick}
+          />
         </div>
       )}
 

@@ -366,6 +366,20 @@ export function resolvePrimitive(
         costReduction: effect.costReduction,
       }];
     }
+    case 'store_triggering_card': {
+      if (!ctx.triggeringCardId) return [];
+      const steps: EngineStep[] = [
+        { type: 'store_card', cardInstanceId: ctx.triggeringCardId, hostInstanceId: ctx.sourceCardId },
+      ];
+      if (effect.effects && effect.effects.length > 0) {
+        steps.push({
+          type: 'resolve_effects',
+          effects: effect.effects,
+          ctx: { controller: ctx.controller, sourceCardId: ctx.sourceCardId },
+        });
+      }
+      return steps;
+    }
 
   }
 

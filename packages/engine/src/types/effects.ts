@@ -75,7 +75,8 @@ export type EffectPrimitive =
   | { type: 'damage_location' }
   | { type: 'discard_target'; target: TargetSelector }
   | { type: 'store_card'; from: Zone; filter: CardFilter; host: 'self'; effects?: EffectPrimitive[] }
-  | { type: 'play_stored_card'; host: 'self'; costReduction?: number };
+  | { type: 'play_stored_card'; host: 'self'; costReduction?: number }
+  | { type: 'store_triggering_card'; host: 'self'; effects?: EffectPrimitive[] };
 
 export type AbilityTiming =
   | 'enters'
@@ -94,7 +95,8 @@ export type AbilityTiming =
   | 'overwhelms'
   | 'is_blocked'
   | 'first_power_gain_this_round'
-  | 'first_solo_attack_this_round';
+  | 'first_solo_attack_this_round'
+  | 'draws_location';
 
 export interface AbilityDefinition {
   timing: AbilityTiming;

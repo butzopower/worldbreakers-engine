@@ -12,7 +12,7 @@ import { getCard, getHand, getDeck, getCardDef, canPay, hasKeyword, getPassiveCo
 import { getCounter } from '../types/counters';
 import {
   canPlayCard, canAttack, canBlock, canBlockAttacker, canDevelop, canUseAbility,
-  getFollowers, getLocations, getBoard,
+  getFollowers, getLocations, getBoard, isStoredPlayableAsHand,
 } from '../state/query';
 
 export interface ProcessResult {
@@ -128,6 +128,11 @@ export function playCard(
 ): EngineStep[] {
   const card = getCard(state, cardInstanceId)!;
   const def = getCardDef(card);
+
+  // Auto-detect stored cards that are playable as hand
+  if (card.zone === 'stored' && card.storedOn && !opts?.fromStorage) {
+    return playCard(state, player, cardInstanceId, { ...opts, fromStorage: card.storedOn });
+  }
 
   // If card has a cost discount and we haven't resolved it yet, queue the discount choice
   if (def.costDiscount && !opts?.skipCostDiscount) {
@@ -694,6 +699,14 @@ export function getLegalActions(state: GameState): ActionInput[] {
   const hand = getHand(state, player);
   for (const card of hand) {
     if (canPlayCard(state, player, card)) {
+      actions.push({ player, action: { type: 'play_card', cardInstanceId: card.instanceId } });
+    }
+  }
+
+  // Play stored cards that are playable as if in hand
+  const storedCards = state.cards.filter(c => c.zone === 'stored' && c.owner === player);
+  for (const card of storedCards) {
+    if (isStoredPlayableAsHand(state, card) && canPay(state, player, card, { costReduction: getPassiveCostReduction(state, player, getCardDef(card)) })) {
       actions.push({ player, action: { type: 'play_card', cardInstanceId: card.instanceId } });
     }
   }

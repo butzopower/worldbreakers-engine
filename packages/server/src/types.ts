@@ -15,6 +15,7 @@ export interface ClientCardDefinition {
   cardDescription?: string;
   locationStages?: { stage: number; description?: string }[];
   storage?: number;
+  storedPlayableAsHand?: string[];
 }
 
 export interface GameInfo {
